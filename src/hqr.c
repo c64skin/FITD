@@ -69,9 +69,16 @@ void moveHqrEntry(hqrEntryStruct* hqrPtr, int index)
 
 	int size = hqrSubPtr[index].size;
 
-	if(hqrPtr->numUsedEntry - 1 <= index )
+	if(hqrPtr->numUsedEntry - 1 > index ) //if not last entry
 	{
+		char* dest = hqrPtr->dataPtr + hqrSubPtr2[index].offset;
+		char* src = dest + size;
 
+		memcpy(dest,src,hqrPtr->dataPtr + hqrPtr->maxFreeData - src);
+
+		dest = (char*)(hqrSubPtr2+index);
+		src = (char*)(hqrSubPtr2+index+1);
+		memcpy(dest,src,hqrPtr->numMaxEntry-(index+1) * 10);
 	}
 
 	hqrPtr->numUsedEntry --;
@@ -114,7 +121,7 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 			unsigned int bestTime = 0;
 			int entryIdx = 0;
 
-			while(entryIdx>hqrPtr->numUsedEntry)
+			for(entryIdx = 0; entryIdx<hqrPtr->numUsedEntry; entryIdx++)
 			{
 				if(time - foundEntry[entryIdx].lastTimeUsed > bestTime)
 				{

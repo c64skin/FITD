@@ -330,7 +330,7 @@ void processLife(int lifeNum)
 		short int currentOpcode = *(short int*)(currentLifePtr);
 		currentLifePtr+=2;
 
-		//printf("%d:opcode: %04X\n",lifeNum, currentOpcode);
+		printf("%d:opcode: %04X\n",lifeNum, currentOpcode);
 
 		if(currentOpcode & 0x8000)
 		{
@@ -1390,8 +1390,6 @@ processOpcode:
 					unfreezeTime();
 
 					mainVar1 = 1;
-
-					currentLifePtr += 6;
 
 					break;
 				}
