@@ -48,7 +48,7 @@ struct channelTableElement
 
 typedef struct channelTableElement channelTableElement;
 
-channelTableElement channelTable[11] = 
+channelTableElement channelDataTable[11] = 
 {
   {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
   {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
@@ -98,7 +98,7 @@ channelTable2Element channelTable2[11] =
 
 unsigned char regBDConf = 0xC0;
 
-unsigned char operatorTableMelodic[] =
+unsigned char channelTableMelodic[] =
 {
   0x00,
   0x03,
@@ -126,7 +126,7 @@ unsigned char operatorTableMelodic[] =
   0xFF
 };
 
-unsigned char operatorTableRythme[] =
+unsigned char channelTableRythme[] =
 {
   0x00,
   0x03,
@@ -152,7 +152,7 @@ unsigned char operatorTableRythme[] =
   0xFF
 };
 
-unsigned char* operatorTable;
+unsigned char* channelTable;
 
 // global table is 300 entry long
 u16 globTableEntry[300] = {
@@ -496,12 +496,12 @@ int musicUpdate(void *udata, uint8 *stream, int len)
 
 void createDefaultChannel(int index)
 {
-  channelTable[index].var5 = 0xFF;
-  channelTable[index].var4 = 0xFF;
-  channelTable[index].var2 = 0x40;
-  channelTable[index].var0 = 0xFFFF;
-  channelTable[index].var7 = 0x9C;
-  channelTable[index].var8 = 0xFFFF;
+  channelDataTable[index].var5 = 0xFF;
+  channelDataTable[index].var4 = 0xFF;
+  channelDataTable[index].var2 = 0x40;
+  channelDataTable[index].var0 = 0xFFFF;
+  channelDataTable[index].var7 = 0x9C;
+  channelDataTable[index].var8 = 0xFFFF;
 }
 
 void resetChannelFrequency(int channelIdx)
@@ -564,8 +564,8 @@ int musicStart(void* dummy)
 
   for(i=0;i<18;i++)
   {
-    sendAdlib(0x60+operatorTableMelodic[i],0xFF);
-    sendAdlib(0x80+operatorTableMelodic[i],0xFF);
+    sendAdlib(0x60+channelTableMelodic[i],0xFF);
+    sendAdlib(0x80+channelTableMelodic[i],0xFF);
   }
 
   for(i=0;i<9;i++)
@@ -600,7 +600,7 @@ int musicLoad(void* ptr)
 
   u8* musicPtr = (u8*)ptr;
 
-  operatorTable = operatorTableMelodic;
+  channelTable = channelTableMelodic;
 
   flag1 = musicPtr[0x3C] & 0xC0;
   musicParam1 = musicPtr[0x3D];
@@ -608,7 +608,7 @@ int musicLoad(void* ptr)
   if(!musicParam1)
   {
     flag1 |= 0x20;
-    operatorTable = operatorTableRythme;
+    channelTable = channelTableRythme;
   }
 
   regBDConf = flag1;
@@ -784,8 +784,6 @@ u8 smallTable[] = { 0x10, 8, 4, 2, 1 };
 
 void applyDirectFrequency(int index, int param1, int param2, int param3)
 {
-  int di;
-
   if(musicParam1)
   {
     setupChannelFrequency(index,param1,param2,param3);
@@ -801,12 +799,9 @@ void applyDirectFrequency(int index, int param1, int param2, int param3)
       return;
     }
 
-    di = param2;
-    param2 = 0x40;
-
     if(index==6)
     {
-      setupChannelFrequency(index,param1,param2,param3);
+      setupChannelFrequency(index,param1,0x40,param3);
     }
     else
     if(index==8 && !(param1&0x80))
@@ -814,7 +809,7 @@ void applyDirectFrequency(int index, int param1, int param2, int param3)
       int indexBackup = index;
       int param1Backup = param1;
 
-      setupChannelFrequency(8,param1,param2,param3);
+      setupChannelFrequency(8,param1,0x40,param3);
       {
         int al = param1&0x70;
 
@@ -831,7 +826,7 @@ void applyDirectFrequency(int index, int param1, int param2, int param3)
             al += 0x10;
         }
 
-        setupChannelFrequency( index, param1, param2,param3);
+        setupChannelFrequency( index, param1, 0x40,param3);
 
       }
 
@@ -839,7 +834,7 @@ void applyDirectFrequency(int index, int param1, int param2, int param3)
       index = indexBackup;
     }
 
-    ah = (!(smallTable[index-6])) & regBDConf;
+    ah = (~(smallTable[index-6])) & regBDConf;
 
     sendAdlib(0xBD,ah);
 
@@ -884,7 +879,6 @@ void configChannel(u8 value, u8* data)
 {
   if(smallData2[value] != 0xFF)
   {
-//    assert(data[2]&0xF == data[2]);
     sendAdlib(0xC0 + smallData2[value], data[2]);
   }
 
@@ -894,8 +888,11 @@ void configChannel(u8 value, u8* data)
   sendAdlib(0xE0 + value, data[3]); // 	Waveform Select
 }
 
-void applyToOpl2(u8 value, u8* data,int bp)
+void changeOuputLevel(u8 value, u8* data,int bp)
 {
+  int keyScaleLevel;
+  int outputLevel;
+
   int ax;
   int dx;
 
@@ -904,17 +901,15 @@ void applyToOpl2(u8 value, u8* data,int bp)
 
   data++;
 
-  ax = *data;
+  outputLevel = (*data)&0x3F;
 
-  bp *= ax;
-  bp += bp;
-  bp += 0x7F;
+  outputLevel = 0x3F - ((((outputLevel*bp)*2) + 0x7F)/0xFE);
 
-  dx = 0x3F;
+  assert((outputLevel & 0x3F) == outputLevel);
 
-  dx -= bp/0xFE;
+  keyScaleLevel = data[0]&0xC0;
 
-  sendAdlib(0x40+value,(data[0]&0xC0) | (dx&0xFF));
+  sendAdlib(0x40+value,(data[0]&0xC0) | (outputLevel&0x3F));
 }
 
 void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement* element)
@@ -950,8 +945,8 @@ void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement*
     element->var7 = 0x9C;
   }
 
-  operator1 = operatorTable[element2->index*2];
-  operator2 = operatorTable[(element2->index*2)+1];
+  operator1 = channelTable[element2->index*2];
+  operator2 = channelTable[(element2->index*2)+1];
 
   if(operator1 == 0xFF && operator2 == 0xFF) // do we have an operator ?
     return;
@@ -970,12 +965,14 @@ void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement*
     element->var5 = 0xFF;
   }
 
+  // Ouput level handling
+
   al = element2->var1D - element2->var1E;
 
   if(al < 0)
     al = 0;
 
-  if(element->var5 == al)
+  if(element->var5 != al)
   {
     int dx;
 
@@ -988,13 +985,15 @@ void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement*
       dx = element->var5;
     }
 
-    applyToOpl2(operator1,currentMusicPtr2+0xD*element2->var12,dx);
+    changeOuputLevel(operator1,currentMusicPtr2+0xD*element2->var12,dx);
 
-      if(operator2 != 0xFF)
-      {
-        applyToOpl2(operator2,(currentMusicPtr2+0xD*element2->var12)+6,0);
-      }
+    if(operator2 != 0xFF)
+    {
+      changeOuputLevel(operator2,(currentMusicPtr2+0xD*element2->var12)+6,element->var5);
+    }
   }
+
+  ////
 
   bp = dx = element2->var17;
 
@@ -1045,7 +1044,7 @@ int update(void* dummy)
       executeMusicCommand(channelTable2[i].var2);
     }
 
-    applyMusicCommandToOPL(si,&channelTable[i]);
+    applyMusicCommandToOPL(si,&channelDataTable[i]);
   }
 
   return 0;
@@ -1079,6 +1078,7 @@ int musicFade(void * param)
       {
         if(dx & 0x100)
         {
+          exit(1);
         }
 
         if(dx & 0x40)
@@ -1104,22 +1104,27 @@ int musicFade(void * param)
 
         if(dx & 0x20)
         {
+          exit(1);
         }
 
         if(dx & 0x2000)
         {
+          exit(1);
         }
 
         if(dx & 0x8000)
         {
+          exit(1);
         }
 
         if(dx & 0x1000)
         {
+          exit(1);
         }
 
         if(dx & 0x10)
         {
+          exit(1);
         }
       }
     }
@@ -1209,16 +1214,8 @@ int oldTimer = 0;
 
 void callMusicUpdate(void)
 {
-  if(timer>oldTimer)
+  if(OPLinitialized)
   {
-    oldTimer = timer;
-
-    updateLoop++;
-
-   // if(updateLoop == 2)
-    {
-      callMusicDrv(0,NULL);
-      updateLoop = 0;
-    }
+    callMusicDrv(0,NULL);
   }
 }

@@ -155,6 +155,12 @@ void CALLBACK vertexCallback(GLvoid *vertex)
 	glVertex3d(x,y,-100);
 }
 
+void Sound_Quit(void)
+{
+  Mix_HookMusic(NULL, NULL);
+  Mix_CloseAudio();
+}
+
 
 osystem_init()	// that's the constructor of the system dependent
 						// object used for the SDL port
@@ -182,9 +188,8 @@ osystem_init()	// that's the constructor of the system dependent
 	    exit(1);
 	}
 
-    atexit(SDL_Quit);
-
-//	atexit(Sound_Quit);
+  atexit(Sound_Quit);
+  //  atexit(SDL_Quit);
 
 /*    if (TTF_Init() < 0)
 	{
@@ -276,7 +281,7 @@ osystem_init()	// that's the constructor of the system dependent
 
   // SDL_mixer init
 
-  if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 1, 1024)==-1)
+  if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 1, 2048)==-1)
   {
     printf("Mix_OpenAudio: %s\n", Mix_GetError());
     exit(2);

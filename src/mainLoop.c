@@ -1,17 +1,37 @@
 #include "common.h"
 
+int mainLoopSwitch = 0;
+
 void mainLoop(int allowSystemMenu)
 {
+#define SPEED 15              /* Ticks per Frame */
+#define SLEEP_MIN 20          /* Minimum time a sleep takes, usually 2*GRAN */
+#define SLEEP_GRAN 10         /* Granularity of sleep */
+
+int frames=0;                   /* Number of frames displayed */
+s32 t_start,t_end,t_left;
+s32 q=0;                     /* Dummy */
+
 	while(1)
 	{
+    frames++;
+    t_start=SDL_GetTicks();
+
+    callMusicUpdate();
+
+    mainLoopSwitch++;
+
+    if(mainLoopSwitch == 1)
+    {
+      timeGlobal++;
+      mainLoopSwitch = 0;
+
 		timer = timeGlobal;
 		process_events();
 		readKeyboard();
 		input3 = input2;
 		input4 = inputKey;
 		button = input1;
-
-    callMusicUpdate();
 
 		if(input3)
 		{
@@ -165,6 +185,18 @@ void mainLoop(int allowSystemMenu)
 		//osystem_delay(100);
 
 //		updateSound2();
+
+    t_end=t_start+SPEED;
+    t_left=t_start-SDL_GetTicks()+SPEED;
+
+    if(t_left>0){
+        if(t_left>SLEEP_MIN)
+            SDL_Delay(t_left-SLEEP_GRAN);
+        while(SDL_GetTicks()<t_end){ q++; };
+    }else{
+       // printf("CPU to slow by %d ticks/round\n",-t_left);
+    };
+    }
 	}
 
 //	mainLoopVar1 = 0;
