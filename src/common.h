@@ -1,6 +1,10 @@
 #ifndef _COMMON_
 #define _COMMON_
 
+typedef unsigned char u8;
+typedef unsigned short int u16;
+typedef unsigned long int u32;
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -54,6 +58,15 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 #include "actorList.h"
 #include "mainLoop.h"
 #include "inventory.h"
+#include "startupMenu.h"
+#include "room.h"
+#include "floor.h"
+#include "object.h"
+
+// debugger
+#ifdef INTERNAL_DEBUGGER
+#include "debugger.h"
+#endif
 
 // scripting
 #include "track.h"

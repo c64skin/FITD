@@ -46,6 +46,12 @@ void readKeyboard(void)
 			case SDLK_SPACE:
 				input1 = 1;
 				break;
+#ifdef INTERNAL_DEBUGGER
+			case SDLK_d:
+				debugger_enterMainDebug();
+				break;
+#endif
+				
 			}
 		}
 	}

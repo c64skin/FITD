@@ -74,6 +74,10 @@ char RGBA_Pal[256*4];
 GLuint		backTexture;
 GLuint		modelsDisplayList;
 
+#ifdef INTERNAL_DEBUGGER
+GLuint		debugFontTexture;
+#endif
+
 GLUtesselator *tobj;
 
 GLdouble tesselateList[100][6];
@@ -257,6 +261,15 @@ osystem_init()	// that's the constructor of the system dependent
 	gluTessCallback(tobj, GLU_TESS_BEGIN, glBegin);
 	gluTessCallback(tobj, GLU_TESS_END, glEnd);
 	gluTessCallback(tobj, GLU_TESS_COMBINE, combineCallback);
+
+	// init debug font
+#ifdef INTERNAL_DEBUGGER
+	glGenTextures(1, &debugFontTexture);
+	glBindTexture(GL_TEXTURE_2D, debugFontTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, debugFont);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+#endif
 }
 
 void osystem_setPalette(byte * palette)
@@ -625,5 +638,60 @@ void osystem_draw3dQuad(float x1, float y1, float z1, float x2, float y2, float 
 	glEnd();*/
 ///
 }
+
+#ifdef INTERNAL_DEBUGGER
+void osystem_drawDebugText(const u32 X, const u32 Y, const u8* string)
+{
+	u32 currentX = X;
+	u32 i;
+	u32 stringLength;
+
+	glBindTexture(GL_TEXTURE_2D, debugFontTexture);
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
+	glColor4ub(255,255,255,255);
+
+	stringLength = strlen(string);
+
+	for(i=0;i<stringLength;i++)
+	{
+		float textX1;
+		float textY1;
+		float textX2;
+		float textY2;
+
+		u8 lineNumber;
+		u8 colNumber;
+
+		lineNumber = string[i]>>4;
+		colNumber = string[i]&0xF;
+
+		textX1 = ((256.f/16.f)*colNumber)/256.f;
+		textY1 = ((256.f/16.f)*lineNumber)/256.f;
+		textX2 = ((256.f/16.f)*(colNumber+1))/256.f;
+		textY2 = ((256.f/16.f)*(lineNumber+1))/256.f;
+
+		glBegin(GL_QUADS);
+
+		glTexCoord2f(textX1,textY1);
+		glVertex2d(currentX,Y);
+
+		glTexCoord2f(textX2,textY1);
+		glVertex2d(currentX+8,Y);
+
+		glTexCoord2f(textX2,textY2);
+		glVertex2d(currentX+8,Y+8);
+
+		glTexCoord2f(textX1,textY2);
+		glVertex2d(currentX,Y+8);
+
+		glEnd();
+
+		currentX+=4;
+	}
+
+	glEnable(GL_DEPTH_TEST);
+}
+#endif
 
 #endif

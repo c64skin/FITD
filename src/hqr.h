@@ -4,6 +4,7 @@
 char* HQR_Get(hqrEntryStruct* hqrPtr, int index);
 int printTextSub1(hqrEntryStruct* hqrPtr,int size);
 char* printTextSub2(hqrEntryStruct* hqrPtr, int index);
+hqrEntryStruct* HQR_InitRessource(char* name, int size, int numEntries);
 
 #endif
 

@@ -15,6 +15,33 @@ hqrSubEntryStruct* quickFindEntry(int index, int numMax, hqrSubEntryStruct* ptr)
 	return(NULL);
 }
 
+hqrEntryStruct* HQR_InitRessource(char* name, int size, int numEntries)
+{
+	hqrEntryStruct* dest;
+	char* dest2;
+
+	dest = (hqrEntryStruct*)malloc(numEntries*sizeof(hqrSubEntryStruct)+sizeof(hqrEntryStruct));
+
+	if(!dest)
+		return NULL;
+
+	dest2 = (char*)malloc(size + 300);
+
+	if(!dest2)
+		return NULL;
+
+	strcpy(dest->string,"        ");
+	strncpy(dest->string,name,8);
+
+	dest->sizeFreeData = size;
+	dest->maxFreeData = size;
+	dest->numMaxEntry = numEntries;
+	dest->numUsedEntry = 0;
+	dest->dataPtr = dest2;
+
+	return(dest);
+}
+
 int printTextSub1(hqrEntryStruct* hqrPtr,int size)
 {
 	hqrSubEntryStruct* dataPtr1;
