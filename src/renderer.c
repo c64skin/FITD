@@ -565,6 +565,14 @@ void primType0(int primType, char** ptr, char** out) // line tested
 	int ax = *(short int*)(*ptr);
 	*ptr+=2;
 
+#ifdef USE_GL
+	*(float*)(*out) = renderPointList[ax]; // X
+	*out+=sizeof(float);
+	*(float*)(*out) = renderPointList[ax+1]; // Y
+	*out+=sizeof(float);
+	int depth1 = *(float*)(*out) = renderPointList[ax+2]; // Z
+	*out+=sizeof(float);
+#else
 	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
 	ax+=2;
 	*out+=2;
@@ -573,10 +581,19 @@ void primType0(int primType, char** ptr, char** out) // line tested
 	*out+=2;
 	int depth1 = *(short int*)(((char*)renderPointList) + ax); // Z
 	ax+=2;
+#endif
 
 	ax = *(short int*)(*ptr);
 	*ptr+=2;
 
+#ifdef USE_GL
+	*(float*)(*out) = renderPointList[ax]; // X
+	*out+=sizeof(float);
+	*(float*)(*out) = renderPointList[ax+1]; // Y
+	*out+=sizeof(float);
+	int depth2 = *(float*)(*out) = renderPointList[ax+2]; // Z
+	*out+=sizeof(float);
+#else
 	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
 	ax+=2;
 	*out+=2;
@@ -585,6 +602,7 @@ void primType0(int primType, char** ptr, char** out) // line tested
 	*out+=2;
 	int depth2 = *(short int*)(((char*)renderPointList) + ax); // Z
 	ax+=2;
+#endif
 
 	primVar2 = *out;
 
@@ -652,6 +670,17 @@ void primType1(int primType, char** ptr, char** out) // poly
 		int pointNumber = *(short int*)(*ptr);
 		*ptr+=2;
 
+#ifdef USE_GL
+		*(float*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber); // X
+		ax+=2;
+		*out+=sizeof(float);
+		*(float*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber + 2); // Y
+		ax+=2;
+		*out+=sizeof(float);
+		int depth = *(float*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber + 4); // Z
+		ax+=2;
+		*out+=sizeof(float);
+#else
 		*(short int*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber); // X
 		ax+=2;
 		*out+=2;
@@ -660,10 +689,6 @@ void primType1(int primType, char** ptr, char** out) // poly
 		*out+=2;
 		int depth = *(short int*)(((char*)renderPointList) + pointNumber + 4); // Z
 		ax+=2;
-
-#ifdef USE_GL
-		*(short int*)(*out) = depth;
-		*out+=2;
 #endif
 
 		if(depth<min)
@@ -709,7 +734,7 @@ void primType1(int primType, char** ptr, char** out) // poly
 		int prod = prod2 - prod1;
 
 #ifdef USE_GL
-	//	prod = -1;
+		prod = -1;
 #endif
 
 		if(prod>0)
@@ -837,7 +862,6 @@ void primType3(int primType, char** ptr, char** out)
 		renderVar2 = *out;
 		*out = primVar2;
 	}
-
 }
 
 void line(int x1, int y1, int x2, int y2, char c);
@@ -848,6 +872,22 @@ void renderStyle0(char* buffer)
 
 	char color = *(buffer++);
 
+#ifdef USE_GL
+	float X1 = *(float*)buffer;
+	buffer+=sizeof(float);
+	float Y1 = *(float*)buffer;
+	buffer+=sizeof(float);
+	float Z1 = *(float*)buffer;
+	buffer+=sizeof(float);
+
+	float X2 = *(float*)buffer;
+	buffer+=sizeof(float);
+	float Y2 = *(float*)buffer;
+	buffer+=sizeof(float);
+	float Z2 = *(float*)buffer;
+	buffer+=sizeof(float);
+
+#else
 	short int X1 = *(short int*)buffer;
 	buffer+=2;
 	short int Y1 = *(short int*)buffer;
@@ -856,10 +896,23 @@ void renderStyle0(char* buffer)
 	buffer+=2;
 	short int Y2 = *(short int*)buffer;
 	buffer+=2;
+#endif
 
+#ifdef USE_GL
+	osystem.draw3dLine(X1,Y1,Z1,X2,Y2,Z2,color);
+#else
 	line(X1,Y1,X2,Y2,color);
+#endif
 }
 
+// buffer is made of:
+// numPoint (short int)
+// color (short int)
+// {
+//  X
+//  Y
+//  Z
+// } * numPoint
 void renderStyle1(char* buffer)
 {
 	int i;
@@ -894,7 +947,7 @@ void renderStyle1(char* buffer)
 	}
 
 #ifdef USE_GL
-	osystem.fillPoly((short *)buffer,numPoint,color);
+	osystem.fillPoly((float *)buffer,numPoint,color);
 #else
 	if(max>=0 && min <320)
 		fillpoly((short *)buffer,numPoint,color);

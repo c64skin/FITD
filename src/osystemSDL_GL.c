@@ -26,21 +26,21 @@
 
 struct quadStruct
 {
-	int x1;
-	int y1;
-	int z1;
+	float x1;
+	float y1;
+	float z1;
 
-	int x2;
-	int y2;
-	int z2;
+	float x2;
+	float y2;
+	float z2;
 
-	int x3;
-	int y3;
-	int z3;
+	float x3;
+	float y3;
+	float z3;
 
-	int x4;
-	int y4;
-	int z4;
+	float x4;
+	float y4;
+	float z4;
 
 	int color;
 
@@ -413,7 +413,7 @@ void OSystem::stopModelRender()
 	//glEndList();
 }
 
-void OSystem::fillPoly(short int* buffer, int numPoint, unsigned char color)
+void OSystem::fillPoly(float* buffer, int numPoint, unsigned char color)
 {
 	int i;
 
@@ -429,7 +429,7 @@ void OSystem::fillPoly(short int* buffer, int numPoint, unsigned char color)
 	glEnd();
 }
 
-void OSystem::draw3dLine(int x1, int y1, int z1, int x2, int y2, int z2, unsigned char color)
+void OSystem::draw3dLine(float x1, float y1, float z1, float x2, float y2, float z2, unsigned char color)
 {
 	glColor3ub(palette[color*3],palette[color*3+1],palette[color*3+2]);
 
@@ -441,7 +441,7 @@ void OSystem::draw3dLine(int x1, int y1, int z1, int x2, int y2, int z2, unsigne
 	glEnd();
 }
 
-void OSystem::draw3dQuad(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3, int x4, int y4, int z4, unsigned char color)
+void OSystem::draw3dQuad(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4, unsigned char color)
 {
 	quadTable[positionInQuadTable].x1 = x1;
 	quadTable[positionInQuadTable].y1 = y1;

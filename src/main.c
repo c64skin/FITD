@@ -2912,11 +2912,19 @@ void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
 	z1 += cameraX;
 	z2 += cameraX;
 
+#ifdef USE_GL
+	float transformedX1 = ((x1 * cameraY) / (float)z1) + cameraCenterX;
+	float transformedX2 = ((x2 * cameraY) / (float)z2) + cameraCenterX;
+
+	float transformedY1 = ((y1 * cameraZ) / (float)z1) + cameraCenterY;
+	float transformedY2 = ((y2 * cameraZ) / (float)z2) + cameraCenterY;
+#else
 	int transformedX1 = ((x1 * cameraY) / z1) + cameraCenterX;
 	int transformedX2 = ((x2 * cameraY) / z2) + cameraCenterX;
 
 	int transformedY1 = ((y1 * cameraZ) / z1) + cameraCenterY;
 	int transformedY2 = ((y2 * cameraZ) / z2) + cameraCenterY;
+#endif
 
 #ifdef USE_GL
 	if(z1>0 && z2>0)
@@ -3031,6 +3039,17 @@ void drawProjectedQuad(int x1,int x2, int x3, int x4, int y1,int y2, int y3, int
 	z3 += cameraX;
 	z4 += cameraX;
 
+#ifdef USE_GL
+	float transformedX1 = ((x1 * cameraY) / (float)z1) + cameraCenterX;
+	float transformedX2 = ((x2 * cameraY) / (float)z2) + cameraCenterX;
+	float transformedX3 = ((x3 * cameraY) / (float)z3) + cameraCenterX;
+	float transformedX4 = ((x4 * cameraY) / (float)z4) + cameraCenterX;
+
+	float transformedY1 = ((y1 * cameraZ) / (float)z1) + cameraCenterY;
+	float transformedY2 = ((y2 * cameraZ) / (float)z2) + cameraCenterY;
+	float transformedY3 = ((y3 * cameraZ) / (float)z3) + cameraCenterY;
+	float transformedY4 = ((y4 * cameraZ) / (float)z4) + cameraCenterY;
+#else
 	int transformedX1 = ((x1 * cameraY) / z1) + cameraCenterX;
 	int transformedX2 = ((x2 * cameraY) / z2) + cameraCenterX;
 	int transformedX3 = ((x3 * cameraY) / z3) + cameraCenterX;
@@ -3040,7 +3059,7 @@ void drawProjectedQuad(int x1,int x2, int x3, int x4, int y1,int y2, int y3, int
 	int transformedY2 = ((y2 * cameraZ) / z2) + cameraCenterY;
 	int transformedY3 = ((y3 * cameraZ) / z3) + cameraCenterY;
 	int transformedY4 = ((y4 * cameraZ) / z4) + cameraCenterY;
-
+#endif
 	if(z1>100 && z2>100 && z3>100 && z4>100)
 		osystem.draw3dQuad(transformedX1,transformedY1,z1, transformedX2,transformedY2,z2, transformedX3,transformedY3,z3, transformedX4,transformedY4,z4, color);
 }
