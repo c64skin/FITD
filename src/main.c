@@ -3027,24 +3027,24 @@ void drawProjectedQuad(int x1,int x2, int x3, int x4, int y1,int y2, int y3, int
 	int transformedY3 = ((y3 * cameraZ) / z3) + cameraCenterY;
 	int transformedY4 = ((y4 * cameraZ) / z4) + cameraCenterY;
 
-	if(z1>0 && z2>0 && z3>0 && z4>0)
+	if(z1>100 && z2>100 && z3>100 && z4>100)
 		osystem.draw3dQuad(transformedX1,transformedY1,z1, transformedX2,transformedY2,z2, transformedX3,transformedY3,z3, transformedX4,transformedY4,z4, color);
 }
 
 void drawProjectedBox(int x1,int x2,int y1,int y2,int z1,int z2, int color)
 {
 	//bottom
-	drawProjectedQuad(x1,x1,x2,x2,y1,y1,y1,y1,z1,z2,z2,z1,100);
+	drawProjectedQuad(x1,x1,x2,x2,y1,y1,y1,y1,z1,z2,z2,z1,color);
 	//top
-	drawProjectedQuad(x1,x1,x2,x2,y2,y2,y2,y2,z1,z2,z2,z1,100);
+	drawProjectedQuad(x1,x1,x2,x2,y2,y2,y2,y2,z1,z2,z2,z1,color);
 	//left
-	drawProjectedQuad(x1,x1,x1,x1,y1,y2,y2,y1,z1,z1,z2,z2,100);
+	drawProjectedQuad(x1,x1,x1,x1,y1,y2,y2,y1,z1,z1,z2,z2,color);
 	//right
-	drawProjectedQuad(x2,x2,x2,x2,y1,y2,y2,y1,z1,z1,z2,z2,100);
+	drawProjectedQuad(x2,x2,x2,x2,y1,y2,y2,y1,z1,z1,z2,z2,color);
 	//front
-	drawProjectedQuad(x1,x2,x2,x1,y1,y1,y2,y2,z1,z1,z1,z1,100);
+	drawProjectedQuad(x1,x2,x2,x1,y1,y1,y2,y2,z1,z1,z1,z1,color);
 	//back
-	drawProjectedQuad(x1,x2,x2,x1,y1,y1,y2,y2,z2,z2,z2,z2,100);
+	drawProjectedQuad(x1,x2,x2,x1,y1,y1,y2,y2,z2,z2,z2,z2,color);
 }
 #endif
 
@@ -3219,7 +3219,7 @@ void mainDraw(int mode)
 			}
 			else
 			{
-				flipScreen();
+				//flipScreen();
 			}
 		}
 		else
@@ -3617,6 +3617,7 @@ void hardColSuB1(ZVStruct* zvPtr, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
 
 int checkForHardCol(ZVStruct* zvPtr, char* dataPtr)
 {
+	return(0);
 	dataPtr += *(short int*)(dataPtr);
 
 	int hardColVar = 0;

@@ -24,6 +24,33 @@
 #include "SDL_sound.h"
 #include "osystem.h"
 
+struct quadStruct
+{
+	int x1;
+	int y1;
+	int z1;
+
+	int x2;
+	int y2;
+	int z2;
+
+	int x3;
+	int y3;
+	int z3;
+
+	int x4;
+	int y4;
+	int z4;
+
+	int color;
+
+	int depth;
+	bool sorted;
+};
+
+quadStruct quadTable[5000];
+int positionInQuadTable = 0;
+
 char *tempBuffer;
 SDL_Surface *sdl_buffer;
 SDL_Surface *sdl_buffer320x200;
@@ -141,6 +168,10 @@ OSystem::OSystem()	// that's the constructor of the system dependent
 
 	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_CULL_FACE);
+
+	glEnable (GL_BLEND);
+	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);				// Black Background
 	glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
 	glLoadIdentity();									// Reset The Projection Matrix
@@ -165,10 +196,48 @@ char tempBuffer2[1024*512*3];
 
 void OSystem::flip(unsigned char *videoBuffer)
 {
-	glColor3ub(255,255,255);
+	int i;
+	int j;
+	int bestIdx;
 
+	for(j=0;j<positionInQuadTable;j++)
+	{
+		int bestDepth = -1;
+		bestIdx = -1;
+
+		for(i=0;i<positionInQuadTable;i++)
+		{
+			if(!quadTable[i].sorted)
+			{
+				if(bestDepth < quadTable[i].depth)
+				{
+					bestDepth = quadTable[i].depth;
+					bestIdx = i;
+				}
+			}
+		}
+
+		glColor4ub(palette[quadTable[bestIdx].color*3],palette[quadTable[bestIdx].color*3+1],palette[quadTable[bestIdx].color*3+2],40);
+
+		glBegin(GL_QUADS);
+		glVertex3f(quadTable[bestIdx].x1,quadTable[bestIdx].y1,-quadTable[bestIdx].z1/1000.f);
+		glVertex3f(quadTable[bestIdx].x2,quadTable[bestIdx].y2,-quadTable[bestIdx].z2/1000.f);
+		glVertex3f(quadTable[bestIdx].x3,quadTable[bestIdx].y3,-quadTable[bestIdx].z3/1000.f);
+		glVertex3f(quadTable[bestIdx].x4,quadTable[bestIdx].y4,-quadTable[bestIdx].z4/1000.f);
+		glEnd();
+
+		quadTable[bestIdx].sorted = true;
+	}
+
+	positionInQuadTable = 0;
+
+	SDL_GL_SwapBuffers( );
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+
+	glColor4ub(255,255,255,255);
 	glBindTexture(GL_TEXTURE_2D, backTexture);
-
 	glBegin(GL_TRIANGLES);
 
 		glTexCoord2f(0,0); // triangle haut gauche
@@ -186,13 +255,7 @@ void OSystem::flip(unsigned char *videoBuffer)
 		glVertex3i(0,480,-100.0f);
 
 	glEnd();
-
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glEnable(GL_DEPTH_TEST);
-	glCallList(modelsDisplayList);
-
-	SDL_GL_SwapBuffers( );
 }
 
 char tempBuffer3[320*200*3];
@@ -334,8 +397,6 @@ void OSystem::playSample(char* sampleName)
 
 void OSystem::startFrame()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
 }
 
 void OSystem::stopFrame()
@@ -382,16 +443,49 @@ void OSystem::draw3dLine(int x1, int y1, int z1, int x2, int y2, int z2, unsigne
 
 void OSystem::draw3dQuad(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3, int x4, int y4, int z4, unsigned char color)
 {
-	glColor4ub(palette[color*3],palette[color*3+1],palette[color*3+2],0.5f);
+	quadTable[positionInQuadTable].x1 = x1;
+	quadTable[positionInQuadTable].y1 = y1;
+	quadTable[positionInQuadTable].z1 = z1;
 
-	glBegin(GL_QUADS);
+	quadTable[positionInQuadTable].x2 = x2;
+	quadTable[positionInQuadTable].y2 = y2;
+	quadTable[positionInQuadTable].z2 = z2;
 
+	quadTable[positionInQuadTable].x3 = x3;
+	quadTable[positionInQuadTable].y3 = y3;
+	quadTable[positionInQuadTable].z3 = z3;
+
+	quadTable[positionInQuadTable].x4 = x4;
+	quadTable[positionInQuadTable].y4 = y4;
+	quadTable[positionInQuadTable].z4 = z4;
+
+	quadTable[positionInQuadTable].color = color;
+
+	quadTable[positionInQuadTable].sorted = false;
+
+	quadTable[positionInQuadTable].depth = z1;
+
+	if(z2 < quadTable[positionInQuadTable].depth)
+		quadTable[positionInQuadTable].depth = z2;
+
+	if(z3 < quadTable[positionInQuadTable].depth)
+		quadTable[positionInQuadTable].depth = z3;
+
+	if(z4 < quadTable[positionInQuadTable].depth)
+		quadTable[positionInQuadTable].depth = z4;
+
+	positionInQuadTable++;
+
+	glDisable(GL_DEPTH_TEST);
+	color+=3;
+	glColor3ub(palette[color*3],palette[color*3+1],palette[color*3+2]);
+	glBegin(GL_LINE_LOOP);
 	glVertex3f(x1,y1,-z1/1000.f);
 	glVertex3f(x2,y2,-z2/1000.f);
 	glVertex3f(x3,y3,-z3/1000.f);
 	glVertex3f(x4,y4,-z4/1000.f);
-
 	glEnd();
+	glEnable(GL_DEPTH_TEST);
 }
 
 #endif
