@@ -387,7 +387,7 @@ void drawAITDBox(int x, int y, int width, int height)
 	currentMenuRight = right - 9;
 	currentMenuBottom = bottom - 9;
 
-//	fillBox(currentMenuLeft,currentMenuTop,currentMenuRight,currentMenuBottom);
+	fillBox(currentMenuLeft,currentMenuTop,currentMenuRight,currentMenuBottom,0);
 //	setClipSize(currentMenuLeft,currentMenuTop,currentMenuRight,currentMenuBottom);
 
 }
@@ -630,8 +630,9 @@ int processStartupMenu(void)
 	while(evalChrono(&chrono) <= 0x10000 || ( evalChrono(&chrono) > 0x10000 && selectedEntry==-1)) // exit loop only if time out or if choice made
 	{
 		process_events();
+		readKeyboard();
 
-	/*	if(inputKey&1) // up key
+		if(inputKey&1) // up key
 		{
 			currentSelectedEntry--;
 
@@ -642,16 +643,18 @@ int processStartupMenu(void)
 
 			drawStartupMenu(currentSelectedEntry);
 
-			menuWaitVSync();
+			flipScreen();
+//			menuWaitVSync();
 
 			startChrono(&chrono);
 
-			while(!inputKey)
+			while(inputKey)
 			{
+				readKeyboard();
 			}
-		} */
+		}
 
-		/*
+		
 		if(inputKey&2) // down key
 		{
 			currentSelectedEntry++;
@@ -663,14 +666,16 @@ int processStartupMenu(void)
 
 			drawStartupMenu(currentSelectedEntry);
 
-			menuWaitVSync();
+			//menuWaitVSync();
+			flipScreen();
 
 			startChrono(&chrono);
 
-			while(!inputKey)
+			while(inputKey)
 			{
+				readKeyboard();
 			}
-		} */
+		} 
 
 /*		if(input2 == 28 || (input1 != 28 && input1!=0)) // select current entry
 		{

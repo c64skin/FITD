@@ -53,3 +53,5 @@ short int fontSm9 = 0x80;
 
 textEntryStruct* tabTextes;
 char* systemTextes;
+
+char inputKey = 0;

@@ -114,4 +114,6 @@ extern short int fontSm9;
 extern textEntryStruct* tabTextes;
 extern char* systemTextes;
 
+extern char inputKey;
+
 #endif

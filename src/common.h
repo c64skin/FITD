@@ -17,6 +17,7 @@
 #include "tatou.h"
 #include "threadCode.h"
 #include "renderer.h"
+#include "input.h"
 
 #include "osystem.h"
 
