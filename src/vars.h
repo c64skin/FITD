@@ -99,12 +99,12 @@ struct hqrSubEntryStruct
 
 struct ZVStruct
 {
-	short int ZVX1;
-	short int ZVX2;
-	short int ZVY1;
-	short int ZVY2;
-	short int ZVZ1;
-	short int ZVZ2;
+	 short int ZVX1;
+	 short int ZVX2;
+	 short int ZVY1;
+	 short int ZVY2;
+	 short int ZVZ1;
+	 short int ZVZ2;
 };
 
 struct rotateStruct

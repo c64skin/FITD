@@ -1849,6 +1849,49 @@ void updateAllActorAndObjectsSub1(int index)
 	}
 }
 
+void getZvCube(char* bodyPtr, ZVStruct* zvPtr)
+{
+	short int* ptr;
+
+	ptr = (short int*)(bodyPtr+2);
+
+	zvPtr->ZVX1 = *(ptr++);
+	zvPtr->ZVX2 = *(ptr++);
+	zvPtr->ZVY1 = *(ptr++);
+	zvPtr->ZVY2 = *(ptr++);
+	zvPtr->ZVZ1 = *(ptr++);
+	zvPtr->ZVZ2 = *(ptr++);
+
+	zvPtr->ZVZ2 = zvPtr->ZVX2 = (zvPtr->ZVX2 + zvPtr->ZVZ2)/2;
+	zvPtr->ZVX1 = zvPtr->ZVZ1 = -zvPtr->ZVZ2;
+}
+
+void getZvNormal(char* bodyPtr, ZVStruct* zvPtr)
+{
+	short int* ptr;
+
+	ptr = (short int*)(bodyPtr+2);
+
+	zvPtr->ZVX1 = *(ptr++);
+	zvPtr->ZVX2 = *(ptr++);
+	zvPtr->ZVY1 = *(ptr++);
+	zvPtr->ZVY2 = *(ptr++);
+	zvPtr->ZVZ1 = *(ptr++);
+	zvPtr->ZVZ2 = *(ptr++);
+}
+
+void makeDefaultZV(ZVStruct* zvPtr)
+{
+	zvPtr->ZVX1 = -100;
+	zvPtr->ZVX2 = 100;
+
+	zvPtr->ZVY1 = -2000;
+	zvPtr->ZVY2 = 0;
+
+	zvPtr->ZVZ1 = -100;
+	zvPtr->ZVZ2 = 100;
+}
+
 int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y, int z, int stage, int room, int alpha, int beta, int gamma, int var2, int var3, int var4, int var5)
 {
 	int i;
@@ -1938,9 +1981,11 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	actorPtr->HIT = -1;
 	actorPtr->HIT_BY = -1;
 
+	char* bodyPtr;
+
 	if(flag2 != -1)
 	{
-		char* bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
+		bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
 
 		if(var2 != -1)
 		{
@@ -1983,32 +2028,46 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	startChrono(&actorPtr->ROOM_CHRONO);
 	startChrono(&actorPtr->CHRONO);
 
-	//ZVStruct* zvPtr = &actorPtr->zv;
+	ZVStruct* zvPtr = &actorPtr->zv;
 
 	switch(var1)
 	{
-	case 0:
-		{
-			break;
-		}
-	case 1:
-		{		
-			break;
-		}
 	case 2:
 		{
+			if(flag2!=-1)
+			{
+				getZvCube(bodyPtr,zvPtr);
+			}
+			else
+			{
+				makeDefaultZV(zvPtr);
+			}
 			break;
 		}
-	case 3:
+	default:
 		{
+			printf("Unsupported ZV type in copyObjectToActor\n");
+			if(flag2!=-1)
+			{
+				getZvNormal(bodyPtr,zvPtr);
+			}
+			else
+			{
+				makeDefaultZV(zvPtr);
+			}
+		//	exit(1);
 			break;
 		}
-	case 4:
-		{
-			break;
-		}
-
 	}
+
+	zvPtr->ZVX1 += x;
+	zvPtr->ZVX2 += x;
+
+	zvPtr->ZVY1 += y;
+	zvPtr->ZVY2 += y;
+
+	zvPtr->ZVZ1 += z;
+	zvPtr->ZVZ2 += z;
 
 	return(i);
 }
@@ -2474,6 +2533,69 @@ int anim(int animNum,int arg_2, int arg_4)
 	return(1);
 }
 
+
+void line(int x1, int y1, int x2, int y2, char c);
+void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
+{
+/*	x1 += renderX;
+	x2 += renderX;
+
+	y1 += renderY;
+	y2 += renderY;*/
+
+	x1 -= translateX;
+	x2 -= translateX;
+
+	y1 -= translateY;
+	y2 -= translateY;
+
+	z1 -= translateZ;
+	z2 -= translateZ;
+
+	/*z1 += renderZ;
+	z2 += renderZ;*/
+
+	transformPoint(&x1,&y1,&z1);
+	transformPoint(&x2,&y2,&z2);
+
+/*	z1 += cameraX;
+	z2 += cameraX; */
+
+	int transformedX1 = ((x1 * cameraY) / z1) + cameraCenterX;
+	int transformedX2 = ((x2 * cameraY) / z2) + cameraCenterX;
+
+	int transformedY1 = ((y1 * cameraZ) / z1) + cameraCenterY;
+	int transformedY2 = ((y2 * cameraZ) / z2) + cameraCenterY;
+
+	line(transformedX1,transformedY1,transformedX2,transformedY2,c);
+}
+
+void drawZv(actorStruct* actorPtr)
+{
+	// bottom
+	drawProjectedLine(actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
+	drawProjectedLine(actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
+	drawProjectedLine(actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
+	drawProjectedLine(actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
+
+	// top
+	drawProjectedLine(actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
+	drawProjectedLine(actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
+	drawProjectedLine(actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
+	drawProjectedLine(actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
+
+	drawProjectedLine(	actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,
+						actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
+	drawProjectedLine(	actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,
+						actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
+	drawProjectedLine(	actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,
+						actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
+	drawProjectedLine(	actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,
+						actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
+
+
+}
+
 void mainDraw(int mode)
 {
 	if(mode == 0)
@@ -2519,6 +2641,8 @@ void mainDraw(int mode)
 
 				renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
 							actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
+
+				drawZv(actorPtr);
 
 			}
 		}
@@ -2989,14 +3113,18 @@ void processActor1(void)
 
 		// TODO -> actor/actor collision
 
-		var_52 += var_4C;
-		currentProcessedActorPtr->modX = var_52;
+		currentProcessedActorPtr->modX = var_52 + var_4C;
+		currentProcessedActorPtr->modY = var_4E + var_4A;
+		currentProcessedActorPtr->modZ = var_50 + var_48;
 
-		var_4E += var_4A;
-		currentProcessedActorPtr->modY = var_4E;
+		currentProcessedActorPtr->zv.ZVX1 += var_52;
+		currentProcessedActorPtr->zv.ZVX2 += var_52;
 
-		var_50 += var_48;
-		currentProcessedActorPtr->modZ = var_50;
+		currentProcessedActorPtr->zv.ZVY1 += var_4E;
+		currentProcessedActorPtr->zv.ZVY2 += var_4E;
+
+		currentProcessedActorPtr->zv.ZVZ1 += var_50;
+		currentProcessedActorPtr->zv.ZVZ2 += var_50;
 
 	}
 
