@@ -5,6 +5,19 @@
 
 #pragma pack(1)
 
+struct textEntryStruct
+{
+	short int index;
+	char* textPtr;
+	short int width;
+};
+
+struct messageStruct
+{
+	textEntryStruct* string;
+	short int time;
+};
+
 struct definesStruct // warning ! Used to read data from a file. Alignement check required
 {
 	short int field_0;
@@ -58,13 +71,6 @@ struct saveEntry
 {
 	void* ptr;
 	unsigned int size;
-};
-
-struct textEntryStruct
-{
-	short int index;
-	char* textPtr;
-	short int width;
 };
 
 struct regularTextEntryStruct
@@ -218,6 +224,16 @@ struct boxStruct
 	short int var3;
 };
 
+struct roomDefStruct
+{
+	short int offsetToCameraDef; // 0
+	short int offsetToPosDef; // 2
+	short int worldX;//4
+	short int worldY;//6
+	short int worldZ;//8
+	short int numCameraInRoom;//0xA
+};
+
 extern hqrEntryStruct* hqrUnk;
 
 extern int videoMode;
@@ -315,7 +331,7 @@ extern short int* vars;
 
 extern int varSize;
 
-extern char* messageVar1[5]; // may be bigger
+extern messageStruct messageTable[5];
 
 extern short int currentMusic;
 extern int action;
@@ -350,11 +366,11 @@ extern int needChangeRoom;
 extern char* cameraPtr;
 extern short int currentDisplayedRoom;
 extern int mainVar1;
-extern int roomVar0;
-extern int roomVar1;
-extern char* roomVar2;
-extern int roomVar3;
-extern char* roomVar4;
+extern int numCameraInRoom;
+extern int numCameraZone;
+extern char* cameraZoneData;
+extern int numRoomZone;
+extern char* roomZoneData;
 extern char* roomVar5[15];
 extern short int roomVar6[15];
 extern int startGameVar1;
@@ -421,6 +437,10 @@ extern char* animVar3;
 extern char* animVar4;
 
 extern int paletteVar;
+
+extern char cameraBuffer[512];
+
+extern short int newRoom;
 
 extern char* listBodySelect[];
 extern char* listAnimSelect[];

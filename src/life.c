@@ -17,6 +17,8 @@ void processLife(int lifeNum)
 		int lifeTempVar1;
 		int lifeTempVar2;
 		int lifeTempVar3;
+		int lifeTempVar4;
+		int lifeTempVar5;
 
 		int switchVal = 0;
 
@@ -128,7 +130,7 @@ processOpcode:
 					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
-					//makeMessage(lifeTempVar1);
+					makeMessage(lifeTempVar1);
 
 					break;
 				}
@@ -161,14 +163,46 @@ processOpcode:
 					currentLifePtr+=2;
 					break;
 				}
-			case 0x20: // DELETE TODO
+			case 0x20: // DELETE
 				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
+
+					deleteObject(lifeTempVar1);
+
+					if(objectTable[lifeTempVar1].foundBody != -1)
+					{
+						objectTable[lifeTempVar1].flags2 &= 0x7FFF;
+						objectTable[lifeTempVar1].flags2 |= 0x4000;
+					}
+
 					break;
 				}
-			case 0x28: // TYPE TODO
+			case 0x28: // TYPE
 				{
+					lifeTempVar1 = *(short int*)(currentLifePtr) + 0x1D1;
 					currentLifePtr+=2;
+
+					lifeTempVar2 = currentProcessedActorPtr->flags;
+
+					currentProcessedActorPtr->flags = (currentProcessedActorPtr->flags & 0xFE2E) + lifeTempVar1;
+
+					if(lifeTempVar2 & 1)
+					{
+						if(!(lifeTempVar1 & 1))
+						{
+							stopAnim(currentProcessedActorIdx);
+						}
+					}
+
+					if(lifeTempVar1 & 1)
+					{
+						if(!(lifeTempVar2 & 8))
+						{
+							deleteSub(currentProcessedActorIdx);
+						}
+					}
+
 					break;
 				}
 			case 0x2F: // STAGE TODO
@@ -195,7 +229,7 @@ processOpcode:
 							if(lifeTempVar3 != currentDisplayedRoom)
 							{
 								needChangeRoom = 1;
-//								newRoom = lifeTempVar3;
+								newRoom = lifeTempVar3;
 							}
 						}
 						else
@@ -271,6 +305,8 @@ processOpcode:
 				{
 					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
+
+					printf("Play music %d\n",lifeTempVar1);
 
 					/*if(currentMusic!=-1)
 					{

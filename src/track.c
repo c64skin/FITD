@@ -1,4 +1,144 @@
 #include "common.h"
+#include "math.h"
+// From LBA:
+int DoTrackVar1;
+int GetAngle(int X1, int Y1, int X2, int Y2)
+{
+    int newX;
+    int newY;
+    int ebp;
+    int edi;
+    int eax;
+    int tempExchange;
+    int esi;
+    int ebx;
+    int flag;
+    int difX;
+    int difY;
+	short int* tab3 = &cosTable[384];
+	short int* tab2 = &cosTable[256];
+
+    difY = edi = Y2 - Y1;
+    newY = edi * edi;
+
+    difX = ebp = X2 - X1;
+    newX = ebp * ebp;
+
+    if (newX < newY)		// exchange X and Y
+	{
+	    tempExchange = difX;
+	    difX = difY;
+	    difY = tempExchange;
+
+	    flag = 1;
+	}
+    else
+	{
+	    flag = 0;
+	}
+
+    DoTrackVar1 = (int) sqrt(newX + newY);
+
+    if (!DoTrackVar1)
+	return (0);
+
+    int destVal;
+    int startAngle;
+    int stopAngle;
+    int finalAngle;
+
+    destVal = (difY << 14) / DoTrackVar1;
+
+    startAngle = 0;
+    stopAngle = 0x100;
+
+    while (tab3[startAngle] > destVal)
+	{
+	    startAngle++;
+	   /*
+	    * if (startAngle > 256) { printf ("Can't find angle %d...\n", destVal); exit (1); } 
+	    */
+	}
+
+    if (tab3[startAngle] != destVal)
+	if ((tab3[startAngle - 1] + tab3[startAngle]) / 2 <= destVal)
+	    {
+		startAngle--;
+	    }
+
+    finalAngle = 128 + startAngle;
+
+    if (difX <= 0)		// if we are going left
+	{
+	    finalAngle = -finalAngle;
+	}
+
+    if (flag & 1)		// X and Y are exchanged -> 90° rotation needed
+	{
+	    finalAngle = -finalAngle + 0x100;
+	}
+
+    return (finalAngle & 0x3FF);
+
+   /*
+    * do { currentAngle=(startAngle+stopAngle)/2;
+    * 
+    * if(destVal>tab3[currentAngle]) { stopAngle=currentAngle; } else { startAngle=currentAngle;
+    * if(destVal==tab3[currentAngle]) { goto endCalc; } currentAngle=stopAngle; } }
+    * while(--currentAngle);
+    */
+
+    esi = (int) tab3;
+    edi = esi + 0x200;
+
+    do
+	{
+	    ebx = esi;
+	    ebx += edi;
+	    ebx >>= 1;
+
+	    if (eax > READ_LE_S16((void*)ebx))
+		{
+		    edi = ebx;
+		}
+	    else
+		{
+		    esi = ebx;
+		    if (eax == READ_LE_S16((void*)ebx))
+			{
+			    goto endCalc;
+			}
+		    ebx = edi;
+		}
+	    ebx -= esi;
+	}
+    while (--ebx > 2);
+
+    if ((READ_LE_S16((void*)esi) + READ_LE_S16((void*)edi)) / 2 <= eax)
+	{
+	    esi = edi;
+	}
+
+  endCalc:
+
+    esi -= (int) tab2;
+    eax = esi;
+    eax >>= 1;
+
+    if (ebp <= 0)
+	{
+	    eax = -eax;
+	}
+
+    if (ebp & 1)		// (newX < newY) ie plus loin sur Y que sur X 
+	{
+	    eax = -eax;
+	    eax += 0x100;
+	}
+
+    return (eax & 0x3FF);
+
+}
 
 int computeAngleModificatorToPositionSub1(int ax)
 {
@@ -86,19 +226,22 @@ void processTrack(void)
 						z -= ((*(short int*)(roomSourceDataPtr+8)) - (*(short int*)(roomDestDataPtr+8))) * 10;
 					}
 
-					int distanceToPoint = computeDistanceToPoint(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
-																	currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
-																	x,z );
+					unsigned int distanceToPoint = computeDistanceToPoint(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
+																			x,z );
 
 
 					if(distanceToPoint >= 400) // not yet at position
 					{
-						int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+						currentProcessedActorPtr->beta = GetAngle(currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
+																			x,z );
+				/*		int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
 																			currentProcessedActorPtr->beta,
 																			x,z );
 
-						if(currentProcessedActorPtr->rotate.param == 0 || (currentProcessedActorPtr->rotate.param != 0 && currentProcessedActorPtr->field_72 != angleModif))
+						if(currentProcessedActorPtr->rotate.param == 0 || currentProcessedActorPtr->field_72 != angleModif)
 						{
 							startActorRotation(currentProcessedActorPtr->beta, currentProcessedActorPtr->beta - (angleModif<<6), 15, &currentProcessedActorPtr->rotate);
 						}
@@ -111,8 +254,8 @@ void processTrack(void)
 						}
 						else
 						{
-							currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
-						}
+							currentProcessedActorPtr->beta = -updateActorRotation(&currentProcessedActorPtr->rotate);
+						}*/
 					}
 					else // reached position
 					{

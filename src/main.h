@@ -23,5 +23,10 @@ short int updateActorRotation(rotateStruct* rotatePtr);
 int anim(int animNum,int arg_2, int arg_4);
 short int getAnimParam(char* animPtr);
 int initAnimInBody(int frame, char* anim, char* body);
+void deleteObject(int objIdx);
+void deleteSub(int actorIdx);
+void stopAnim(int actorIdx);
+void makeMessage(int messageIdx);
+int drawTextOverlay(void);
 
 #endif

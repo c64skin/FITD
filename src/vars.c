@@ -96,7 +96,7 @@ short int* vars;
 
 int varSize;
 
-char* messageVar1[5]; // may be bigger
+messageStruct messageTable[5];
 
 short int currentMusic;
 int action;
@@ -131,11 +131,11 @@ int needChangeRoom;
 char* cameraPtr;
 short int currentDisplayedRoom;
 int mainVar1;
-int roomVar0;
-int roomVar1;
-char* roomVar2;
-int roomVar3;
-char* roomVar4;
+int numCameraInRoom;
+int numCameraZone;
+char* cameraZoneData;
+int numRoomZone;
+char* roomZoneData;
 char* roomVar5[15];
 short int roomVar6[15];
 int startGameVar1;
@@ -202,6 +202,10 @@ char* animVar3;
 char* animVar4;
 
 int paletteVar;
+
+char cameraBuffer[512];
+
+short int newRoom;
 
 short int inventory[30];
 

@@ -291,7 +291,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 					computeRotationMatrix(boneDataPtr);
 					break;
 				}
-		/*	case 1:
+			case 1:
 				{
 					computeTranslation1(transX,transY,transZ,boneDataPtr);
 					break;
@@ -300,7 +300,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 				{
 					computeTranslation2(transX,transY,transZ,boneDataPtr);
 					break;
-				} */
+				}
 			}
 		}
 	}
@@ -939,6 +939,8 @@ primFunction primFunctionTable[]={
 int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 {
 	char* ptr = (char*)modelPtr;
+
+	// TODO: shouldn't be there....
 
 	BBox3D1 = 0x7FFF;
 	BBox3D2 = 0x7FFF;

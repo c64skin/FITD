@@ -1449,7 +1449,7 @@ void initVarsSub1(void)
 
 	for(i=0;i<5;i++)
 	{
-		messageVar1[i] = NULL;
+		messageTable[i].string = NULL;
 	}
 }
 
@@ -1522,13 +1522,13 @@ void loadRoom(int roomNumber)
 	int cameraVar0;
 	int cameraVar1;
 	int cameraVar2;
-	int cameraVar3;
+	int currentCameraIdx;
 
 //	freezeTime();
 
 	if(currentCamera == -1)
 	{
-		cameraVar3 = -1;
+		currentCameraIdx = -1;
 	}
 	else
 	{
@@ -1536,65 +1536,72 @@ void loadRoom(int roomNumber)
 		cameraVar1 = *(short int*)(cameraPtr+6);
 		cameraVar2 = *(short int*)(cameraPtr+8);
 
-		cameraVar3 = *(short int*)(cameraPtr + (currentCamera+6)*2);
+		currentCameraIdx = *(short int*)(cameraPtr + (currentCamera+6)*2);
 	}
 
 	cameraPtr = etageVar0+*(unsigned int*)(etageVar0 + (roomNumber * 4));
+	roomDefStruct* roomDataPtr = (roomDefStruct*)(etageVar0+*(unsigned int*)(etageVar0 + (roomNumber * 4)));
 
 	currentDisplayedRoom = roomNumber;
 
-	roomVar0 = *(short int*)(cameraPtr + 0xA);
+	numCameraInRoom = roomDataPtr->numCameraInRoom;
 
-	char* var_20 = cameraPtr + *(unsigned short int*)(cameraPtr + 2);
-
-	roomVar1 = *(short int*)var_20;
+	char* var_20 = cameraPtr + roomDataPtr->offsetToPosDef;
+	numCameraZone = *(short int*)var_20;
 	var_20 += 2;
+	cameraZoneData = var_20;
 
-	roomVar2 = var_20;
-
-	var_20 = cameraPtr + *(unsigned short int*)cameraPtr;
-
-	roomVar3 = *(short int*)var_20;
+	var_20 = cameraPtr + roomDataPtr->offsetToCameraDef;
+	numRoomZone = *(short int*)var_20;
 	var_20 += 2;
-
-	roomVar4 = var_20;
+	roomZoneData = var_20;
 
 	int var_1A = 0;
 	int var_10 = -1;
 	int var_1C;
 	
-	for(i=0;i<roomVar0;i++) // search ?
+	for(i=0;i<numCameraInRoom;i++) // build all the camera list
 	{
-		int var_22 = *(short int*)(cameraPtr + (i+6)*2);
+		int cameraIdx = *(short int*)(cameraPtr + (i+6)*2); // indexes are between the roomDefStruct and the first zone data
 
-		if(cameraVar3 == var_22)
+		if(currentCameraIdx == cameraIdx)
 		{
 			var_1A = i;
-			var_10 = var_22;
+			var_10 = cameraIdx;
 		}
 
-		roomVar5[i] = etageVar1 + *(unsigned int*)(etageVar1 + var_22 * 4);
-		var_20 = roomVar5[i];
-		var_22 = *(short int*)var_20;
+		roomVar5[i] = etageVar1 + *(unsigned int*)(etageVar1 + cameraIdx * 4);
+		var_20 = roomVar5[i] + 0x12;
+		cameraIdx = *(short int*)var_20;
 		var_20 +=2;
-		int var_24 = 0;
 
-		for(;*(short int*)(var_20+=2)!=currentDisplayedRoom;(var_24++) && (var_20+=0xA))
+		int j;
+
+		for(j=0;*(short int*)(var_20+=2)!=currentDisplayedRoom;(j++) && (var_20+=0xA))
 		{
-			if(var_24>= var_22)
+			if(j>= cameraIdx)
 			{
 				break;
 			}
 		}
 
-		var_1C = var_24;
+	/*	for(j=0;j<cameraIdx;j++)
+		{
+			if(*(short int*)var_20 == currentDisplayedRoom)
+				break;
+
+			var_20+=2;
+			var_20+=0xA;
+		}*/
+
+		var_1C = j;
 
 		char* var_8 = roomVar5[i] + (var_1C << 3) + (var_1C<<2) + 0x18;
 
 		roomVar6[i] = (*(short int*)var_8)*2;
 	}
 
-	if(cameraVar3 != -1)
+	if(currentCameraIdx != -1) // if the two room have the current camera in common, update the actor transform
 	{
 		int var_E = (*(short int*)(cameraPtr + 4) - cameraVar0) * 10;
 		int var_C = (*(short int*)(cameraPtr + 6) - cameraVar1) * 10;
@@ -2299,7 +2306,7 @@ short int computeDistanceToPoint(int x1, int z1, int x2, int z2)
 	}
 	else
 	{
-		return((x1+z1));
+		return(x1+z1);
 	}
 }
 
@@ -2313,6 +2320,8 @@ void startActorRotation(short int beta, short int newBeta, short int param, rota
 
 short int updateActorRotation(rotateStruct* rotatePtr)
 {
+	return(rotatePtr->newAngle);
+
 	if(!rotatePtr->param)
 		return(rotatePtr->newAngle);
 
@@ -2344,6 +2353,86 @@ short int updateActorRotation(rotateStruct* rotatePtr)
 		int angle = ((rotatePtr->newAngle&0x3FF)+0x400) - ((rotatePtr->oldAngle&0x3FF)+0x400);
 		return ((rotatePtr->oldAngle&0x3FF)+0x400) + ((angle*timeDif)/rotatePtr->param);
 	}
+}
+
+void deleteSub(int actorIdx)
+{
+	actorStruct* actorPtr = &actorTable[actorIdx];
+
+	actorPtr->flags &= 0xFFF7;
+
+//	objModifFlag2 = 1;
+
+	BBox3D1 = actorPtr->field_14;
+
+	if(BBox3D1 > -1)
+	{
+		BBox3D2 = actorPtr->field_16;
+		BBox3D3 = actorPtr->field_18;
+		BBox3D4 = actorPtr->field_1A;
+
+		//deleteSubSub();
+	}
+}
+
+int findObjectInInventory(int objIdx)
+{
+	int i;
+
+	for(i=0;i<numObjInInventory;i++)
+	{
+		if(inventory[i] == objIdx)
+		{
+			return(i);
+		}
+	}
+
+	return(-1);
+}
+
+void removeObjFromInventory(int objIdx)
+{
+	int inventoryIdx;
+
+	inventoryIdx = findObjectInInventory(objIdx);
+
+	if(inventoryIdx != -1)
+	{
+		memmove(&inventory[inventoryIdx],&inventory[inventoryIdx+1],(30-inventoryIdx-1)*2);
+
+		numObjInInventory--;
+	}
+}
+
+void deleteObject(int objIdx)
+{
+	objectStruct* objPtr;
+	int actorIdx;
+	actorStruct* actorPtr;
+
+	objPtr = &objectTable[objIdx];
+	actorIdx = objPtr->ownerIdx;
+
+	if(actorIdx != -1)
+	{
+		actorPtr = &actorTable[actorIdx];
+
+		actorPtr->room = -1;
+		actorPtr->stage = -1;
+
+//		objModifFlag1 = 1;
+
+		if(actorPtr->flags & 8)
+		{
+			deleteSub(actorIdx);
+		}
+	}
+
+	objPtr->room = -1;
+	objPtr->stage = -1;
+
+	removeObjFromInventory(objIdx);
+
 }
 
 int anim(int animNum,int arg_2, int arg_4)
@@ -2427,10 +2516,10 @@ void mainDraw(int mode)
 		}
 	}
 
-	/*if(drawTextOverlay())
+	if(drawTextOverlay())
 	{
-		addToRedrawBox();
-	}*/
+		//addToRedrawBox();
+	}
 
 	if(!lightVar1)
 	{
@@ -2690,6 +2779,7 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 		char* tempBx = animVar1;
 		char* si = animVar1;
 
+
 		si+=8;
 
 		do
@@ -2741,6 +2831,8 @@ void stopAnim(int actorIdx)
 {
 	actorTable[actorIdx].flags |= 0xC;
 	actorTable[actorIdx].flags &= 0xFFFE;
+
+	//objModifFlag2 = 1;
 }
 
 void processActor1(void)
@@ -3337,6 +3429,188 @@ void makeStatusScreen(void)
 	//updateShaking();
 }
 
+int changeCameraSub1Sub1(int x1, int z1, int x2, int z2, int x3, int z3, int x4, int z4)
+{
+	int returnFlag = 0;
+
+	int var1 = x1 - x2;
+	int var2 = z3 - z4;
+	int var3 = x3 - x4;
+	int var4 = z1 - z2;
+
+	int var5 = x1 - x3;
+	int var6 = z1 - z3;
+
+	int result1 = (var1 * var2) - (var3 * var4);
+
+	if(!result1)
+	{
+		return(returnFlag);
+	}
+
+	int result2 = (var5 * var2) - (var3 * var6);
+
+	int result3 = (-var1 * var6) + (var6 * var4);
+
+	if(result1<0)
+	{
+		result1 = -result1;
+		result2 = -result2;
+		result3 = -result3;
+	}
+
+	if(!result2 || !result3)
+	{
+		return(returnFlag);
+	}
+
+	if(result1 > result2 && result1 < result3)
+	{
+		returnFlag = 1;
+	}
+
+	return(returnFlag);
+}
+
+int changeCameraSub1(int x1, int x2, int z1, int z2, char* ptr, short int param)
+{
+	int xMid = (x1+x2)/2;
+	int zMid = (z1+z2)/2;
+
+	char* src = ptr;
+	int i;
+
+	for(i=0;i<param;i++)
+	{
+		char* dest = cameraBuffer;
+
+		int var1 = *(short int*)src;
+		src+=2;
+
+		memcpy(dest,src,var1<<2);
+		dest+= var1<<2;
+
+		*(short int*)dest = *(short int*)src;
+		dest+=2;
+		*(short int*)dest = *(short int*)(src+2);
+		dest+=2;
+
+		src += (var1)<<2;
+
+		dest = cameraBuffer;
+
+		int j;
+
+		int flag = 0;
+
+		for(j=0;j<var1;j++)
+		{
+			int var2= *(short int*)dest;
+			dest+=2;
+			int var3= *(short int*)(etageVar1 + *(short int*)dest);
+			dest+=2;
+			int var4= *(short int*)(etageVar1 + *(short int*)dest);
+			int var5= *(short int*)(etageVar1 + *(short int*)(dest+2));
+
+			if(changeCameraSub1Sub1(xMid,zMid,xMid-10000,zMid,var2,var3,var4,var5))
+			{
+				flag |= 1;
+			}
+
+			if(changeCameraSub1Sub1(xMid,zMid,xMid+10000,zMid,var2,var3,var4,var5))
+			{
+				flag |= 2;
+			}
+		}
+
+		if(flag == 3)
+		{
+			return(1);
+		}
+	}
+
+	return(0);
+}
+
+int changeCameraSub2(void)
+{
+	int foundDistance = 32000;
+	int foundCamera = -1;
+
+	actorStruct* actorPtr = &actorTable[genVar9];
+
+	int x1 = actorPtr->zv.ZVX1/10;
+	int x2 = actorPtr->zv.ZVX2/10;
+	int z1 = actorPtr->zv.ZVZ1/10;
+	int z2 = actorPtr->zv.ZVZ2/10;
+
+	int i;
+
+	for(i=0;i<numCameraInRoom;i++)
+	{
+		char* cameraDataPtr = roomVar5[i] + 2*roomVar6[i];
+
+		if(changeCameraSub1(x1,x2,z1,z2,cameraDataPtr+2,*(short int*)cameraDataPtr)) // if in camera i zone ?
+		{
+			int newAngle = actorPtr->beta + (((*(short int*)(roomVar5[i] + 2))+0x200)&0x3FF);
+
+			if(newAngle)
+			{
+				newAngle = -newAngle;
+			}
+
+			if(newAngle<foundDistance)
+			{
+				foundDistance = newAngle;
+				foundCamera = i;
+			}
+		}
+	}
+
+	return(foundCamera);
+}
+
+void checkIfCameraChangeIsRequired(void)
+{
+	int localCurrentCam = currentCamera;
+	int newCamera;
+
+	currentCamera = -1;
+	if(currentCamera!=-1)
+	{
+		char* cameraDataPtr = roomVar5[currentCamera] + 2*roomVar6[currentCamera];
+
+		actorStruct* actorPtr;
+
+		actorPtr = &actorTable[genVar9];
+
+		int zvx1 = actorPtr->zv.ZVX1/10;
+		int zvx2 = actorPtr->zv.ZVX2/10;
+
+		int zvz1 = actorPtr->zv.ZVZ1/10;
+		int zvz2 = actorPtr->zv.ZVZ2/10;
+
+		if(changeCameraSub1(zvx1,zvx2,zvz1,zvz2,cameraDataPtr+2,*(short int*)cameraDataPtr)) // is still in current camera zone ?
+		{
+			return;
+		}
+	}
+
+	newCamera = changeCameraSub2(); // find new camera
+
+	if(newCamera!=-1)
+	{
+		localCurrentCam = newCamera;
+	}
+
+	if(currentCamera != localCurrentCam)
+	{
+		startGameVar1 = localCurrentCam;
+		mainVar1 = 1;
+	}
+
+}
+
 void mainLoop(int allowSystemMenu)
 {
 	while(1)
@@ -3463,12 +3737,12 @@ void mainLoop(int allowSystemMenu)
 
 		if(needChangeRoom)
 		{
-//			loadRoom(newRoom);
+			loadRoom(newRoom);
 			setupCamera();
 		}
 		else
 		{
-//			checkIfCameraChangeIsRequired();
+			checkIfCameraChangeIsRequired();
 			if(mainVar1)
 			{
 				setupCamera();
@@ -3829,6 +4103,8 @@ int main(int argc, char** argv)
 					readKeyboard();
 					while(input2)
 						readKeyboard();
+
+					defines.hero = 0;
 					startGame(7,1,0);
 
 				/*	if(!protectionState)
@@ -3898,3 +4174,103 @@ int main(int argc, char** argv)
 	return(0);
 }
 
+int drawTextOverlay(void)
+{
+	int var_2 = 0;
+
+	BBox3D4 = 199;
+	BBox3D1 = 319;
+	BBox3D3 = 0;
+
+	int var_14 = 0;
+
+	int var_10 = 183;
+
+	messageStruct* currentMessage = messageTable;
+
+	if(lightVar1==0)
+	{
+		int i;
+
+		for(i=0;i<5;i++)
+		{
+			if(currentMessage->string)
+			{
+				int width = currentMessage->string->width;
+				int X = 160 - width/2;
+				int Y = X + width;
+
+				if(X<BBox3D1)
+				{
+					BBox3D1 = X;
+				}
+
+				if(Y>BBox3D3)
+				{
+					BBox3D3 = Y;
+				}
+
+				if((currentMessage->time++)>55)
+				{
+					currentMessage->string = NULL;
+				}
+				else
+				{
+					if(currentMessage->time<26)
+					{
+						initFont(fontData,16);
+					}
+					else
+					{
+						initFont(fontData,16+(currentMessage->time-26)/2);
+					}
+
+					renderText(X,var_10+1,screen,currentMessage->string->textPtr);
+				}
+
+				var_10 -= 16;
+				var_14 = 1;
+
+			}
+
+			currentMessage++;
+		}
+	}
+	else
+	{
+	}
+
+	BBox3D2 = var_10;
+	return(var_14);
+}
+
+void makeMessage(int messageIdx)
+{
+	textEntryStruct* messagePtr;
+
+	messagePtr = getTextFromIdx(messageIdx);
+
+	if(messagePtr)
+	{
+		int i;
+
+		for(i=0;i<5;i++)
+		{
+			if(messageTable[i].string == messagePtr)
+			{
+				messageTable[i].time = 0;
+				return;
+			}
+		}
+
+		for(i=0;i<5;i++)
+		{
+			if(messageTable[i].string == NULL)
+			{
+				messageTable[i].string = messagePtr;
+				messageTable[i].time = 0;
+				return;
+			}
+		}
+	}
+}
