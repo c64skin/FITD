@@ -4,6 +4,16 @@
 
 #include "common.h"
 
+void sysInitSub1(char* var0, char* var1)
+{
+	screenSm1 = var0;
+	screenSm2 = var0;
+
+	screenSm3 = var1;
+	screenSm4 = var1;
+	screenSm5 = var1;
+}
+
 void initFont(char* fontData, int color)
 {
 	short int tempDx;
@@ -203,8 +213,8 @@ void sysInit(void)
 		theEnd(1,"Aux2");
 	}
 
-/*	sysInitSub1(aux2,screen);
-	sysInitSub2(aux2);
+	sysInitSub1(aux2,screen);
+/*	sysInitSub2(aux2);
 	sysInitSub3(aux2); */
 
 	bufferAnim = (char*)malloc(4960);
@@ -284,27 +294,6 @@ void freeAll(void)
 	free(aux2);*/
 
 	//TODO: implement all the code that restore the interrupts & all
-}
-
-void startGame(int startupEtage, int startupRoom, int allowSystemMenu)
-{
-/*	loadObjects();
-	initVars();
-
-	loadEtage(startupEtage);
-
-	currentCamera = -1;
-
-	loadRoom(startupRoom);
-
-	startGameVar1 = 0;
-	mainVar1 = 2;
-
-	setupCamera();
-
-	mainLoop(allowSystemMenu);
-
-	fadeout(8,0); */
 }
 
 void drawPartOfAITDBox(int left, int top, int index, char* gfxData)
@@ -435,12 +424,12 @@ char flagTable[]= {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
 void renderText(int x, int y, char* surface, char* string)
 {
-	char character;
+	unsigned char character;
 
 	fontVar6 = x;
 	fontSm7 = y;
 
-	while(character = *(string++))
+	while(character = *((unsigned char*)string++))
 	{
 		char* dataPtr;
 		unsigned short int data;
@@ -741,15 +730,29 @@ void preloadResource(void)
 	copyPalette(aux,palette);
 }
 
+void selectHeroSub1(int x1,int y1, int x2, int y2)
+{
+	int i;
+	int j;
+
+	for(i=y1;i<y2;i++)
+	{
+		for(j=x1;j<x2;j++)
+		{
+			*(screenSm3+i*320+j) = *(screenSm1+i*320+j);
+		}
+	}
+}
+
 int selectHero(void)
 {
-	int var_6 = 0;
+	int choice = 0;
 	int var_4 = 1;
-	int var_2 = 0;
+	int choiceMade = 0;
 
-	//sysInitSub1(aux,screen);
+	sysInitSub1(aux,screen);
 
-	while(var_2 == 0)
+	while(choiceMade == 0)
 	{
 		process_events();
 		readKeyboard();
@@ -758,15 +761,15 @@ int selectHero(void)
 		copyToScreen(aux,screen);
 		copyToScreen(screen,aux2);
 
-		if(var_6 == 0)
+		if(choice == 0)
 		{
 			drawAITDBox(80,100,160,200);
-		//	selectHeroSub1(10,10,149,190);
+			selectHeroSub1(10,10,149,190);
 		}
 		else
 		{
 			drawAITDBox(240,100,160,200);
-		//	selectHeroSub1(170,10,309,190);
+			selectHeroSub1(170,10,309,190);
 		}
 
 		flipScreen();
@@ -774,14 +777,97 @@ int selectHero(void)
 		if(var_4 != 0)
 		{
 			//make3dTatouUnk1(0x40,0);
+
+			do
+			{
+				readKeyboard();
+			}while(input1 || input2);
+
+			var_4 = 0;
 		}
+
+		while((input3 = input2)!=28 && input1 ==0) // process input
+		{
+			readKeyboard();
+			process_events();
+
+			if(inputKey & 4) // left
+			{
+				choice = 0;
+				copyToScreen(aux2,screen);
+				drawAITDBox(80,100,160,200);
+				selectHeroSub1(10,10,149,190);
+				flipScreen();
+
+				while(inputKey!=0)
+				{
+					readKeyboard();
+				}
+			}
+
+			if(inputKey & 8) // right
+			{
+				choice = 1;
+				copyToScreen(aux2,screen);
+				drawAITDBox(240,100,160,200);
+				selectHeroSub1(170,10,309,190);
+				flipScreen();
+
+				while(inputKey!=0)
+				{
+					readKeyboard();
+				}
+			}
+
+			if(input3 == 1)
+			{
+				sysInitSub1(aux2,screen);
+//				fadeOut(0x40,0);
+				return(-1);
+			}
+		}
+
+//		fadeOut(0x40,0);
+		readVar = 0;
+
+		switch(choice)
+		{
+		case 0:
+			{
+				copyToScreen(unkScreenVar,screen);
+//				setClipSize(0,0,319,199);
+				loadPakToPtr("itd_ress",14,aux);
+				selectHeroSub1(160,0,319,199);
+				copyToScreen(screen,aux);
+				printText(defines.field_C+1,165,5,314,194,2,15);
+				defines.hero = 1;
+				break;
+			}
+		case 1:
+			{
+				copyToScreen(unkScreenVar,screen);
+//				setClipSize(0,0,319,199);
+				loadPakToPtr("itd_ress",14,aux);
+				selectHeroSub1(0,0,159,199);
+				copyToScreen(screen,aux);
+				printText(defines.field_A+1,5,5,154,194,2,15);
+				defines.hero = 0;
+				break;
+			}
+		}
+
+		if(input3 && 0x1C)
+		{
+			choiceMade = 1;
+		}
+
 	}
 
 	//fadeOut(0x40,0);
 
-	//sysInitSub1(aux2,screen);
+	sysInitSub1(aux2,screen);
 
-	return(-1);
+	return(choice);
 }
 
 int printTextSub1(hqrEntryStruct* hqrPtr,int size)
@@ -819,7 +905,7 @@ hqrSubEntryStruct* quickFindEntry(int index, int numMax, hqrSubEntryStruct* ptr)
 
 	for(i=0;i<numMax;i++)
 	{
-		if(ptr->key == index)
+		if(ptr[i].key == index)
 		{
 			return(ptr);
 		}
@@ -864,7 +950,7 @@ void printTextSub8()
 
 int printText(int index, int left, int top, int right, int bottom, int mode, int color)
 {
-	int var_1A8 = 0;
+	bool lastPageReached = false;
 	char tabString[] = "    ";
 	int var_12 = 1;
 	int currentPage = 0;
@@ -872,6 +958,7 @@ int printText(int index, int left, int top, int right, int bottom, int mode, int
 	int var_2 = -1;
 	int var_1C3;
 	char* localTextTable[100];
+	int currentTextIdx;
 
 	initFont(fontData, color);
 
@@ -900,7 +987,7 @@ int printText(int index, int left, int top, int right, int bottom, int mode, int
 		char* var_1C2 = localTextTable[currentPage];
 
 		int currentTextY = top;
-		var_1A8 = 0;
+		lastPageReached = false;
 
 		while(currentTextY <= bottom - 16)
 		{
@@ -909,9 +996,9 @@ int printText(int index, int left, int top, int right, int bottom, int mode, int
 
 			regularTextEntryStruct* currentText = textTable;
 
-			int maxTextIdx = 0;
+			int numWordInLine = 0;
 
-			int var_1B6 = 0;
+			int interWordSpace = 0;
 
 parseSpe:	while(*var_1C2 == '#')
 			{
@@ -928,6 +1015,11 @@ parseSpe:	while(*var_1C2 == '#')
 					}
 				case 'T': // tab
 					{
+						currentText->textPtr = tabString;
+						currentText->width = computeStringWidth(currentText->textPtr)+3;
+						var_1BA+=currentText->width;
+						numWordInLine++;
+						currentText++;
 						break;
 					}
 				case 'C': // center
@@ -936,8 +1028,34 @@ parseSpe:	while(*var_1C2 == '#')
 						var_1AA |= 8;
 						break;
 					}
-				case 'G':
+				case 'G': // print number
 					{
+						currentTextIdx = 0;
+
+						while(*var_1C2>='0' && *var_1C2<='9')
+						{
+							currentTextIdx = (currentTextIdx * 10 + *var_1C2 - 48);
+							var_1C2 ++;
+						}
+
+						if(loadPakToPtr("itd_ress",9,aux2))
+						{
+						/*	var_C = printTextSub3(currentTextIdx,aux2);
+							var_A = printTextSub4(currentTextIdx,aux2);
+
+							if(currentTextY + var_A > bottom)
+							{
+								var_1C2 = var_1BE;
+
+								goto pageChange;
+							}
+							else
+							{
+								printTextSub5((((right-left)/2)+left)-var_C, currentTextY, currentTextIdx, aux2);
+								currentTextY = var_A;
+							}*/
+						}
+
 						break;
 					}
 				}
@@ -947,7 +1065,7 @@ parseSpe:	while(*var_1C2 == '#')
 
 			do
 			{
-				var_1C3 = *(var_1C2++);
+				var_1C3 = *((unsigned char*)var_1C2++);
 			}while(var_1C3>' '); // go to the end of the string
 
 			*(var_1C2-1) = 0; // add end of string marker to cut the word
@@ -965,16 +1083,16 @@ parseSpe:	while(*var_1C2 == '#')
 					currentText->width = currentStringWidth;
 					var_1BA += currentStringWidth;
 
-					maxTextIdx++;
+					numWordInLine++;
 					currentText++;
 
 					switch(var_1C3) // eval the character that caused the 'end of word' state
 					{
-					case 0x1A:
+					case 0x1A: // end of text
 						{
 							var_1AA &= 0xFFFE;
 							var_1AA |= 4;
-							var_1A8 = 1;
+							lastPageReached = true;
 
 							break;
 						}
@@ -1016,15 +1134,15 @@ parseSpe:	while(*var_1C2 == '#')
 				quit = 1;
 			}
 
-			if(var_1AA & 1)
+			if(var_1AA & 1) // stretch words on line
 			{
-			//	var_1B6 = (maxStringWidth - var_1BA) / (maxTextIdx-1);
+				//interWordSpace = (maxStringWidth - var_1BA) / (numWordInLine-1);
 			}
 
 			currentText = textTable;
 			int currentTextX;
 
-			if(var_1AA & 8)
+			if(var_1AA & 8) // center
 			{
 				currentTextX = left + ((maxStringWidth - var_1BA) / 2);
 			}
@@ -1033,13 +1151,13 @@ parseSpe:	while(*var_1C2 == '#')
 				currentTextX = left;
 			}
 
-			int currentTextIdx = 0;
+			currentTextIdx = 0;
 
-			while(currentTextIdx < maxTextIdx)
+			while(currentTextIdx < numWordInLine)
 			{
 				renderText(currentTextX,currentTextY,screen,currentText->textPtr);
 
-				currentTextX += currentText->width + var_1B6;
+				currentTextX += currentText->width + interWordSpace; // add inter word space
 
 				currentText++;
 				currentTextIdx++;
@@ -1053,15 +1171,15 @@ parseSpe:	while(*var_1C2 == '#')
 			currentTextY += 16;
 		}
 
-		if(!var_1A8 || bottom+16<currentTextY)
+		if(!lastPageReached || bottom+16<currentTextY)
 		{
-pageChange:	if(var_1A8)
+pageChange:	if(lastPageReached)
 			{
 				*(var_1C2-1) = 0x1A;
 			}
 			else
 			{
-				var_1C2 = localTextTable[currentPage];
+				localTextTable[currentPage+1] = var_1C2;
 			}
 
 			if(mode==0)
@@ -1071,7 +1189,7 @@ pageChange:	if(var_1A8)
 					printTextSub5(left-19,185,12,aitdBoxGfx);
 				}
 
-				if(var_1A8==0)
+				if(!lastPageReached)
 				{
 					printTextSub5(right+4,185,11,aitdBoxGfx);
 				}
@@ -1084,7 +1202,7 @@ pageChange:	if(var_1A8)
 					printTextSub5(left-3,191,13,aitdBoxGfx);
 				}
 
-				if(var_1A8==0)
+				if(!lastPageReached)
 				{
 					printTextSub5(right-10,191,14,aitdBoxGfx);
 				}
@@ -1135,14 +1253,13 @@ pageChange:	if(var_1A8)
 				do
 				{
 					readKeyboard();
-				}
-				while(input2 && inputKey && input1);
+				}while(input2 || inputKey || input1);
 
 				input3 = input2 & 0xFF;
 				input4 = inputKey & 0xFF;
 				joy = input1;
 
-				if(input3==1 || !joy)
+				if(input3==1 || joy)
 				{
 					quit = 1;
 				}
@@ -1152,7 +1269,7 @@ pageChange:	if(var_1A8)
 					{
 						if(inputKey&0xA0 || input3 == 0x1C)
 						{
-							if(var_1A8 == 0) // flip to next page
+							if(!lastPageReached) // flip to next page
 							{
 								var_2 = currentPage++;
 
@@ -1182,22 +1299,24 @@ pageChange:	if(var_1A8)
 				unsigned int var_6;
 				startChrono(&var_6);
 
-			/*	do
+				do
 				{
+					process_events();
+					readKeyboard();
 					if(evalChrono(&var_6) > 300)
 					{
 						break;
 					}
-				}while(!input2 && !input1);*/
+				}while(!input2 && !input1);
 
 				if(input2 || input1)
 				{
 					quit = 1;
 				}
 
-				if(var_1A8==0)
+				if(!lastPageReached)
 				{
-				//	currentPage++;
+					currentPage++;
 //								playSound(defines.field_0);
 //								soundVar2 = -1;
 				}
@@ -1254,6 +1373,132 @@ int makeIntroScreens(void)
 	return(0);
 }
 
+hqrEntryStruct* HQR_InitRessource(char* name, int size, int numEntries)
+{
+	hqrEntryStruct* dest;
+	char* dest2;
+
+	dest = (hqrEntryStruct*)malloc(numEntries*sizeof(hqrSubEntryStruct)+sizeof(hqrEntryStruct));
+
+	if(!dest)
+		return NULL;
+
+	dest2 = (char*)malloc(size + 300);
+
+	if(!dest2)
+		return NULL;
+
+	strcpy(dest->string,"        ");
+	strncpy(dest->string,name,8);
+
+	dest->sizeFreeData = size;
+	dest->maxFreeData = size;
+	dest->numMaxEntry = numEntries;
+	dest->numUsedEntry = 0;
+	dest->dataPtr = dest2;
+
+	return(dest);
+}
+
+void initEngine(void)
+{
+	FILE* fHandle;
+	int i;
+
+	fHandle = fopen("OBJETS.ITD","rb");
+	if(!fHandle)
+		theEnd(0,"OBJETS.ITD");
+
+	fread(&maxObjects,2,1,fHandle);
+
+	for(i=0;i<maxObjects;i++)
+	{
+		fread(&objectTable[i],0x34,1,fHandle);
+
+		objectTable[i].flags |= 0x20;
+	}
+
+	fclose(fHandle);
+
+	vars = (short int*)loadFromItd("VARS.ITD");
+
+	varSize = fileSize;
+
+	i = defines.hero; // backup hero selection
+
+	fHandle = fopen("DEFINES.ITD","rb");
+	if(!fHandle)
+	{
+		theEnd(0,"DEFINES.ITD");
+	}
+
+///////////////////////////////////////////////
+	{
+		short int table[45];
+		int i;
+
+		fread(table,45,2,fHandle);
+		fclose(fHandle);
+		
+		for(i=0;i<45;i++)
+		{
+			table[i] = ((table[i]&0xFF)<<8) | ((table[i]&0xFF00)>>8);
+		}
+
+		memcpy(&defines,table,45*2);
+	}
+
+	defines.hero = i;
+
+	listLife = HQR_InitRessource("ListLife", 10000, 100);
+	listTrack = HQR_InitRessource("ListTrak", 100, 10);
+
+	// TODO: missing dos memory check here
+
+	char* listBodySelect[] = {
+		"ListBody",
+		"ListBod2",
+	};
+
+	char* listAnimSelect[] = {
+		"ListAnim",
+		"ListAni2",
+	};
+
+	listBody = HQR_InitRessource(listBodySelect[defines.hero],100000, 50); // was calculated from free mem size
+	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],100000, 50); // was calculated from free mem size
+
+	for(i=0;i<50;i++)
+	{
+		actorTable[i].field_0 = -1;
+	}
+
+	currentCameraTarget = defines.field_E;
+}
+
+void startGame(int startupFloor, int startupRoom, int allowSystemMenu)
+{
+	initEngine();
+	/*initVars();
+
+	loadEtage(startupFloor);
+
+	currentCamera = -1;
+
+	loadRoom(startupRoom);
+
+	startGameVar1 = 0;
+	mainVar1 = 2;
+
+	setupCamera();
+
+	mainLoop(allowSystemMenu);
+
+	freeScene();
+
+	fadeOut(8,0);*/
+}
+
 int main(int argc, char** argv)
 {
 	int startupMenuResult;
@@ -1303,11 +1548,11 @@ int main(int argc, char** argv)
 					protectionToBeDone = 0;
 				}*/
 
-				if(selectHero()!=-1)
+				//if(selectHero()!=-1)
 				{
-				/*	startGame(7,1,0);
+					startGame(7,1,0);
 
-					if(!protectionState)
+				/*	if(!protectionState)
 					{
 						freeAll();
 						exit(-1);

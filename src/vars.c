@@ -70,3 +70,29 @@ regularTextEntryStruct textTable[40];
 int readVar;
 
 int hqrKeyGen = 0;
+
+char* screenSm1;
+char* screenSm2;
+char* screenSm3;
+char* screenSm4;
+char* screenSm5;
+
+actorStruct actorTable[50];
+
+int currentCameraTarget;
+
+int fileSize;
+
+hqrEntryStruct* listBody;
+hqrEntryStruct* listAnim;
+hqrEntryStruct* listLife;
+hqrEntryStruct* listTrack;
+
+short int maxObjects;
+
+objectStruct objectTable[300]; // may be less
+
+short int* vars;
+
+int varSize;
+

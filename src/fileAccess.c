@@ -15,7 +15,6 @@ void theEnd(int type, char* name)
 char* loadFromItd(char* name)
 {
 	FILE* fHandle;
-	int size;
 	char* ptr;
 
 	fHandle = fopen(name,"rb");
@@ -27,17 +26,17 @@ char* loadFromItd(char* name)
 	}
 
 	fseek(fHandle,0,SEEK_END);
-	size = ftell(fHandle);
+	fileSize = ftell(fHandle);
 	fseek(fHandle,0,SEEK_SET);
 
-	ptr = (char*)malloc(size);
+	ptr = (char*)malloc(fileSize);
 	if(!ptr)
 	{
 		theEnd(1,name);
 		return NULL;
 	}
 
-	fread(ptr,size,1,fHandle);
+	fread(ptr,fileSize,1,fHandle);
 
 	fclose(fHandle);
 
