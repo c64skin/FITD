@@ -22,7 +22,7 @@ struct sceZoneStruct
 
 typedef struct sceZoneStruct sceZoneStruct;
 
-typedef struct cameraZonePointStruct
+struct cameraZonePointStruct
 {
   s16 x;
   s16 y;
@@ -30,7 +30,7 @@ typedef struct cameraZonePointStruct
 
 typedef struct cameraZonePointStruct cameraZonePointStruct;
 
-typedef struct cameraZoneEntryStruct
+struct cameraZoneEntryStruct
 {
   u16 numPoints;
 
@@ -39,7 +39,7 @@ typedef struct cameraZoneEntryStruct
 
 typedef struct cameraZoneEntryStruct cameraZoneEntryStruct;
 
-typedef struct cameraZoneDefStruct
+struct cameraZoneDefStruct
 {
   s16 dummy1;
   s16 dummy2;
@@ -56,7 +56,7 @@ typedef struct cameraZoneDefStruct
 
 typedef struct cameraZoneDefStruct cameraZoneDefStruct;
 
-typedef struct cameraDataStruct
+struct cameraDataStruct
 {
   s16 alpha;
   s16 beta;

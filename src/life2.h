@@ -5,3 +5,4 @@ void processLife2(int lifeNum);
 void convertPaletteIfRequired(unsigned char* lpalette);
 
 #endif
+
