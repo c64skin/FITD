@@ -138,7 +138,7 @@ void allocTextes(void)
 	}
 }
 
-hqrEntryStruct* HQR_Init(int numEntry, int size)
+hqrEntryStruct* HQR_Init(int size,int numEntry)
 {
 	hqrEntryStruct* dest;
 	char* dest2;
@@ -791,7 +791,7 @@ int printTextSub1(hqrEntryStruct* hqrPtr,int size)
 	int key;
 	int entryNum;
 
-	if(hqrPtr->sizeFreeData>size)
+	if(hqrPtr->sizeFreeData<size)
 		return(-1);
 
 	entryNum = hqrPtr->numUsedEntry;
@@ -894,6 +894,7 @@ int printText(int index, int left, int top, int right, int bottom, int mode, int
 	while(!quit)
 	{
 		copyToScreen(aux,screen);
+		process_events();
 		//setClipSize(left,top,right,bottom);
 
 		char* var_1C2 = localTextTable[currentPage];
@@ -1243,7 +1244,7 @@ int makeIntroScreens(void)
 	soundVar1 = -1;
 	soundVar2 = -1;
 	soundVar1 = 0; */
-	readVar = 1;
+//	readVar = 1;
 	printText(defines.field_6+1,48, 2,260,197,1,26);
 
 	return(0);
