@@ -924,6 +924,14 @@ processOpcode:
 
 					break;
 				}
+			case 0x3C:
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					*(((short int*)(&defines))+lifeTempVar1) = evalVar();
+					break;
+				}
 			case 0x3F: //todo
 				{
 					playSound(evalVar());

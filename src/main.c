@@ -3070,8 +3070,8 @@ void mainDraw(int mode)
 					//TODO: implement anim stuff
 				}
 
-				if(actorPtr->field_0 == 1)
-					printf("pos: %d %d %d\n",actorPtr->worldX, actorPtr->worldY, actorPtr->worldZ); 
+//				if(actorPtr->field_0 == 1)
+//					printf("pos: %d %d %d\n",actorPtr->worldX, actorPtr->worldY, actorPtr->worldZ); 
 
 				renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
 							actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
