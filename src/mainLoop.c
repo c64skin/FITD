@@ -44,172 +44,172 @@ s32 q=0;                     /* Dummy */
 
   //atexit(cleanupAndExit);
 
-	while(1)
-	{
+  while(1)
+  {
     frames++;
     t_start=SDL_GetTicks();
 
     timeGlobal++;
 
-		timer = timeGlobal;
-		process_events();
-		readKeyboard();
-		input3 = input2;
-		input4 = inputKey;
-		button = input1;
+    timer = timeGlobal;
+    process_events();
+    readKeyboard();
+    input3 = input2;
+    input4 = inputKey;
+    button = input1;
 
-		if(input3)
-		{
-			if(input3 == 0x1C || input3 == 0x17)
-			{
-				if(allowSystemMenu == 0)
-				{
-					break;
-				}
+    if(input3)
+    {
+      if(input3 == 0x1C || input3 == 0x17)
+      {
+        if(allowSystemMenu == 0)
+        {
+          break;
+        }
 
-				if(statusScreenAllowed)
-				{
-					makeStatusScreen();
-				}
-			}
-		}
-		else
-		{
-//			input5 = 0;
-		}
+        if(statusScreenAllowed)
+        {
+          makeStatusScreen();
+        }
+      }
+    }
+    else
+    {
+//      input5 = 0;
+    }
 
-		if(button)
-		{
-			if(!allowSystemMenu)
-			{
-				break;
-			}
+    if(button)
+    {
+      if(!allowSystemMenu)
+      {
+        break;
+      }
 
-			action = 0x2000;
-		}
-		else
-		{
-			action = 0;
-		}
+      action = 0x2000;
+    }
+    else
+    {
+      action = 0;
+    }
 
-		updateInHand(inHand);
+    updateInHand(inHand);
 
-		if(changeFloor == 0)
-		{
-			if(defines.field_1A == -1)
-			{
-//				mainVar2 = 2000;
-//				mainVar3 = 2000;
-			}
+    if(changeFloor == 0)
+    {
+      if(defines.field_1A == -1)
+      {
+//        mainVar2 = 2000;
+//        mainVar3 = 2000;
+      }
 
-			currentProcessedActorPtr = actorTable;
+      currentProcessedActorPtr = actorTable;
 
-			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < NUM_MAX_ACTOR; currentProcessedActorIdx++)
-			{
-				if(currentProcessedActorPtr->field_0 >= 0)
-				{
-					currentProcessedActorPtr->COL_BY = -1;
-					currentProcessedActorPtr->HIT_BY = -1;
-					currentProcessedActorPtr->HIT = -1;
-					currentProcessedActorPtr->HARD_DEC = -1;
-					currentProcessedActorPtr->HARD_COL = -1;
-				}
+      for(currentProcessedActorIdx = 0; currentProcessedActorIdx < NUM_MAX_ACTOR; currentProcessedActorIdx++)
+      {
+        if(currentProcessedActorPtr->field_0 >= 0)
+        {
+          currentProcessedActorPtr->COL_BY = -1;
+          currentProcessedActorPtr->HIT_BY = -1;
+          currentProcessedActorPtr->HIT = -1;
+          currentProcessedActorPtr->HARD_DEC = -1;
+          currentProcessedActorPtr->HARD_COL = -1;
+        }
 
-				currentProcessedActorPtr++;
-			}
+        currentProcessedActorPtr++;
+      }
 
-			currentProcessedActorPtr = actorTable;
-			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < NUM_MAX_ACTOR; currentProcessedActorIdx++)
-			{
-				if(currentProcessedActorPtr->field_0 >= 0)
-				{
-					int flag = currentProcessedActorPtr->flags;
+      currentProcessedActorPtr = actorTable;
+      for(currentProcessedActorIdx = 0; currentProcessedActorIdx < NUM_MAX_ACTOR; currentProcessedActorIdx++)
+      {
+        if(currentProcessedActorPtr->field_0 >= 0)
+        {
+          int flag = currentProcessedActorPtr->flags;
 
-					if(flag & 1)
-					{
-						processActor1();
-					}
+          if(flag & 1)
+          {
+            processActor1();
+          }
 
-					if(flag & 0x40)
-					{
-						processActor2();
-					}
+          if(flag & 0x40)
+          {
+            processActor2();
+          }
 
-					if(currentProcessedActorPtr->animActionType)
-					{
-						processAnimAction();
-					}
-				}
+          if(currentProcessedActorPtr->animActionType)
+          {
+            processAnimAction();
+          }
+        }
 
-				currentProcessedActorPtr++;
-			}
+        currentProcessedActorPtr++;
+      }
 
-			currentProcessedActorPtr = actorTable;
-			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < NUM_MAX_ACTOR; currentProcessedActorIdx++)
-			{
-				if(currentProcessedActorPtr->field_0 >= 0)
-				{
-					if(currentProcessedActorPtr->life != -1 && currentProcessedActorPtr->lifeMode != -1)
-					{
-						processLife(currentProcessedActorPtr->life);
-					}
-				}
+      currentProcessedActorPtr = actorTable;
+      for(currentProcessedActorIdx = 0; currentProcessedActorIdx < NUM_MAX_ACTOR; currentProcessedActorIdx++)
+      {
+        if(currentProcessedActorPtr->field_0 >= 0)
+        {
+          if(currentProcessedActorPtr->life != -1 && currentProcessedActorPtr->lifeMode != -1)
+          {
+            processLife(currentProcessedActorPtr->life);
+          }
+        }
 
-				if(changeFloor)
-					break;
+        if(changeFloor)
+          break;
 
-				currentProcessedActorPtr++;
-			}
+        currentProcessedActorPtr++;
+      }
 
-			if(giveUp)
-				break;
+      if(giveUp)
+        break;
 
 
-		}
+    }
 
-		if(changeFloor)
-		{
-			loadFloor(newFloor);
-		}
+    if(changeFloor)
+    {
+      loadFloor(newFloor);
+    }
 
-		if(needChangeRoom)
-		{
-			loadRoom(newRoom);
-			setupCamera();
-		}
-		else
-		{
-			checkIfCameraChangeIsRequired();
-			if(mainVar1)
-			{
-				setupCamera();
-			}
-		}
+    if(needChangeRoom)
+    {
+      loadRoom(newRoom);
+      setupCamera();
+    }
+    else
+    {
+      checkIfCameraChangeIsRequired();
+      if(mainVar1)
+      {
+        setupCamera();
+      }
+    }
 
-//		if(objModifFlag1)
-		{
-			updateAllActorAndObjects();
-		} 
+//    if(objModifFlag1)
+    {
+      updateAllActorAndObjects();
+    } 
 
-//		if(actorTurnedToObj)
-		{
-			createActorList();
-		}
+//    if(actorTurnedToObj)
+    {
+      createActorList();
+    }
 
-		sortActorList();
+    sortActorList();
 
-//		if(objModifFlag2)
-		{
-//			setupCameraSub4();
-		}
+//    if(objModifFlag2)
+    {
+//      setupCameraSub4();
+    }
 
-//		mainLoopSub1();
+//    mainLoopSub1();
 
-		mainDraw(setupCameraVar1);
+    mainDraw(setupCameraVar1);
 
-		//osystem_delay(100);
+    //osystem_delay(100);
 
-		updatePendingEvents();
+    updatePendingEvents();
 
     t_end=t_start+SPEED;
     t_left=t_start-SDL_GetTicks()+SPEED;
@@ -221,11 +221,11 @@ s32 q=0;                     /* Dummy */
     }else{
        // printf("CPU to slow by %d ticks/round\n",-t_left);
     };
-	}
+  }
 
-//	mainLoopVar1 = 0;
-//	shakingState = 0;
+//  mainLoopVar1 = 0;
+//  shakingState = 0;
 
-//	stopShaking();
-//	stopSounds();
+//  stopShaking();
+//  stopSounds();
 }

@@ -155,7 +155,7 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain.lib sdl.lib winmm.lib dxguid.lib opengl32.lib glaux.lib glu32.lib SDL_mixer.lib"
-				OutputFile=".\Debug/FITD.exe"
+				OutputFile=".\DebugGL/FITD.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
 				IgnoreDefaultLibraryNames="MSVCRT"
@@ -211,7 +211,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain.lib sdl.lib winmm.lib dxguid.lib opengl32.lib glaux.lib glu32.lib SDL_mixer.lib"
-				IgnoreDefaultLibraryNames="LIBCMTD"/>
+				IgnoreDefaultLibraryNames="LIBCMTD"
+				SubSystem="2"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -268,6 +269,66 @@
 				Name="VCPreLinkEventTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+		</Configuration>
+		<Configuration
+			Name="DebugGL NO SOUND|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				PreprocessorDefinitions="WIN32,_DEBUG,_CONSOLE,USE_GL,INTERNAL_DEBUGGER,NO_SOUND"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="common.h"
+				PrecompiledHeaderFile=".\DebugGL/common.pch"
+				AssemblerListingLocation=".\DebugGL NO SOUND/"
+				ObjectFile=".\DebugGL NO SOUND/"
+				ProgramDataBaseFileName=".\DebugGL NO SOUND/"
+				WarningLevel="3"
+				SuppressStartupBanner="TRUE"
+				DebugInformationFormat="4"/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalOptions="/MACHINE:I386"
+				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain.lib sdl.lib winmm.lib dxguid.lib opengl32.lib glaux.lib glu32.lib SDL_mixer.lib"
+				OutputFile=".\DebugGL NO SOUND/FITD Debug GL NO SOUND.exe"
+				LinkIncremental="2"
+				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="MSVCRT"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile=".\DebugGL NO SOUND/FITD.pdb"
+				SubSystem="1"/>
+			<Tool
+				Name="VCMIDLTool"
+				TypeLibraryName=".\Debug/FITD.tlb"/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG"
+				Culture="1036"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool

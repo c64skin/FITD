@@ -2,124 +2,124 @@
 
 void drawStartupMenu(int selectedEntry)
 {
-	int currentY = 76;
-	int currentTextNum = 0;
+  int currentY = 76;
+  int currentTextNum = 0;
 
-	drawAITDBox(160,100,320,80);
+  drawAITDBox(160,100,320,80);
 
-	while(currentTextNum<3)
-	{
-		if(currentTextNum == selectedEntry) // hilight selected entry
-		{
-			fillBox(10,currentY,309,currentY+16,100);
-			drawSlectedText(160,currentY,currentTextNum+11,15,4);
-		}
-		else
-		{
-			drawText(160,currentY,currentTextNum+11,4);
-		}
+  while(currentTextNum<3)
+  {
+    if(currentTextNum == selectedEntry) // hilight selected entry
+    {
+      fillBox(10,currentY,309,currentY+16,100);
+      drawSlectedText(160,currentY,currentTextNum+11,15,4);
+    }
+    else
+    {
+      drawText(160,currentY,currentTextNum+11,4);
+    }
 
-		currentY+=16; // next line
-		currentTextNum++; // next text
-	}
+    currentY+=16; // next line
+    currentTextNum++; // next text
+  }
 }
 
 int processStartupMenu(void)
 {
-	int currentSelectedEntry = 0;
-	unsigned int chrono;
-	int selectedEntry = -1;
+  int currentSelectedEntry = 0;
+  unsigned int chrono;
+  int selectedEntry = -1;
 
-	flushScreen();
+  flushScreen();
 
-	drawStartupMenu(0);
+  drawStartupMenu(0);
 #ifdef USE_GL
-	osystem_startFrame();
-	osystem_stopFrame();
-	osystem_CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+  osystem_startFrame();
+  osystem_stopFrame();
+  osystem_CopyBlockPhys((unsigned char*)screen,0,0,320,200);
 #endif
-	flipScreen();
-	make3dTatouUnk1(16,0);
-	startChrono(&chrono);
+  flipScreen();
+  make3dTatouUnk1(16,0);
+  startChrono(&chrono);
 
-	while(evalChrono(&chrono) <= 0x10000) // exit loop only if time out or if choice made
-	{
+  while(evalChrono(&chrono) <= 0x10000) // exit loop only if time out or if choice made
+  {
 #ifdef USE_GL
-	osystem_CopyBlockPhys((unsigned char*)screen,0,0,320,200);
-	osystem_startFrame();
+  osystem_CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+  osystem_startFrame();
 #endif
 
-		if(selectedEntry!=-1 || evalChrono(&chrono) > 0x10000)
-		{
-			break;
-		}
+    if(selectedEntry!=-1 || evalChrono(&chrono) > 0x10000)
+    {
+      break;
+    }
 
-		process_events();
-		readKeyboard();
+    process_events();
+    readKeyboard();
 
-		if(inputKey&1) // up key
-		{
-			currentSelectedEntry--;
+    if(inputKey&1) // up key
+    {
+      currentSelectedEntry--;
 
-			if(currentSelectedEntry<0)
-			{
-				currentSelectedEntry = 2;
-			}
+      if(currentSelectedEntry<0)
+      {
+        currentSelectedEntry = 2;
+      }
 
-			drawStartupMenu(currentSelectedEntry);
-			flipScreen();
-//			menuWaitVSync();
+      drawStartupMenu(currentSelectedEntry);
+      flipScreen();
+//      menuWaitVSync();
 
-			startChrono(&chrono);
+      startChrono(&chrono);
 
-			while(inputKey)
-			{
-				readKeyboard();
-			}
-		}
+      while(inputKey)
+      {
+        readKeyboard();
+      }
+    }
 
-		
-		if(inputKey&2) // down key
-		{
-			currentSelectedEntry++;
+    
+    if(inputKey&2) // down key
+    {
+      currentSelectedEntry++;
 
-			if(currentSelectedEntry>2)
-			{
-				currentSelectedEntry = 0;
-			}
+      if(currentSelectedEntry>2)
+      {
+        currentSelectedEntry = 0;
+      }
 
-			drawStartupMenu(currentSelectedEntry);
-			//menuWaitVSync();
-			flipScreen();
+      drawStartupMenu(currentSelectedEntry);
+      //menuWaitVSync();
+      flipScreen();
 
-			startChrono(&chrono);
+      startChrono(&chrono);
 
-			while(inputKey)
-			{
-				readKeyboard();
-			}
-		} 
+      while(inputKey)
+      {
+        readKeyboard();
+      }
+    } 
 
-		if(input2 == 28 || (input2 != 28 && input1!=0)) // select current entry
-		{
-			selectedEntry = currentSelectedEntry;
-		}
+    if(input2 == 28 || (input2 != 28 && input1!=0)) // select current entry
+    {
+      selectedEntry = currentSelectedEntry;
+    }
 #ifdef USE_GL
-		osystem_stopFrame();
-		flipScreen();
+    osystem_stopFrame();
+    flipScreen();
 #endif
-	}
+  }
 
-	if(selectedEntry==2) // if exit game, do not fade
-	{
-		fadeOut(16,0);
-	}
+  if(selectedEntry==2) // if exit game, do not fade
+  {
+    fadeOut(16,0);
+  }
 
-	readKeyboard();
-	while(inputKey)
-	{
-		readKeyboard();
-	}
+  readKeyboard();
+  while(inputKey)
+  {
+    readKeyboard();
+  }
 
-	return(selectedEntry);
+  return(selectedEntry);
 }

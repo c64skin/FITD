@@ -4,148 +4,148 @@
 
 typedef struct  // warning: allignement unsafe
 {
-	long int discSize;
-	long int uncompressedSize;
-	char compressionFlag;
-	char info5;
-	short int offset;
+  long int discSize;
+  long int uncompressedSize;
+  char compressionFlag;
+  char info5;
+  short int offset;
 }pakInfoStruct;
 
 #define USE_UNPACKED_DATA
 
 int loadPakToPtr(char* name, int index, char* ptr)
 {
-	char buffer[256];
-	FILE* fHandle;
-	int size;
+  char buffer[256];
+  FILE* fHandle;
+  int size;
 
-	sprintf(buffer,"%s/%04X.OUT",name,index);
+  sprintf(buffer,"%s/%04X.OUT",name,index);
 
-	fHandle = fopen(buffer,"rb");
+  fHandle = fopen(buffer,"rb");
 
-	if(!fHandle)
-		return(0);
+  if(!fHandle)
+    return(0);
 
-	fseek(fHandle,0L,SEEK_END);
-	size = ftell(fHandle);
-	fseek(fHandle,0L,SEEK_SET);
+  fseek(fHandle,0L,SEEK_END);
+  size = ftell(fHandle);
+  fseek(fHandle,0L,SEEK_SET);
 
-	fread(ptr,size,1,fHandle);
-	fclose(fHandle);
+  fread(ptr,size,1,fHandle);
+  fclose(fHandle);
 
-	return(1);
+  return(1);
 }
 
 int getPakSize(char* name, int index)
 {
-	char buffer[256];
-	FILE* fHandle;
-	int size;
+  char buffer[256];
+  FILE* fHandle;
+  int size;
 
-	sprintf(buffer,"%s/%04X.OUT",name,index);
+  sprintf(buffer,"%s/%04X.OUT",name,index);
 
-	fHandle = fopen(buffer,"rb");
+  fHandle = fopen(buffer,"rb");
 
-	if(!fHandle)
-		return(0);
+  if(!fHandle)
+    return(0);
 
-	fseek(fHandle,0L,SEEK_END);
-	size = ftell(fHandle);
-	fseek(fHandle,0L,SEEK_SET);
+  fseek(fHandle,0L,SEEK_END);
+  size = ftell(fHandle);
+  fseek(fHandle,0L,SEEK_SET);
 
-	fclose(fHandle);
+  fclose(fHandle);
 
-	return (size);
+  return (size);
 }
 
 char* loadPak(char* name, int index)
 {
 #ifdef USE_UNPACKED_DATA
-	char buffer[256];
-	FILE* fHandle;
-	int size;
-	char* ptr;
+  char buffer[256];
+  FILE* fHandle;
+  int size;
+  char* ptr;
 
-	sprintf(buffer,"%s/%04X.OUT",name,index);
+  sprintf(buffer,"%s/%04X.OUT",name,index);
 
-	fHandle = fopen(buffer,"rb");
+  fHandle = fopen(buffer,"rb");
 
-	if(!fHandle)
-		return NULL;
+  if(!fHandle)
+    return NULL;
 
-	fseek(fHandle,0L,SEEK_END);
-	size = ftell(fHandle);
-	fseek(fHandle,0L,SEEK_SET);
+  fseek(fHandle,0L,SEEK_END);
+  size = ftell(fHandle);
+  fseek(fHandle,0L,SEEK_SET);
 
-	ptr = (char*)malloc(size);
+  ptr = (char*)malloc(size);
 
-	fread(ptr,size,1,fHandle);
-	fclose(fHandle);
+  fread(ptr,size,1,fHandle);
+  fclose(fHandle);
 
-	return ptr;
+  return ptr;
 #else
-	char bufferName[256];
-	FILE* fileHandle;
-	long int fileOffset;
-	long int additionalDescriptorSize;
-	pakInfoStruct pakInfo;
-	char* ptr=0;
+  char bufferName[256];
+  FILE* fileHandle;
+  long int fileOffset;
+  long int additionalDescriptorSize;
+  pakInfoStruct pakInfo;
+  char* ptr=0;
 
-	//makeExtention(bufferName, name, ".PAK");
-	strcpy(bufferName, name); // temporary until makeExtention is coded
-	strcat(bufferName,".PAK");
+  //makeExtention(bufferName, name, ".PAK");
+  strcpy(bufferName, name); // temporary until makeExtention is coded
+  strcat(bufferName,".PAK");
 
-	fileHandle = fopen(bufferName,"rb");
+  fileHandle = fopen(bufferName,"rb");
 
-	if(fileHandle) // a bit stupid, should return NULL right away
-	{
-		fseek(fileHandle,(index+1)*4,SEEK_SET);
+  if(fileHandle) // a bit stupid, should return NULL right away
+  {
+    fseek(fileHandle,(index+1)*4,SEEK_SET);
 
-		fread(&fileOffset,4,1,fileHandle);
+    fread(&fileOffset,4,1,fileHandle);
 
-		fseek(fileHandle,fileOffset,SEEK_SET);
+    fseek(fileHandle,fileOffset,SEEK_SET);
 
-		fread(&additionalDescriptorSize,4,1,fileHandle);
+    fread(&additionalDescriptorSize,4,1,fileHandle);
 
-		if(additionalDescriptorSize)
-		{
-			printf("Unimplemented additionalDescriptorSize in loadPak\n");
-			return(0);
-			exit(1);
-		}
+    if(additionalDescriptorSize)
+    {
+      printf("Unimplemented additionalDescriptorSize in loadPak\n");
+      return(0);
+      exit(1);
+    }
 
-		fread(&pakInfo,sizeof(pakInfoStruct),1,fileHandle);
+    fread(&pakInfo,sizeof(pakInfoStruct),1,fileHandle);
 
-		fseek(fileHandle,pakInfo.offset,SEEK_CUR);
+    fseek(fileHandle,pakInfo.offset,SEEK_CUR);
 
-		if(pakInfo.compressionFlag == 0) // uncompressed
-		{
-			ptr = (char*)malloc(pakInfo.discSize);
-			fread(ptr,pakInfo.discSize,1,fileHandle);
+    if(pakInfo.compressionFlag == 0) // uncompressed
+    {
+      ptr = (char*)malloc(pakInfo.discSize);
+      fread(ptr,pakInfo.discSize,1,fileHandle);
 
-		}
-		else if(pakInfo.compressionFlag == 1) // compressed
-		{
-			char* compressedDataPtr;
+    }
+    else if(pakInfo.compressionFlag == 1) // compressed
+    {
+      char* compressedDataPtr;
 
-			ptr = (char*)malloc(pakInfo.uncompressedSize);
+      ptr = (char*)malloc(pakInfo.uncompressedSize);
 
-			if(pakInfo.uncompressedSize >= 64*1024)
-			{
-				printf("Bigger!\n");
-			}
+      if(pakInfo.uncompressedSize >= 64*1024)
+      {
+        printf("Bigger!\n");
+      }
 
 
-			compressedDataPtr = ptr + pakInfo.uncompressedSize + 300 - pakInfo.discSize;
+      compressedDataPtr = ptr + pakInfo.uncompressedSize + 300 - pakInfo.discSize;
 
-			fread(compressedDataPtr,pakInfo.discSize,1,fileHandle);
+      fread(compressedDataPtr,pakInfo.discSize,1,fileHandle);
 
-			unpack(pakInfo.info5, compressedDataPtr, ptr, pakInfo.uncompressedSize, ptr+pakInfo.uncompressedSize + 300);
-		}
+      unpack(pakInfo.info5, compressedDataPtr, ptr, pakInfo.uncompressedSize, ptr+pakInfo.uncompressedSize + 300);
+    }
 
-		fclose(fileHandle);
-	}
+    fclose(fileHandle);
+  }
 
-	return ptr;
+  return ptr;
 #endif
 }

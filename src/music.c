@@ -919,10 +919,10 @@ void configChannel(u8 value, u8* data)
     sendAdlib(0xC0 + smallData2[value], data[2]);
   }
 
-  sendAdlib(0x60 + value, data[4]); // Attack Rate 	Decay Rate
-  sendAdlib(0x80 + value, data[5]); // Sustain Level 	Release Rate
-  sendAdlib(0x20 + value, data[1]); // Tremolo 	Vibrato 	Sustain 	KSR 	Frequency Multiplication Factor
-  sendAdlib(0xE0 + value, data[3]); // 	Waveform Select
+  sendAdlib(0x60 + value, data[4]); // Attack Rate  Decay Rate
+  sendAdlib(0x80 + value, data[5]); // Sustain Level  Release Rate
+  sendAdlib(0x20 + value, data[1]); // Tremolo  Vibrato   Sustain   KSR   Frequency Multiplication Factor
+  sendAdlib(0xE0 + value, data[3]); //  Waveform Select
 }
 
 void changeOuputLevel(u8 value, u8* data,int bp)
@@ -1235,6 +1235,9 @@ int fadeMusic(int param1, int param2, int param3)
 
 void playMusic(int musicNumber)
 {
+#ifdef NO_SOUND
+  return;
+#endif
 //  if(musicEnabled)
   {
     if(currentMusic != musicNumber)

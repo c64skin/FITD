@@ -132,24 +132,24 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 #endif
 #endif
 
-FORCEINLINE uint16 READ_LE_U16(void *ptr)
+FORCEINLINE u16 READ_LE_U16(void *ptr)
 {
-  return (((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
+  return (((u8*)ptr)[1]<<8)|((u8*)ptr)[0];
 }
 
-FORCEINLINE int16 READ_LE_S16(void *ptr)
+FORCEINLINE s16 READ_LE_S16(void *ptr)
 {
-  return (((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
+  return (((u8*)ptr)[1]<<8)|((u8*)ptr)[0];
 }
 
-FORCEINLINE uint32 READ_LE_U32(void *ptr)
+FORCEINLINE u32 READ_LE_U32(void *ptr)
 {
-  return (((byte*)ptr)[3]<<24)|(((byte*)ptr)[2]<<16)|(((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
+  return (((u8*)ptr)[3]<<24)|(((u8*)ptr)[2]<<16)|(((u8*)ptr)[1]<<8)|((u8*)ptr)[0];
 }
 
-FORCEINLINE int32 READ_LE_S32(void *ptr)
+FORCEINLINE s32 READ_LE_S32(void *ptr)
 {
-  return (((byte*)ptr)[3]<<24)|(((byte*)ptr)[2]<<16)|(((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
+  return (((u8*)ptr)[3]<<24)|(((u8*)ptr)[2]<<16)|(((u8*)ptr)[1]<<8)|((u8*)ptr)[0];
 }
 
 FORCEINLINE void WRITE_LE_U16(void *ptr, uint16 value)
