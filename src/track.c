@@ -194,7 +194,6 @@ void manualRot(int param)
 		if(currentProcessedActorPtr->rotate.param == 0)
 		{
 			int oldBeta = currentProcessedActorPtr->beta;
-			printf("X: %X ",oldBeta);
 
 			if(currentProcessedActorPtr->speed != 0)
 			{
@@ -207,7 +206,6 @@ void manualRot(int param)
 		}
 
 		currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
-		printf("beta: %X\n",currentProcessedActorPtr->beta);
 	}
 	if(input4&8)
 	{
@@ -233,9 +231,8 @@ void manualRot(int param)
 		}
 
 		currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
-		printf("beta: %X\n",currentProcessedActorPtr->beta);
 	}
-	if(input4==0xC)
+	if(!(input4&0xC))
 	{
 		currentProcessedActorPtr->field_72 = 0;
 		currentProcessedActorPtr->rotate.param = 0;
@@ -327,7 +324,7 @@ void processTrack(void)
 						currentProcessedActorPtr->beta = 0x100 + GetAngle(currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
 																			x,z );
-					/*	int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+				/*		int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
 																			currentProcessedActorPtr->beta,
 																			x,z );
@@ -346,7 +343,7 @@ void processTrack(void)
 						else
 						{
 							currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
-						}*/
+						} */
 					}
 					else // reached position
 					{

@@ -25,7 +25,7 @@ void fillpoly(short int * datas, int n, ColorP c) {
 //    printf("fillpoly starting with n = %i dots\n", n);
     
     if (n <= 2) {
-	printf("Désolé Vincent, tu m'envoies une ligne ou un point là ;-)\n");
+	//printf("Désolé Vincent, tu m'envoies une ligne ou un point là ;-)\n");
 	switch (n) {
 	case 0:
 	    return;

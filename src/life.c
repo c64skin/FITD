@@ -12,7 +12,19 @@ void animMove(int a,int b,int c,int d,int e,int f,int g)
 	}
 	if(currentProcessedActorPtr->speed == -1)
 	{
-		anim(a,1,-1);
+		if(currentProcessedActorPtr->ANIM == b)
+		{
+			anim(a,0,e);
+		}
+		else
+		if(currentProcessedActorPtr->ANIM == c)
+		{
+			anim(d,0,a);
+		}
+		else
+		{
+			anim(e,1,-1);
+		}
 	}
 	if(currentProcessedActorPtr->speed == 0)
 	{
@@ -20,6 +32,73 @@ void animMove(int a,int b,int c,int d,int e,int f,int g)
 	}
 
 
+}
+
+void setStage(int newRoomLocal, int newStage, int X, int Y, int Z)
+{
+	currentProcessedActorPtr->stage = newStage;
+	currentProcessedActorPtr->room = newRoomLocal;
+
+	int animX;
+	int animY;
+	int animZ;
+
+	animX = currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+	animY = currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+	animZ = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+
+	currentProcessedActorPtr->zv.ZVX1 = X - animX;
+	currentProcessedActorPtr->zv.ZVX2 = X - animX;
+
+	currentProcessedActorPtr->zv.ZVY1 = Y - animY;
+	currentProcessedActorPtr->zv.ZVY2 = Y - animY;
+
+	currentProcessedActorPtr->zv.ZVZ1 = Z - animZ;
+	currentProcessedActorPtr->zv.ZVZ2 = Z - animZ;
+
+	currentProcessedActorPtr->roomX = X;
+	currentProcessedActorPtr->roomY = Y;
+	currentProcessedActorPtr->roomZ = Z;
+
+	currentProcessedActorPtr->worldX = X;
+	currentProcessedActorPtr->worldY = Y;
+	currentProcessedActorPtr->worldZ = Z;
+
+	currentProcessedActorPtr->modX = 0;
+	currentProcessedActorPtr->modY = 0;
+	currentProcessedActorPtr->modZ = 0;
+
+	if(genVar9 == currentProcessedActorIdx)
+	{
+		if(newStage != currentEtage)
+		{
+			changeFloor = 1;
+//			newFloor = newStage;
+			newRoom = newRoomLocal;
+		}
+		else
+		{
+			if(currentDisplayedRoom != newRoomLocal)
+			{
+				needChangeRoom = 1;
+				newRoom = newRoomLocal;
+			}
+		}
+	}
+	else
+	{
+		if(currentDisplayedRoom != newRoomLocal)
+		{
+/*			char* etagePtr = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4);
+
+			currentProcessedActorPtr->worldX -= ((short int*)(cameraPtr+4) - (short int*)(etagePtr+4))*10;
+			currentProcessedActorPtr->worldY -= ((short int*)(cameraPtr+6) - (short int*)(etagePtr+6))*10;
+			currentProcessedActorPtr->worldZ -= ((short int*)(cameraPtr+8) - (short int*)(etagePtr+8))*10;*/
+
+		}
+
+//		objModifFlag1 = 1;
+	}
 }
 
 void processLife(int lifeNum)
@@ -375,7 +454,19 @@ processOpcode:
 				}
 			case 0x2F: // STAGE TODO
 				{
-					currentLifePtr+=10;
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar2 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar3 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar4 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar5 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					setStage(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5);
+
 					break;
 				}
 			case 0x33: // CAMERA_TARGET

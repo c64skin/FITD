@@ -1396,6 +1396,7 @@ void initEngine(void)
 		fprintf(fHandle,"\t room:%02d",objectTable[i].room);
 		fprintf(fHandle,"\t trackMode: %01d",objectTable[i].trackMode);
 		fprintf(fHandle,"\t life: %02d",objectTable[i].life);
+		fprintf(fHandle,"\t beta: %03X",objectTable[i].beta);
 
 		fprintf(fHandle,"\n");
 	}
@@ -2407,19 +2408,19 @@ short int updateActorRotation(rotateStruct* rotatePtr)
 	{
 		if(angleDif>=-0x200)
 		{
-			int angle = (rotatePtr->newAngle&0x3FF);
-			return (angle*timeDif)/rotatePtr->param;
+			int angle = (rotatePtr->newAngle&0x3FF) - (rotatePtr->oldAngle&0x3FF);
+			return (rotatePtr->oldAngle&0x3FF) + (angle*timeDif)/rotatePtr->param;
 		}
 		else
 		{
-			int angle = ((rotatePtr->newAngle&0x3FF)+0x400) - (rotatePtr->oldAngle&0x3FF);
-			return ((angle*timeDif)/rotatePtr->param) + angle;
+			short int angle = ((rotatePtr->newAngle&0x3FF)+0x400) - ((rotatePtr->oldAngle&0x3FF));
+			return (((rotatePtr->oldAngle&0x3FF)) + ((angle*timeDif)/rotatePtr->param));
 		}
 	}
 	else
 	{
-		short int angle = ((rotatePtr->newAngle&0x3FF)) - ((rotatePtr->oldAngle&0x3FF)+0x400);
-		return (((rotatePtr->oldAngle&0x3FF)+0x400) + ((angle*timeDif)/rotatePtr->param));
+		int angle = (rotatePtr->newAngle&0x3FF) - ((rotatePtr->oldAngle&0x3FF)+0x400);
+		return ((angle*timeDif)/rotatePtr->param) + ((rotatePtr->oldAngle&0x3FF));
 	}
 }
 
@@ -2697,6 +2698,9 @@ void mainDraw(int mode)
 				{
 					//TODO: implement anim stuff
 				}
+
+				if(actorPtr->field_0 == 1)
+					printf("Beta: %X\n",actorPtr->beta);
 
 				renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
 							actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
@@ -3903,7 +3907,6 @@ void mainLoop(int allowSystemMenu)
 				}
 
 				currentProcessedActorPtr++;
-				currentProcessedActorIdx++;
 			}
 
 			currentProcessedActorPtr = actorTable;
@@ -3930,8 +3933,7 @@ void mainLoop(int allowSystemMenu)
 				}
 
 				currentProcessedActorPtr++;
-				currentProcessedActorIdx++;
-			}
+				}
 
 			currentProcessedActorPtr = actorTable;
 			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < 50; currentProcessedActorIdx++)
