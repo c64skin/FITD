@@ -9,7 +9,7 @@ void initFont(char* fontData, int color)
 	short int tempDx;
 	short int tempAxFlip;
 
-	fontVar1 = fontData;
+	fontVar1 = fontData; // fontPtr
 
 	tempDx = *(short int*)fontData; // alignement
 	fontData+=2;
@@ -31,7 +31,7 @@ void initFont(char* fontData, int color)
 
 	fontVar4 = fontData;
 
-	fontVar5 = fontVar1 + tempAxFlip - tempDx*2;
+	fontVar5 = fontVar1 + tempAxFlip - (tempDx&0xFF)*2;
 
 	currentFontColor = color;
 
@@ -47,9 +47,9 @@ void initFont2(int var1, int var2)
 int computeStringWidth(char* string)
 {
 	int width = 0;
-	char character;
+	unsigned char character;
 
-	while(character = *(string++))
+	while(character = (unsigned char)*(string++))
 	{
 		char* dataPtr;
 		unsigned short int data;
@@ -57,13 +57,7 @@ int computeStringWidth(char* string)
 		dataPtr = fontVar5 + character*2;
 		data = *(short int*)dataPtr;
 	
-		data = ((data & 0xFF)<<8)| ((data&0xFF00)>>8);
-
-		int i;
-		for(i=0;i<4;i++)
-		{
-			data = ((data<<1)&0xFFFE) | ((data & 0x7FFF)>>14);
-		}
+		data>>=4;
 
 		data &= 0xF;
 
@@ -414,13 +408,13 @@ void renderText(int x, int y, char* surface, char* string)
 		unsigned short int dx;
 
 		dataPtr = fontVar5 + character*2;
-		data = *(short int*)dataPtr;
+		data = *(unsigned short int*)dataPtr;
 	
 		data = ((data & 0xFF)<<8)| ((data&0xFF00)>>8);
 
 		dx = data;
 
-		data >>= 4;
+		data >>= 12;
 
 		if(data&0xF) // real character (width != 0)
 		{
