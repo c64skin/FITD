@@ -80,6 +80,7 @@ hqrEntryStruct* listBody;
 hqrEntryStruct* listAnim;
 hqrEntryStruct* listLife;
 hqrEntryStruct* listTrack;
+hqrEntryStruct* listMatrix;
 
 short int maxObjects;
 
@@ -131,7 +132,7 @@ int numCameraZone;
 char* cameraZoneData;
 int numRoomZone;
 char* roomZoneData;
-char* roomVar5[15];
+char* roomVar5[NUM_MAX_CAMERA_IN_ROOM];
 int startGameVar1;
 
 int transformX;

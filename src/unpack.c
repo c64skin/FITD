@@ -1,27 +1,40 @@
 /*
-   Explode (or unimplode) unpacking algorithm
-   Original code from Mark Adler, (30 Mars 1992)
-   Rewritten by Cyril VOILA (cvoila@free.fr) to handle genuine AITD PAK file format
+   UnPAK, PAK file unpacker
+   By Cyril VOILA (cvoila@free.fr)
+
+   Part of "explode" code from Mark Adler implementation (30 Mars 1992)
 
    vers    date          who           what
    ----  ---------  --------------  ------------------------------------
-    1.0  02 Oct 04  C. Voila        First release
+    1.0  05 Oct 04  C. Voila        First release
 */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "common.h"
 
+#define _WINDOWS
+//#define ZLIB_DLL
+#include "zlib.h"
 
 // --------------------------------------------------------------
-// VARS
+// Explode unpacking functions & types
 // --------------------------------------------------------------
-
 #define PAK_BMAX 16
 #define PAK_N_MAX 288
 #define PAK_WSIZE 0x8000
 
-// --------------------------------------------------------------
-// TYPES
-// --------------------------------------------------------------
+typedef struct {
+  unsigned long csize;
+  unsigned long ucsize;
+  unsigned char * buf_src;
+  unsigned char * buf_dst;
+  unsigned long off_src;
+  unsigned long off_dst;
+  unsigned short flags;
+} PAK_stream;
 
 typedef struct PAK_huft {
   unsigned short e;     // number of PAK_extra bits or operation
@@ -32,20 +45,6 @@ typedef struct PAK_huft {
   } v;
 } PAK_huft;
 
-typedef struct {
-  unsigned short flags;
-  unsigned long csize;
-  unsigned long ucsize;
-  unsigned char * buf_src;
-  unsigned char * buf_dst;
-  unsigned long off_src;
-  unsigned long off_dst;
-} PAK_vars;
-
-
-// --------------------------------------------------------------
-// GLOBALS
-// --------------------------------------------------------------
 
 static unsigned char PAK_slide[PAK_WSIZE];
 static unsigned PAK_mask_bits[17] = { 0x0000, 0x0001, 0x0003, 0x0007, 0x000f, 0x001f, 0x003f, 0x007f, 0x00ff, 0x01ff, 0x03ff, 0x07ff, 0x0fff, 0x1fff, 0x3fff, 0x7fff, 0xffff };
@@ -90,10 +89,6 @@ static unsigned short cpdist8[] = {
         7041, 7169, 7297, 7425, 7553, 7681, 7809, 7937, 8065
 };
 
-// --------------------------------------------------------------
-// INLINE FUNCTIONS
-// --------------------------------------------------------------
-
 #define PAK_NEXTBYTE ((pG->off_src<pG->csize)?(pG->buf_src[pG->off_src++]):0)
 #define PAK_FLUSH(size) { memcpy(pG->buf_dst + pG->off_dst, PAK_slide, size); pG->off_dst += size; }
 
@@ -112,17 +107,7 @@ static unsigned short cpdist8[] = {
   }\
 }
 
-// --------------------------------------------------------------
-// FUNCTIONS
-// --------------------------------------------------------------
-
-void PAK_Error(char * txt) {
-  printf("%s", txt);
-  getchar();
-  exit(0);
-}
-
-void PAK_huft_free(PAK_vars * pG, PAK_huft * t) {
+void PAK_huft_free(PAK_stream * pG, PAK_huft * t) {
   register PAK_huft *p, *q;
   p = t;
   while(p != (PAK_huft *)NULL) {
@@ -132,7 +117,7 @@ void PAK_huft_free(PAK_vars * pG, PAK_huft * t) {
   }
 }
 
-int PAK_huft_build(PAK_vars * pG, unsigned * b, unsigned n, unsigned s, unsigned short * d, unsigned char * e, PAK_huft * t[], unsigned * m) {
+int PAK_huft_build(PAK_stream * pG, unsigned * b, unsigned n, unsigned s, unsigned short * d, unsigned char * e, PAK_huft * t[], unsigned * m) {
   unsigned a;                   /* counter for codes of length k */
   unsigned c[PAK_BMAX+1];       /* bit length count table */
   unsigned el;                  /* length of EOB code (value 256) */
@@ -296,7 +281,7 @@ int PAK_huft_build(PAK_vars * pG, unsigned * b, unsigned n, unsigned s, unsigned
 }
 
 /* Get the bit lengths for a code representation from the compressed stream. */
-int PAK_get_tree(PAK_vars * pG, unsigned * l, unsigned n) {
+int PAK_get_tree(PAK_stream * pG, unsigned * l, unsigned n) {
   unsigned i;           /* unsigned chars remaining in list */
   unsigned k;           /* lengths entered */
   unsigned j;           /* number of codes */
@@ -317,7 +302,7 @@ int PAK_get_tree(PAK_vars * pG, unsigned * l, unsigned n) {
 }
 
 /* Decompress the imploded data using coded literals and a sliding window (of size 2^(6+bdl) bytes). */
-int PAK_explode_lit(PAK_vars * pG, PAK_huft * tb, PAK_huft * tl, PAK_huft * td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl) {
+int PAK_explode_lit(PAK_stream * pG, PAK_huft * tb, PAK_huft * tl, PAK_huft * td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl) {
   unsigned long s;      /* bytes to decompress */
   register unsigned e;  /* table entry flag/number of extra bits */
   unsigned n, d;        /* length and index for copy */
@@ -394,7 +379,7 @@ int PAK_explode_lit(PAK_vars * pG, PAK_huft * tb, PAK_huft * tl, PAK_huft * td, 
 }
 
 /* Decompress the imploded data using uncoded literals and a sliding window (of size 2^(6+bdl) bytes). */
-int PAK_explode_nolit(PAK_vars * pG, PAK_huft * tl, PAK_huft * td, unsigned bl, unsigned bd, unsigned bdl) {
+int PAK_explode_nolit(PAK_stream * pG, PAK_huft * tl, PAK_huft * td, unsigned bl, unsigned bd, unsigned bdl) {
   unsigned long s;      /* unsigned chars to decompress */
   register unsigned e;  /* table entry flag/number of PAK_extra bits */
   unsigned n, d;        /* length and index for copy */
@@ -470,12 +455,12 @@ int PAK_explode_nolit(PAK_vars * pG, PAK_huft * tl, PAK_huft * td, unsigned bl, 
   return(0);
 }
 
-/* Main function : Explode an imploded compressed stream. */
-// TODO : Ajouter une gestion d'erreur propre !!!
-int PAK_explode(PAK_vars * pG) {
+// --------------------------------------------------------------
+// Wrapper to explode
+// --------------------------------------------------------------
 
-  int ret = 0;
-
+int PAK_explode(unsigned char * srcBuffer, unsigned char * dstBuffer, unsigned int compressedSize, unsigned int uncompressedSize, unsigned short flags)
+{
   PAK_huft * tb;        /* literal code table */
   PAK_huft * tl;        /* length code table */
   PAK_huft * td;        /* distance code table */
@@ -485,69 +470,78 @@ int PAK_explode(PAK_vars * pG) {
   unsigned bdl;         /* number of uncoded lower distance bits */
   unsigned l[256];      /* bit lengths for codes */
 
-  bl = 7;
-  bd = (pG->csize > 200000L) ? 8 : 7; // TODO : Totalement FOIREUX, à vérifier
-
-  if(pG->flags & 4) {    // With literal tree--minimum match length is 3
-    bb = 9;
-    ret = PAK_get_tree(pG, l, 256);
-if(ret!=0) PAK_Error("ERROR 1\n");
-    ret = PAK_huft_build(pG, l, 256, 256, NULL, NULL, &tb, &bb);
-if(ret!=0) PAK_Error("ERROR 2\n");
-    ret = PAK_get_tree(pG, l, 64);
-if(ret!=0) PAK_Error("ERROR 3\n");
-    ret = PAK_huft_build(pG, l, 64, 0, cplen3, extra, &tl, &bl);
-  } else {                // No literal tree--minimum match length is 2
-    tb = (PAK_huft *) NULL;
-    ret = PAK_get_tree(pG, l, 64);
-if(ret!=0) PAK_Error("ERROR 4\n");
-    ret = PAK_huft_build(pG, l, 64, 0, cplen2, extra, &tl, &bl);
-if(ret!=0) PAK_Error("ERROR 5\n");
-  }
-
-  ret = PAK_get_tree(pG, l, 64);
-if(ret!=0) PAK_Error("ERROR 6\n");
-
-  if(pG->flags & 2) {     /* true if 8K */
-    bdl = 7;
-    ret = PAK_huft_build(pG, l, 64, 0, cpdist8, extra, &td, &bd);
-if(ret!=0) PAK_Error("ERROR 7\n");
-  } else {                 /* else 4K */
-    bdl = 6;
-    ret = PAK_huft_build(pG, l, 64, 0, cpdist4, extra, &td, &bd);
-if(ret!=0) PAK_Error("ERROR 8\n");
-  }
-
-  if(tb!=NULL) {
-    ret = PAK_explode_lit(pG, tb, tl, td, bb, bl, bd, bdl);
-if(ret!=0) PAK_Error("ERROR 9\n");
-    PAK_huft_free(pG, tb);
-  } else {
-    ret = PAK_explode_nolit(pG, tl, td, bl, bd, bdl);
-if(ret!=0) PAK_Error("ERROR 10\n");
-  }
-
-  PAK_huft_free(pG, td);
-  PAK_huft_free(pG, tl);
-
-  return(0);
-}
-
-
-// --------------------------------------------------------------
-// UNPACKER WRAPPER
-// --------------------------------------------------------------
-int unpack_CV(short param, char * src, char * dst, int compressedSize, int uncompressedSize) {
-
-  PAK_vars G;
-  G.flags = param;
-  G.buf_src = (unsigned char *)src;
-  G.buf_dst = (unsigned char *)dst;
+  PAK_stream G;
+  G.buf_src = srcBuffer;
+  G.buf_dst = dstBuffer;
   G.off_src = 0;
   G.off_dst = 0;
   G.csize = compressedSize;
   G.ucsize = uncompressedSize;
 
-  return(PAK_explode(&G));
+  bl = 7;
+  bd = (compressedSize > 200000L) ? 8 : 7; // TODO : Totalement FOIREUX, à vérifier
+
+  if(flags & 4) {    // With literal tree--minimum match length is 3
+    bb = 9;
+    PAK_get_tree(&G, l, 256);
+    PAK_huft_build(&G, l, 256, 256, NULL, NULL, &tb, &bb);
+    PAK_get_tree(&G, l, 64);
+    PAK_huft_build(&G, l, 64, 0, cplen3, extra, &tl, &bl);
+  } else {                // No literal tree--minimum match length is 2
+    tb = (PAK_huft *) NULL;
+    PAK_get_tree(&G, l, 64);
+    PAK_huft_build(&G, l, 64, 0, cplen2, extra, &tl, &bl);
+  }
+
+  PAK_get_tree(&G, l, 64);
+
+  if(flags & 2) {     /* true if 8K */
+    bdl = 7;
+    PAK_huft_build(&G, l, 64, 0, cpdist8, extra, &td, &bd);
+  } else {                 /* else 4K */
+    bdl = 6;
+    PAK_huft_build(&G, l, 64, 0, cpdist4, extra, &td, &bd);
+  }
+
+  if(tb!=NULL) {
+    PAK_explode_lit(&G, tb, tl, td, bb, bl, bd, bdl);
+    PAK_huft_free(&G, tb);
+  } else {
+    PAK_explode_nolit(&G, tl, td, bl, bd, bdl);
+  }
+
+  PAK_huft_free(&G, td);
+  PAK_huft_free(&G, tl);
+
+  return(0);
 }
 
+// --------------------------------------------------------------
+// ZLIB wrapper to deflate
+// --------------------------------------------------------------
+
+int PAK_deflate(unsigned char * srcBuffer, unsigned char * dstBuffer, unsigned int compressedSize, unsigned int uncompressedSize) {
+  z_stream G;
+  G.next_in = srcBuffer;
+  G.avail_in = compressedSize;
+  G.next_out = dstBuffer;
+  G.avail_out = uncompressedSize;
+  G.zalloc = (alloc_func)0;
+  G.zfree = (free_func)0;
+
+  inflateInit2(&G, -15);
+  inflate(&G, Z_SYNC_FLUSH);
+  inflateEnd(&G);
+
+  return(0);
+}
+
+// --------------------------------------------------------------
+// UTILS
+// --------------------------------------------------------------
+
+void PAK_Error(char * txt) {
+  printf("%s", txt);
+  getchar();
+  exit(0);
+}

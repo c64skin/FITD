@@ -22,7 +22,7 @@ struct sceZoneStruct
 
 typedef struct sceZoneStruct sceZoneStruct;
 
-struct cameraZonePointStruct
+typedef struct cameraZonePointStruct
 {
   s16 x;
   s16 y;
@@ -30,7 +30,7 @@ struct cameraZonePointStruct
 
 typedef struct cameraZonePointStruct cameraZonePointStruct;
 
-struct cameraZoneEntryStruct
+typedef struct cameraZoneEntryStruct
 {
   u16 numPoints;
 
@@ -39,7 +39,7 @@ struct cameraZoneEntryStruct
 
 typedef struct cameraZoneEntryStruct cameraZoneEntryStruct;
 
-struct cameraZoneDefStruct
+typedef struct cameraZoneDefStruct
 {
   s16 dummy1;
   s16 dummy2;
@@ -56,7 +56,7 @@ struct cameraZoneDefStruct
 
 typedef struct cameraZoneDefStruct cameraZoneDefStruct;
 
-struct cameraDataStruct
+typedef struct cameraDataStruct
 {
   s16 alpha;
   s16 beta;
@@ -94,8 +94,8 @@ struct roomDataStruct
 };
 typedef struct roomDataStruct roomDataStruct;
 
-extern cameraDataStruct* cameraDataTable[15];
-extern cameraZoneDefStruct* currentCameraZoneList[15];
+extern cameraDataStruct* cameraDataTable[NUM_MAX_CAMERA_IN_ROOM];
+extern cameraZoneDefStruct* currentCameraZoneList[NUM_MAX_CAMERA_IN_ROOM];
 extern roomDataStruct* roomDataTable;
 
 roomDefStruct* getRoomData(int roomNumber);

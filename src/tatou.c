@@ -344,11 +344,12 @@ void rotateModel(int x,int y,int z,int alpha,int beta,int gamma,int time)
 
 void playSound(int num)
 {
-  char buffer[256];
+  int size = getPakSize("listsamp",num);
+  char* ptr = HQR_Get(listSamp,num);
 
-  sprintf(buffer,"LISTSAMP/%04X.VOC",num);
-
-  osystem_playSample(buffer);
+#ifndef NO_SOUND
+  osystem_playSample(ptr,size);
+#endif
 }
 
 ////////////////////////

@@ -1,5 +1,8 @@
+
 #ifndef _COMMON_
 #define _COMMON_
+
+#define NUM_MAX_CAMERA_IN_ROOM 20
 
 #define HAS_YM3812 1
 
@@ -66,6 +69,9 @@ typedef signed long int s32;
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned long uint32;
+#ifndef UNIX
+typedef unsigned int uint;
+#endif
 typedef signed char int8;
 typedef signed short int16;
 typedef signed long int32;
@@ -121,7 +127,7 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 // scripting
 #include "track.h"
 #include "life.h"
-#include "life2.h"
+#include "life_2.h"
 #include "evalVar.h"
 
 #include "osystem.h"
@@ -131,15 +137,13 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 
 //typedef unsigned char byte;
 
-#ifndef WIN32
-#define FORCEINLINE static inline
-#endif
-
 #ifdef UNIX
 #define FORCEINLINE static inline
 #else
 #ifdef WIN32
 #define FORCEINLINE __forceinline
+#else
+#define FORCEINLINE inline
 #endif
 #endif
 
@@ -224,4 +228,3 @@ FORCEINLINE void WRITE_LE_S32(void *ptr, int32 value)
 }
 
 #endif
-

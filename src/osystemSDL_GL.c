@@ -260,7 +260,7 @@ void osystem_init()  // that's the constructor of the system dependent
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);       // Black Background
   glMatrixMode(GL_PROJECTION);            // Select The Projection Matrix
   glLoadIdentity();                 // Reset The Projection Matrix
-  glOrtho(0,320,200,0,0.2,-50*1000);
+  glOrtho(0,320,200,0,0.2,-100*1000);
   glMatrixMode(GL_MODELVIEW);             // Select The Modelview Matrix
   glLoadIdentity();                 // Reset The Modelview Matrix
 
@@ -665,7 +665,7 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len)
   }*/
 }
 
-void osystem_playSample(char* sampleName)
+void osystem_playSampleFromName(char* sampleName)
 {
   Mix_Chunk *sample;
 
@@ -680,6 +680,23 @@ void osystem_playSample(char* sampleName)
     Mix_PlayChannel(-1, sample, 0);
   }
 }
+
+void osystem_playSample(char* samplePtr,int size)
+{
+  Mix_Chunk *sample;
+
+  sample=Mix_LoadWAV_RW(SDL_RWFromConstMem(samplePtr, size), 1);
+
+  if(!sample)
+  {
+    printf("Mix_LoadWAV_RW: %s\n", Mix_GetError());
+  }
+  else
+  {
+    Mix_PlayChannel(-1, sample, 0);
+  }
+}
+
 
 int tesselatePosition = 0;
 

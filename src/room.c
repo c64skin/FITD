@@ -14,8 +14,8 @@ etageVar1 -> table for camera data
 */
 
 roomDataStruct* roomDataTable = NULL;
-cameraDataStruct* cameraDataTable[15];
-cameraZoneDefStruct* currentCameraZoneList[15];
+cameraDataStruct* cameraDataTable[NUM_MAX_CAMERA_IN_ROOM];
+cameraZoneDefStruct* currentCameraZoneList[NUM_MAX_CAMERA_IN_ROOM];
 
 roomDefStruct* getRoomData(int roomNumber)
 {
@@ -27,6 +27,14 @@ int getNumberOfRoom()
   int i;
   int j = 0;
 
+  if(gameId >= AITD3)
+  {
+    char buffer[256];
+    sprintf(buffer,"SAL%02d",currentEtage);
+
+    return PAK_getNumFiles(buffer);
+  }
+  else
   {
 
     int numMax = (((*(unsigned int*)(etageVar0))/4));
@@ -60,7 +68,7 @@ void loadRoom(int roomNumber)
 
   freezeTime();
 
-  ASSERT(roomNumber >=0);
+  assert(roomNumber >=0);
 
   if(currentCamera == -1)
   {
@@ -75,16 +83,20 @@ void loadRoom(int roomNumber)
     oldCameraIdx = roomDataTable[currentDisplayedRoom].cameraIdxTable[currentCamera];
   }
 
-  cameraPtr = (char*)getRoomData(roomNumber); // TODO: obsolete
-  roomDataPtr = getRoomData(roomNumber);
-  pCurrentRoomData = getRoomData(roomNumber);
+  if(gameId < AITD3)
+  {
+    cameraPtr = (char*)getRoomData(roomNumber); // TODO: obsolete
+    roomDataPtr = getRoomData(roomNumber);
+    pCurrentRoomData = getRoomData(roomNumber);
+  }
 
   currentDisplayedRoom = roomNumber;
 
-  numCameraInRoom = roomDataPtr->numCameraInRoom;
+  numCameraInRoom = roomDataTable[roomNumber].numCameraInRoom;
 
-  ASSERT(numCameraInRoom < 15);
+  assert(numCameraInRoom < NUM_MAX_CAMERA_IN_ROOM);
 
+/*
   var_20 = cameraPtr + roomDataPtr->offsetToPosDef;
   numCameraZone = *(short int*)var_20;
   var_20 += 2;
@@ -93,9 +105,9 @@ void loadRoom(int roomNumber)
   var_20 = cameraPtr + roomDataPtr->offsetToCameraDef;
   numRoomZone = *(short int*)var_20;
   var_20 += 2;
-  roomZoneData = var_20;
+  roomZoneData = var_20;*/
  
-  ASSERT(numCameraInRoom < 15);
+  assert(numCameraInRoom < NUM_MAX_CAMERA_IN_ROOM);
 
   for(i=0;i<numCameraInRoom;i++) // build all the camera list
   {
@@ -104,7 +116,7 @@ void loadRoom(int roomNumber)
 
     currentCameraIdx = roomDataTable[currentDisplayedRoom].cameraIdxTable[i]; // indexes are between the roomDefStruct and the first zone data
 
-    ASSERT(currentCameraIdx<=numGlobalCamera);
+    assert(currentCameraIdx<=numGlobalCamera);
 
     if(oldCameraIdx == currentCameraIdx)
     {
@@ -112,7 +124,10 @@ void loadRoom(int roomNumber)
       var_10 = currentCameraIdx;
     }
 
-    roomVar5[i] = etageVar1 + *(unsigned int*)(etageVar1 + currentCameraIdx * 4);
+    if(gameId < AITD3)
+    {
+      roomVar5[i] = etageVar1 + *(unsigned int*)(etageVar1 + currentCameraIdx * 4);
+    }
 
     cameraDataTable[i] = &(globalCameraDataTable[currentCameraIdx]);
 
@@ -125,7 +140,7 @@ void loadRoom(int roomNumber)
         break;
     }
 
-    ASSERT(cameraDataTable[i]->cameraZoneDefTable[j].dummy1 == currentDisplayedRoom);
+    assert(cameraDataTable[i]->cameraZoneDefTable[j].dummy1 == currentDisplayedRoom);
 
     currentCameraZoneList[i] = &cameraDataTable[i]->cameraZoneDefTable[j];
   }
@@ -140,9 +155,28 @@ void loadRoom(int roomNumber)
     {
       if(actorTable[i].field_0 != -1)
       {
-        actorTable[i].worldX -= var_E;
-        actorTable[i].worldY += var_C;
-        actorTable[i].worldZ += var_A;
+ /*       if(gameId == AITD1) // special case. In AITD1, the load room function was always triggered just after the actor was moved in the new room.
+                            // it is not always the case in later games. Maybe we could generalize the AITD2 way...
+        {
+          actorTable[i].worldX -= var_E;
+          actorTable[i].worldY += var_C;
+          actorTable[i].worldZ += var_A;
+        }
+        else*/
+        {
+          if(i!=genVar9)
+          {
+            actorTable[i].worldX -= var_E;
+            actorTable[i].worldY += var_C;
+            actorTable[i].worldZ += var_A;
+          }
+          else
+          {
+            actorTable[i].worldX = actorTable[i].roomX;
+            actorTable[i].worldY = actorTable[i].roomY;
+            actorTable[i].worldZ = actorTable[i].roomZ;
+          }
+        }
       }
     }
   }

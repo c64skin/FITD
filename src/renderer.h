@@ -5,7 +5,11 @@ extern int BBox3D1;
 extern int BBox3D2;
 extern int BBox3D3;
 extern int BBox3D4;
-extern short int pointBuffer[400*3];
+
+#define NUM_MAX_POINT_IN_POINT_BUFFER 400
+#define NUM_MAX_BONES 40
+
+extern short int pointBuffer[NUM_MAX_POINT_IN_POINT_BUFFER*3];
 extern int numOfPoints;
 
 #ifdef USE_GL

@@ -112,7 +112,15 @@ s32 q=0;                     /* Dummy */
       action = 0;
     }
 
-    updateInHand(inHand);
+    if(gameId == AITD1)
+    {
+      updateInHand(inHand);
+    }
+    else
+    {
+      if(gameId == AITD2) // seems to crash in Jack for now
+        updateInHand(inHandTable[currentInHand]);
+    }
 
     if(changeFloor == 0)
     {
@@ -145,7 +153,7 @@ s32 q=0;                     /* Dummy */
         {
           int flag = currentProcessedActorPtr->flags;
 
-          if(flag & 1)
+          if(flag & 1 || (gameId >= AITD2 && flag & 0x200))
           {
             processActor1();
           }
@@ -173,11 +181,18 @@ s32 q=0;                     /* Dummy */
           {
             switch(gameId)
             {
-            case JACK:
             case AITD2:
+            case AITD3:
               {
                 if(currentProcessedActorPtr->lifeMode&3)
                   if(!(currentProcessedActorPtr->lifeMode&4))
+                    processLife2(currentProcessedActorPtr->life);
+                break;
+              }
+            case JACK:
+              {
+                if(currentProcessedActorPtr->life != -1)
+                  if(currentProcessedActorPtr->lifeMode != -1)
                     processLife2(currentProcessedActorPtr->life);
                 break;
               }
@@ -207,6 +222,11 @@ s32 q=0;                     /* Dummy */
       loadFloor(newFloor);
     }
 
+#if INTERNAL_DEBUGGER
+    if(debuggerVar_topCamera)
+      setupCamera();
+#endif
+
     if(needChangeRoom)
     {
       loadRoom(newRoom);
@@ -215,7 +235,7 @@ s32 q=0;                     /* Dummy */
     else
     {
       checkIfCameraChangeIsRequired();
-      if(gameId == AITD2 || gameId == JACK)
+      if(gameId >= AITD2)
       {
         int tempCurrentCamera;
 

@@ -15,6 +15,9 @@ bool debuggerVar_debugMenuDisplayed = false;
 ////// debug var used in engine
 bool debuggerVar_drawModelZv = false;
 bool debuggerVar_drawCameraCoverZone = false;
+bool debuggerVar_noHardClip = false;
+bool debuggerVar_topCamera = false;
+long int debufferVar_topCameraZoom = -4000;
 
 bool debuggerVar_useBlackBG = false;
 ///////////////////////////////

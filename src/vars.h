@@ -392,6 +392,7 @@ extern hqrEntryStruct* listBody;
 extern hqrEntryStruct* listAnim;
 extern hqrEntryStruct* listLife;
 extern hqrEntryStruct* listTrack;
+extern hqrEntryStruct* listMatrix;
 
 extern short int maxObjects;
 
@@ -442,7 +443,7 @@ extern int numCameraZone;
 extern char* cameraZoneData;
 extern int numRoomZone;
 extern char* roomZoneData;
-extern char* roomVar5[15];
+extern char* roomVar5[NUM_MAX_CAMERA_IN_ROOM];
 extern int startGameVar1;
 
 extern int transformX;
@@ -570,4 +571,3 @@ extern backgroundModeEnum backgroundMode;
 #endif
 
 #endif
-

@@ -12,7 +12,7 @@ char scaledScreen[640*400];
 
 int input5;
 
-unsigned char defaultPalette[0x30] =
+const unsigned char defaultPalette[0x30] =
 {
   0x00,
   0x00,
@@ -62,6 +62,58 @@ unsigned char defaultPalette[0x30] =
   0x3F,
   0x3F,
   0x3F
+};
+
+const unsigned char defaultPaletteAITD3[0x30]=
+{
+  0x00,
+  0x00,
+  0x00,
+  0xFC,
+  0xFC,
+  0xFC,
+  0x30,
+  0x30,
+  0x38,
+  0xC0,
+  0xBC,
+  0xFC,
+  0x78,
+  0x58,
+  0x3C,
+  0x00,
+  0x00,
+  0x00,
+  0xF0,
+  0x70,
+  0x10,
+  0xFC,
+  0xFC,
+  0xFC,
+  0x48,
+  0x50,
+  0x60,
+  0xC4,
+  0x54,
+  0x5C,
+  0x54,
+  0x94,
+  0x54,
+  0x54,
+  0xBC,
+  0xFC,
+  0xFC,
+  0x88,
+  0x54,
+  0xAC,
+  0x54,
+  0xFC,
+  0xFC,
+  0xFC,
+  0xFC,
+  0xFC,
+  0xFC,
+  0xF8
 };
 
 
@@ -144,6 +196,7 @@ void updateInHand(int objIdx)
   {
   case JACK:
   case AITD2:
+  case AITD3:
     {
       processLife2(foundLife);
       break;
@@ -200,6 +253,10 @@ void allocTextes(void)
     theEnd(1,"TabTextes");
   }
 
+  if(gameId == AITD3)
+  {
+    strcpy(languageNameString,"TEXTES");
+  }
   systemTextes = loadPakSafe(languageNameString, 0); // todo: use real language name
   textLength = getPakSize(languageNameString, 0);
 
@@ -313,6 +370,7 @@ void sysInit(void)
   {
   case JACK:
   case AITD2:
+  case AITD3:
     {
       fontData = loadPakSafe("ITD_RESS",1);
       break;
@@ -325,12 +383,21 @@ void sysInit(void)
   }
 
   initFont(fontData, 14);
-  initFont2(2,0);
+
+  if(gameId == AITD1)
+  {
+    initFont2(2,0);
+  }
+  else
+  {
+    initFont2(2,1);
+  }
 
   switch(gameId)
   {
   case JACK:
   case AITD2:
+  case AITD3:
     {
       aitdBoxGfx = loadPakSafe("ITD_RESS",0);
       break;
@@ -1069,7 +1136,7 @@ void initEngine(void)
   fseek(fHandle,0,SEEK_SET);
 
   pObjectDataBackup = pObjectData = (u8*)malloc(objectDataSize);
-  ASSERT(pObjectData);
+  assert(pObjectData);
 
   fread(pObjectData,objectDataSize,1,fHandle);
   fclose(fHandle);
@@ -1159,7 +1226,7 @@ void initEngine(void)
     objectTable[i].positionInTrack = READ_LE_U16(pObjectData);
     pObjectData+=2;
 
-    if(gameId == JACK || gameId == AITD2)
+    if(gameId >= JACK)
     {
       objectTable[i].mark = READ_LE_U16(pObjectData);
       pObjectData+=2;
@@ -1252,6 +1319,7 @@ void initEngine(void)
     listBody = HQR_InitRessource("LISTBODY",100000, 50); // was calculated from free mem size
     listAnim = HQR_InitRessource("LISTANIM",100000, 50); // was calculated from free mem size
 
+    listMatrix = HQR_InitRessource("LISTMAT",16000,5);
   }
 
 
@@ -1276,8 +1344,22 @@ void initVarsSub1(void)
 void initVars()
 {
   giveUp = 0;
-  inHand = -1;
-  numObjInInventory = 0;
+  if(gameId == AITD1)
+  {
+    inHand = -1;
+    numObjInInventory = 0;
+  }
+  else
+  {
+    int i;
+
+    for(i=0;i<2;i++)
+    {
+      numObjInInventoryTable[i] = 0;
+      inHandTable[i] = -1;
+    }
+  }
+  
   action = 0;
 
   genVar1 = genVar2;
@@ -1349,12 +1431,24 @@ void loadCamera(int cameraIdx)
     theEnd(0,name);
   }
 
-  if(gameId == AITD2 || gameId == JACK)
+  if(gameId == AITD3)
+  {
+    memmove(aux,aux+4,64000+0x300);
+  }
+
+  if(gameId >= JACK)
   {
     copyPalette(aux+64000,palette);
-    memcpy(palette,defaultPalette,0x30);
     
-    convertPaletteIfRequired(palette);
+    if(gameId == AITD3)
+    {
+      //memcpy(palette,defaultPaletteAITD3,0x30);
+    }
+    else
+    {
+      memcpy(palette,defaultPalette,0x30);
+      convertPaletteIfRequired(palette);
+    }
 
     osystem_setPalette(palette);
   }
@@ -2003,7 +2097,7 @@ void updateAllActorAndObjects()
   actorStruct *currentActor = actorTable;
   objectStruct* currentObject;
 
-  if(gameId == AITD2 || gameId == JACK)
+  if(gameId >= JACK)
   {
     updateAllActorAndObjectsAITD2();
     return;
@@ -2215,30 +2309,36 @@ void setupCamera()
 
   currentCamera = startGameVar1;
 
-  loadCamera(*(short int*)(cameraPtr+(startGameVar1+6)*2));
+  loadCamera(roomDataTable[currentDisplayedRoom].cameraIdxTable[startGameVar1]);
 
   pCamera = cameraDataTable[currentCamera];
 
-#if 1
   setupPointTransformSM(pCamera->alpha,pCamera->beta,pCamera->gamma);
-#else
-  setupPointTransformSM(0x100,0,0);
+
+#if INTERNAL_DEBUGGER
+  if(debuggerVar_topCamera)
+    setupPointTransformSM(0x100,0,0);
 #endif
 
-  x = (pCamera->x - pCurrentRoomData->worldX)*10;
-  y = (pCurrentRoomData->worldY - pCamera->y)*10;
-  z = (pCurrentRoomData->worldZ - pCamera->z)*10;
-#if 0
-  x = 0;
-  y=-40000;
-  z = 0;
+  x = (pCamera->x - roomDataTable[currentDisplayedRoom].worldX)*10;
+  y = (roomDataTable[currentDisplayedRoom].worldY - pCamera->y)*10;
+  z = (roomDataTable[currentDisplayedRoom].worldZ - pCamera->z)*10;
+
+#if INTERNAL_DEBUGGER
+  if(debuggerVar_topCamera)
+  {
+    x = actorTable[genVar9].worldX + actorTable[genVar9].modX;
+    y = debufferVar_topCameraZoom;
+    z = actorTable[genVar9].worldZ + actorTable[genVar9].modZ;
+  }
 #endif
   setupSelfModifyingCode(x,y,z); // setup camera position
 
-#if 1
   setupSMCode(160,100,pCamera->focal1,pCamera->focal2,pCamera->focal3); // setup focale
-#else
-  setupSMCode(160,100,100,100,100); // setup focale
+
+#if INTERNAL_DEBUGGER
+  if(debuggerVar_topCamera)
+    setupSMCode(160,100,1000,100,100); // setup focale
 #endif
 
   setupCameraSub1();
@@ -2828,6 +2928,7 @@ void drawSceZone(int roomNumber)
       getZvRelativePosition(&dataLocal,roomNumber,currentDisplayedRoom);
     }
 
+    if(roomDataTable[roomNumber].sceZoneTable[i].parameter == 4)
     if(roomDataTable[roomNumber].sceZoneTable[i].type)
     {
       drawRoomZv(&dataLocal,20,40);
@@ -3188,7 +3289,14 @@ void getHotPoint(int hotPointIdx, char* bodyPtr, point3dStruct* hotPoint)
       int pointIdx;
       short int* source;
 
-      bodyPtr+=hotPointIdx*16;
+      if(flag&8)
+      {
+        bodyPtr+=hotPointIdx*0x18;
+      }
+      else
+      {
+        bodyPtr+=hotPointIdx*16;
+      }
 
       pointIdx = *(short int*)(bodyPtr+4); // first point
 
@@ -3350,12 +3458,9 @@ void mainDraw(int mode)
   osystem_stopModelRender();
 #endif
 
-  if(gameId == AITD1) // TODO: fix for AITD2
+  if(drawTextOverlay())
   {
-    if(drawTextOverlay())
-    {
-      //addToRedrawBox();
-    }
+    //addToRedrawBox();
   }
 
   if(!lightVar1)
@@ -3896,7 +4001,12 @@ int checkForHardCol(ZVStruct* zvPtr, roomDataStruct* pRoomData)
   u16 i;
   int hardColVar = 0;
   hardColStruct* pCurrentEntry = pRoomData->hardColTable;
-  
+
+#ifdef INTERNAL_DEBUGGER
+  if(debuggerVar_noHardClip)
+    return 0;
+#endif
+
   for(i=0;i<pRoomData->numHardCol;i++)
   {
     if(((pCurrentEntry->zv.ZVX1) < (zvPtr->ZVX2)) && ((zvPtr->ZVX1) < (pCurrentEntry->zv.ZVX2)))
@@ -4150,22 +4260,25 @@ void processActor1(void)
           currentProcessedActorPtr->HARD_COL = 255;
         }
 
-        if(var_52 || var_50) // move on the X or Y axis ? update to avoid entering the hard col
+        if(gameId == AITD1 || (gameId>=JACK && (var_3E->type != 10 || currentProcessedActorIdx != genVar9)))
         {
-          ZVStruct tempZv;
+          if(var_52 || var_50) // move on the X or Y axis ? update to avoid entering the hard col
+          {
+            ZVStruct tempZv;
 
-          hardColVar1 = var_52;
-          hardColVar2 = var_50;
+            hardColVar1 = var_52;
+            hardColVar2 = var_50;
 
-          hardColSuB1(zvPtr, &zvLocal, &var_3E->zv);
+            hardColSuB1(zvPtr, &zvLocal, &var_3E->zv);
 
-          zvLocal.ZVX1 +=  hardColVar1 - var_52;
-          zvLocal.ZVX2 +=  hardColVar1 - var_52;
-          zvLocal.ZVZ1 +=  hardColVar2 - var_50;
-          zvLocal.ZVZ2 +=  hardColVar2 - var_50;
+            zvLocal.ZVX1 +=  hardColVar1 - var_52;
+            zvLocal.ZVX2 +=  hardColVar1 - var_52;
+            zvLocal.ZVZ1 +=  hardColVar2 - var_50;
+            zvLocal.ZVZ2 +=  hardColVar2 - var_50;
 
-          var_52 = hardColVar1;
-          var_50 = hardColVar2;
+            var_52 = hardColVar1;
+            var_50 = hardColVar2;
+          }
         }
       }
     }
@@ -4558,7 +4671,7 @@ int changeCameraSub2(void)
 
   for(i=0;i<numCameraInRoom;i++)
   {
-    ASSERT(i<15);
+    assert(i<NUM_MAX_CAMERA_IN_ROOM);
     if(changeCameraSub1(x1,x2,z1,z2,currentCameraZoneList[i])) // if in camera zone ?
     {
       int newAngle = actorPtr->beta + (((cameraDataTable[i]->beta)+0x200)&0x3FF);
@@ -5096,6 +5209,13 @@ void detectGame(void)
     printf("Detected Alone in the Dark 2\n");
     return;
   }
+  if(fileExists("AN1.PAK"))
+  {
+    gameId = AITD3;
+
+    printf("Detected Alone in the Dark 3\n");
+    return;
+  }
 
   printf("FATAL: Game detection failed...\n");
   exit(1);
@@ -5124,24 +5244,34 @@ int main(int argc, char** argv)
 
   preloadResource();
 
-  if(gameId == AITD1)
+  switch(gameId)
   {
-    fadeIn(palette);
-
-    if(!make3dTatou())
+  case AITD1:
     {
-      makeIntroScreens();
+      fadeIn(palette);
+
+      if(!make3dTatou())
+      {
+        makeIntroScreens();
+      }
+      break;
     }
-  }
-  else
-  if(gameId == AITD2)
-  {
-    startGame(8,0,0);
-  }
-  else
-  if(gameId == JACK)
-  {
-    startGame(16,1,1);
+  case JACK:
+    {
+      startGame(16,1,1);
+      break;
+    }
+  case AITD2:
+    {
+      startGame(8,0,0);
+      break;
+    }
+  case AITD3:
+    {
+      startGame(0,12,1);
+      startGame(0,0,1);
+      break;
+    }
   }
 
   while(1)
@@ -5191,6 +5321,11 @@ int main(int argc, char** argv)
           case AITD2:
             {
               startGame(8,7,1);
+              break;
+            }
+          case AITD3:
+            {
+              startGame(0,12,1);
               break;
             }
           case AITD1:
@@ -5417,3 +5552,4 @@ void cleanupAndExit(void)
 
   exit(0);
 }
+

@@ -121,9 +121,9 @@ int renderZ;
 int numOfPoints;
 int numOfBones;
 
-short int pointBuffer[400*3];
-short int cameraSpaceBuffer[400*3];
-short int bonesBuffer[59];
+short int pointBuffer[NUM_MAX_POINT_IN_POINT_BUFFER*3];
+short int cameraSpaceBuffer[NUM_MAX_POINT_IN_POINT_BUFFER*3];
+short int bonesBuffer[NUM_MAX_BONES];
 
 bool boneRotateX;
 bool boneRotateY;
@@ -373,6 +373,17 @@ void computeBoneRotation(short int* pointPtr, int numOfPoint)
   }
 }
 
+void computeBoneRotation2(char* ptr)
+{
+  if(*(ptr+7))
+  {
+    int baseBone = *(short int*)(ptr);
+    int numPoints = *(short int*)((ptr)+2);
+
+    computeBoneRotation(pointBuffer+baseBone/2,numPoints);
+  }
+}
+
 void computeRotationMatrix(char* ptr)
 {
   int baseBone = *(short int*)(ptr);
@@ -438,55 +449,112 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
   numOfPoints = *(short int*)ptr;
   ptr+=2;
 
+  ASSERT(numOfPoints<NUM_MAX_POINT_IN_POINT_BUFFER); 
+
   memcpy(pointBuffer,ptr,numOfPoints*3*2);
   ptr+=numOfPoints*3*2;
 
   numOfBones = *(short int*)ptr;
   ptr+=2;
 
+  ASSERT(numOfBones<NUM_MAX_BONES);
   memcpy(bonesBuffer,ptr,numOfBones*2);
   ptr+=numOfBones*2;
 
   tempPtr = ptr;
 
-  *(short int*)(ptr+0xA) = alpha;
-  *(short int*)(ptr+0xC) = beta;
-  *(short int*)(ptr+0xE) = gamma;
-
-  for(i=0;i<numOfBones;i++)
+  if(modelFlags&8)
   {
-    int boneDataOffset = bonesBuffer[i];
-    char* boneDataPtr = tempPtr + boneDataOffset;
-
-    int transX;
-    int transY;
-    int transZ;
-
-    transX = *(short int*)(boneDataPtr+0xA);
-    transY = *(short int*)(boneDataPtr+0xC);
-    transZ = *(short int*)(boneDataPtr+0xE);
-
-    if(transX || transY || transZ)
+    for(i=0;i<numOfBones;i++)
     {
+      int boneDataOffset = bonesBuffer[i];
+      char* boneDataPtr = tempPtr + boneDataOffset;
+
       int type = *(short int*)(boneDataPtr+0x8);
 
       switch(type)
       {
-      case 0:
-        { 
-          prepareRotationMatrix(transX,transY,transZ);
-          computeRotationMatrix(boneDataPtr);
-          break;
-        }
       case 1:
         {
-          computeTranslation1(transX,transY,transZ,boneDataPtr);
+          int transX;
+          int transY;
+          int transZ;
+
+          transX = *(short int*)(boneDataPtr+0xA);
+          transY = *(short int*)(boneDataPtr+0xC);
+          transZ = *(short int*)(boneDataPtr+0xE);
+
+          if(transX || transY || transZ)
+          {
+            computeTranslation1(transX,transY,transZ,boneDataPtr);
+          }
+
           break;
         }
       case 2:
         {
-          computeTranslation2(transX,transY,transZ,boneDataPtr);
+          int transX;
+          int transY;
+          int transZ;
+
+          transX = *(short int*)(boneDataPtr+0xA);
+          transY = *(short int*)(boneDataPtr+0xC);
+          transZ = *(short int*)(boneDataPtr+0xE);
+
+          if(transX || transY || transZ)
+          {
+            computeTranslation2(transX,transY,transZ,boneDataPtr);
+          }
+
           break;
+        }
+      }
+
+      prepareRotationMatrix(*(short int*)(boneDataPtr+0x10),*(short int*)(boneDataPtr+0x12),*(short int*)(boneDataPtr+0x14));
+      computeBoneRotation2(boneDataPtr);
+    }
+  }
+  else
+  {
+    *(short int*)(ptr+0xA) = alpha;
+    *(short int*)(ptr+0xC) = beta;
+    *(short int*)(ptr+0xE) = gamma;
+
+    for(i=0;i<numOfBones;i++)
+    {
+      int boneDataOffset = bonesBuffer[i];
+      char* boneDataPtr = tempPtr + boneDataOffset;
+
+      int transX;
+      int transY;
+      int transZ;
+
+      transX = *(short int*)(boneDataPtr+0xA);
+      transY = *(short int*)(boneDataPtr+0xC);
+      transZ = *(short int*)(boneDataPtr+0xE);
+
+      if(transX || transY || transZ)
+      {
+        int type = *(short int*)(boneDataPtr+0x8);
+
+        switch(type)
+        {
+        case 0:
+          { 
+            prepareRotationMatrix(transX,transY,transZ);
+            computeRotationMatrix(boneDataPtr);
+            break;
+          }
+        case 1:
+          {
+            computeTranslation1(transX,transY,transZ,boneDataPtr);
+            break;
+          }
+        case 2:
+          {
+            computeTranslation2(transX,transY,transZ,boneDataPtr);
+            break;
+          }
         }
       }
     }
@@ -498,14 +566,38 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
   {
     int j;
 
-    short int* ptr1 = (short int*)(((char*)pointBuffer)+*(short int*)(si+4));
-    short int* ptr2 = (short int*)(((char*)pointBuffer)+*(short int*)(si));
+    int point1;
+    int point2;
 
-    int number = *(short int*)(si+2);
+    short int* ptr1;
+    short int* ptr2;
 
-    int ax = ptr1[0];
-    int bx = ptr1[1];
-    int dx = ptr1[2];
+    int number;
+
+    int ax;
+    int bx;
+    int dx;
+
+    point1 = *(short int*)(si+4);
+    point2 = *(short int*)(si);
+
+    ASSERT(point1%2 == 0);
+    ASSERT(point2%2 == 0);
+
+    point1/=2;
+    point2/=2;
+
+    ASSERT(point1/3<NUM_MAX_POINT_IN_POINT_BUFFER);
+    ASSERT(point2/3<NUM_MAX_POINT_IN_POINT_BUFFER);
+
+    ptr1 = (short int*)&pointBuffer[point1];
+    ptr2 = (short int*)&pointBuffer[point2];
+
+    number = *(short int*)(si+2);
+
+    ax = ptr1[0];
+    bx = ptr1[1];
+    dx = ptr1[2];
 
     for(j=0;j<number;j++)
     {
@@ -514,15 +606,29 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
       *(ptr2++) += dx;
     }
 
-    si += 0x10;
+    if(modelFlags & 8)
+    {
+      si += 0x18;
+    }
+    else
+    {
+      si += 0x10;
+    }
   }
 
   //(*ptr) = si;
   tempOutPtr = si;
 
+  if(modelFlags & 8)
+  {
+    prepareRotationMatrix(alpha,beta,gamma);
+    computeBoneRotation(pointBuffer,numOfPoints);
+  }
+
   {
     char* ptr = (char*)pointBuffer;
     short int* outPtr = cameraSpaceBuffer;
+    int k = numOfPoints;
     
 
 #ifdef USE_GL
@@ -622,8 +728,8 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
         *(outPtr2++) = Z; */
       }
 
-      numOfPoints--;
-      if(numOfPoints==0)
+      k--;
+      if(k==0)
       {
         return(1);
       }
@@ -849,8 +955,12 @@ void primType1(int primType, char** ptr, char** out) // poly
   u8 polyColor;
   u8 polyType;
   float depth = 32000.f;
+
   rendererPointStruct* pCurrentPoint = &primPointTable[positionInPointTable];
   primEntryStruct* pCurrentPrimEntry = &primTable[positionInPrimEntry];
+
+  ASSERT(positionInPointTable < NUM_MAX_POINT);
+  ASSERT(positionInPrimEntry < NUM_MAX_PRIM_ENTRY);
 
   numOfPointInPoly = **ptr;
   (*ptr)++;
@@ -1134,10 +1244,6 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
   
   if(modelFlags&2)
   {
-    if(gameId == JACK)
-    {
-      return(2);
-    }
     if(!computeModel(x,y,z,alpha,beta,gamma,modelPtr,ptr))
     {
       BBox3D3 = -32000;
@@ -1266,7 +1372,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
     {
       screen[y*320+x] = 15;
     }
-  } */
+  }*/
 //
 
   return(0);

@@ -32,8 +32,6 @@ int copyObjectToActor(int flag2, int var1, int foundName, short int flag, int x,
 
   if(room != currentDisplayedRoom)
   {
-    char* roomPtr = (char*)getRoomData(actorPtr->room);
-
     actorPtr->worldX -= (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[actorPtr->room].worldX) * 10;
     actorPtr->worldY += (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[actorPtr->room].worldY) * 10;
     actorPtr->worldZ += (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[actorPtr->room].worldZ) * 10;
@@ -195,65 +193,68 @@ int copyObjectToActor(int flag2, int var1, int foundName, short int flag, int x,
     }
     case 4:
     {
-      char* roomDataPtr = (char*)getRoomData(room);
-      int numElements;
-      int j;
-
-      roomDataPtr += *(short int*)roomDataPtr;
-
-      numElements = *(short int*)roomDataPtr;
-      roomDataPtr+=2;
-
-      for(j=0;j<numElements;j++)
+      if(gameId < AITD3)
       {
-        if(*(short int*)(roomDataPtr+0xE) == 9)
+        char* roomDataPtr = (char*)getRoomData(room);
+        int numElements;
+        int j;
+
+        roomDataPtr += *(short int*)roomDataPtr;
+
+        numElements = *(short int*)roomDataPtr;
+        roomDataPtr+=2;
+
+        for(j=0;j<numElements;j++)
         {
-          if(*(short int*)(roomDataPtr+0xC) == foundName)
+          if(*(short int*)(roomDataPtr+0xE) == 9)
           {
-            int tempX;
-            int tempY;
-            int tempZ;
-
-            zvPtr->ZVX1 = READ_LE_S16(roomDataPtr+0x00);
-            zvPtr->ZVX2 = READ_LE_S16(roomDataPtr+0x02);
-            zvPtr->ZVY1 = READ_LE_S16(roomDataPtr+0x04);
-            zvPtr->ZVY2 = READ_LE_S16(roomDataPtr+0x06);
-            zvPtr->ZVZ1 = READ_LE_S16(roomDataPtr+0x08);
-            zvPtr->ZVZ2 = READ_LE_S16(roomDataPtr+0x0A);
-
-            x = 0;
-            y = 0;
-            z = 0;
-
-            tempX = ((*(short int*)roomDataPtr) + (*(short int*)(roomDataPtr+2)))/2;
-            actorPtr->worldX = tempX;
-            actorPtr->roomX = tempX;
-
-            tempY = ((*(short int*)(roomDataPtr+4)) + (*(short int*)(roomDataPtr+6)))/2;
-            actorPtr->worldY = tempY;
-            actorPtr->roomY = tempY;
-
-            tempZ = ((*(short int*)(roomDataPtr+8)) + (*(short int*)(roomDataPtr+0xA)))/2;
-            actorPtr->worldZ = tempZ;
-            actorPtr->roomZ = tempZ;
-
-            if(room != currentDisplayedRoom)
+            if(*(short int*)(roomDataPtr+0xC) == foundName)
             {
-              actorPtr->worldX = (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[room].worldX) * 10;
-              actorPtr->worldY = (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[room].worldY) * 10;
-              actorPtr->worldZ = (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[room].worldZ) * 10;
-            }
+              int tempX;
+              int tempY;
+              int tempZ;
 
-            break;
+              zvPtr->ZVX1 = READ_LE_S16(roomDataPtr+0x00);
+              zvPtr->ZVX2 = READ_LE_S16(roomDataPtr+0x02);
+              zvPtr->ZVY1 = READ_LE_S16(roomDataPtr+0x04);
+              zvPtr->ZVY2 = READ_LE_S16(roomDataPtr+0x06);
+              zvPtr->ZVZ1 = READ_LE_S16(roomDataPtr+0x08);
+              zvPtr->ZVZ2 = READ_LE_S16(roomDataPtr+0x0A);
+
+              x = 0;
+              y = 0;
+              z = 0;
+
+              tempX = ((*(short int*)roomDataPtr) + (*(short int*)(roomDataPtr+2)))/2;
+              actorPtr->worldX = tempX;
+              actorPtr->roomX = tempX;
+
+              tempY = ((*(short int*)(roomDataPtr+4)) + (*(short int*)(roomDataPtr+6)))/2;
+              actorPtr->worldY = tempY;
+              actorPtr->roomY = tempY;
+
+              tempZ = ((*(short int*)(roomDataPtr+8)) + (*(short int*)(roomDataPtr+0xA)))/2;
+              actorPtr->worldZ = tempZ;
+              actorPtr->roomZ = tempZ;
+
+              if(room != currentDisplayedRoom)
+              {
+                actorPtr->worldX = (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[room].worldX) * 10;
+                actorPtr->worldY = (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[room].worldY) * 10;
+                actorPtr->worldZ = (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[room].worldZ) * 10;
+              }
+
+              break;
+            }
           }
+
+          roomDataPtr+=0x10;
         }
 
-        roomDataPtr+=0x10;
-      }
-
-      if(j==numElements)
-      {
-        makeDefaultZV(zvPtr);
+        if(j==numElements)
+        {
+          makeDefaultZV(zvPtr);
+        }
       }
 
       break;

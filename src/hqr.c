@@ -25,6 +25,8 @@ hqrEntryStruct* HQR_InitRessource(char* name, int size, int numEntries)
   if(!dest)
     return NULL;
 
+  numEntries = 2000;
+
   strcpy(dest->string,"        ");
   strncpy(dest->string,name,8);
 
@@ -246,6 +248,8 @@ hqrEntryStruct* HQR_Init(int size,int numEntry)
   ASSERT(numEntry > 0);
 
   dest = (hqrEntryStruct*)malloc(sizeof(hqrEntryStruct));
+
+  numEntry = 2000;
 
   ASSERT_PTR(dest);
 

@@ -2,6 +2,20 @@
 
 int getPosRelTable[] = {4,1,8,2,4,1,8,0};
 
+int getMatrix(int param1, int actorIdx, int param2)
+{
+  int matrixWidth;
+  unsigned char* matrixPtr = HQR_Get(listMatrix,param1);
+
+  matrixWidth = *matrixPtr;
+  matrixPtr++;
+
+  matrixPtr+=(actorTable[actorIdx].hardMat)*matrixWidth;
+  matrixPtr+=(actorTable[param2].hardMat);
+
+  return *matrixPtr;
+}
+
 int getPosRel(actorStruct* actor1, actorStruct* actor2)
 {
   int beta1 = actor1->beta;
@@ -581,11 +595,11 @@ int evalVar2(void)
             return(objectTable[objectNumber].room);
             break;
           }
-     /*   case 0x26:
+        case 0x24:
           {
             return(objectTable[objectNumber].stage);
             break;
-          }*/
+          }
         default:
           {
             printf("Unsupported evalVar %X when actor not in room !\n", var1 & 0x7FFF);
@@ -715,8 +729,6 @@ int evalVar2(void)
             int tempX = actorTable[actorNumber].worldX;
             int tempY = actorTable[actorNumber].worldY;
             int tempZ = actorTable[actorNumber].worldZ;
-
-            return(3000);
 
             return(calcDist(actorPtr->worldX, actorPtr->worldY, actorPtr->worldZ, tempX, tempY, tempZ));
           }
@@ -868,7 +880,7 @@ int evalVar2(void)
           return(1);
           break;
         }
-      case 0x22:
+      case 0x22: // c_var
         {
           int temp = *((short int*)&defines)+(*(short int*)currentLifePtr);
           currentLifePtr+=2;
@@ -899,13 +911,26 @@ int evalVar2(void)
         }
       case 0x25: // get_matrix
         {
-          currentLifePtr+=4;
-          return 0;
+          int param1;
+          int param2;
+
+          param1 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+
+          param2 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+
+          return getMatrix(param1,actorIdx,objectTable[param2].ownerIdx);
           break;
         }
       case 0x26: // hard_mat
         {
           return actorPtr->hardMat;
+          break;
+        }
+      case 0x27: // protection
+        {
+          return 1;
           break;
         }
       default:

@@ -8,6 +8,9 @@ int initAnimInBody(int frame, char* anim, char* body)
   short int bx;
   char* saveAnim;
   int i;
+  int flag;
+
+  flag = (*(short int*)body);
 
   temp = *(short int*)anim;
   anim+=2;
@@ -22,14 +25,21 @@ int initAnimInBody(int frame, char* anim, char* body)
 
   cx = ax;
 
-  ax = ((ax+1)<<3)*frame;
+  if(flag&8)
+  {
+    ax = ((ax<<4)+8)*frame;
+  }
+  else
+  {
+    ax = ((ax+1)<<3)*frame;
+  }
 
   anim+=ax;
 
   animCurrentTime = *(short int*)anim;
   animKeyframeLength = animCurrentTime;
 
-  if(!((*(short int*)body)&2))
+  if(!(flag&2))
   {
     return(0);
   }
@@ -74,6 +84,22 @@ int initAnimInBody(int frame, char* anim, char* body)
     *(short int*)(body) = *(short int*)(anim);
     body+=2;
     anim+=2;
+
+    if(flag&8)
+    {
+      *(short int*)(body) = *(short int*)(anim);
+      body+=2;
+      anim+=2;
+      *(short int*)(body) = *(short int*)(anim);
+      body+=2;
+      anim+=2;
+      *(short int*)(body) = *(short int*)(anim);
+      body+=2;
+      anim+=2;
+      *(short int*)(body) = *(short int*)(anim);
+      body+=2;
+      anim+=2;
+    }
 
     body+=8;
   }
@@ -158,7 +184,8 @@ int anim(int animNum,int arg_2, int arg_4)
 
 void initBufferAnim(char* buffer, char* bodyPtr)
 {
-  if((*(short int*)bodyPtr) & 2)
+  int flag = *(short int*)bodyPtr;
+  if(flag & 2)
   {
     char* source = bodyPtr+0x10;
     short int ax;
@@ -192,6 +219,17 @@ void initBufferAnim(char* buffer, char* bodyPtr)
 
       buffer+=8;
       source+=8;
+
+      if(flag&8)
+      {
+        *(short int*)(buffer) = *(short int*)(source);
+        *(short int*)(buffer+2) = *(short int*)(source+2);
+        *(short int*)(buffer+4) = *(short int*)(source+4);
+        *(short int*)(buffer+6) = *(short int*)(source+6);
+
+        buffer+=8;
+        source+=8;
+      }
 
       source+=8;
     }
@@ -294,10 +332,20 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
   unsigned short int bx;
   unsigned short int time;
   int bp;
+  int flag;
+
+  flag = *(short int*)bodyPtr;
   
   animPtr+=4;
 
-  animPtr += ((numOfBonesInAnim+1)*8)*frame; // seek to keyframe
+  if(flag&8)
+  {
+    animPtr += ((numOfBonesInAnim<<4)+8)*frame; // seek to keyframe
+  }
+  else
+  {
+    animPtr += ((numOfBonesInAnim+1)*8)*frame; // seek to keyframe
+  }
 
   // animVar1 = ptr to the current keyFrame
   animVar1 = animPtr;
@@ -354,30 +402,67 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
     animVar4 += 8; // anim buffer
     animVar1 += 8; // current keyframe ptr
 
-    do
+    if(!(flag&8))
     {
-      switch(getAnimType(&bodyPtr))
+      do
       {
-      case 0:
+        switch(getAnimType(&bodyPtr))
         {
-          processAnimRotation(&bodyPtr,bp,bx);
-          processAnimRotation(&bodyPtr,bp,bx);
-          processAnimRotation(&bodyPtr,bp,bx);
-          break;
+        case 0:
+          {
+            processAnimRotation(&bodyPtr,bp,bx);
+            processAnimRotation(&bodyPtr,bp,bx);
+            processAnimRotation(&bodyPtr,bp,bx);
+            break;
+          }
+        case 1:
+        case 2:
+          {
+            processAnimTranslation(&bodyPtr,bp,bx);
+            processAnimTranslation(&bodyPtr,bp,bx);
+            processAnimTranslation(&bodyPtr,bp,bx);
+            break;
+          }
         }
-      case 1:
-      case 2:
-        {
-          processAnimTranslation(&bodyPtr,bp,bx);
-          processAnimTranslation(&bodyPtr,bp,bx);
-          processAnimTranslation(&bodyPtr,bp,bx);
-          break;
-        }
-      }
 
-      bodyPtr+=8;
+        bodyPtr+=8;
+      }
+      while(--numOfBonesInAnim);
     }
-    while(--numOfBonesInAnim);
+    else
+    {
+      do
+      {
+        switch(getAnimType(&bodyPtr))
+        {
+        case 0:
+          {
+            animVar4 += 6;
+            animVar1 += 6;
+            bodyPtr += 6;
+            break;
+          }
+        case 1:
+        case 2:
+          {
+            processAnimTranslation(&bodyPtr,bp,bx);
+            processAnimTranslation(&bodyPtr,bp,bx);
+            processAnimTranslation(&bodyPtr,bp,bx);
+            break;
+          }
+        }
+
+        processAnimRotation(&bodyPtr,bp,bx);
+        processAnimRotation(&bodyPtr,bp,bx);
+        processAnimRotation(&bodyPtr,bp,bx);
+
+        animVar4 += 2;
+        animVar1 += 2;
+        bodyPtr += 10;
+
+      }
+      while(--numOfBonesInAnim);
+    }
 
     animVar1 = animVar1Backup;
 
@@ -411,6 +496,16 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 
       bodyPtr+=8;
       si+=8;
+
+      if(flag&8)
+      {
+        *(short int*)(bodyPtr) = *(short int*)(si);
+        *(short int*)(bodyPtr+2) = *(short int*)(si+2);
+        *(short int*)(bodyPtr+4) = *(short int*)(si+4);
+        *(short int*)(bodyPtr+6) = *(short int*)(si+6);
+        bodyPtr+=8;
+        si+=8;
+      }
 
       bodyPtr+=8;
 

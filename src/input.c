@@ -93,6 +93,23 @@ void readKeyboard(void)
         input1 = 1;
         break;
 #ifdef INTERNAL_DEBUGGER
+      case SDLK_o:
+        debufferVar_topCameraZoom+=100;
+        break;
+      case SDLK_p:
+        debufferVar_topCameraZoom-=100;
+        break;
+      case SDLK_t:
+        debuggerVar_topCamera = !debuggerVar_topCamera;
+
+        if(!debuggerVar_topCamera)
+        {
+          backgroundMode = backgroundModeEnum_2D;
+        }
+        break;
+      case SDLK_c:
+        debuggerVar_noHardClip = !debuggerVar_noHardClip;
+        break;
       case SDLK_d:
         debugger_enterMainDebug();
         break;
@@ -106,4 +123,10 @@ void readKeyboard(void)
       }
     }
   }
+#ifdef INTERNAL_DEBUGGER
+  if(debuggerVar_topCamera)
+  {
+    backgroundMode = backgroundModeEnum_3D;
+  }
+#endif
 }

@@ -785,3 +785,479 @@ void processTrack(void)
   currentProcessedActorPtr->beta &= 0x3FF;
 }
 
+void processTrack2(void)
+{
+  switch(currentProcessedActorPtr->trackMode)
+  {
+  case 1: // manual
+    {
+      manualRot(60);
+      if(input4&1) // forward
+      {
+        if(timer - lastTimeForward < 10 && currentProcessedActorPtr->speed != 4)
+          currentProcessedActorPtr->speed = 5;
+        else
+        if(currentProcessedActorPtr->speed == 0 || currentProcessedActorPtr->speed == -1)
+          currentProcessedActorPtr->speed = 4;
+
+/*        if(currentProcessedActorPtr->speed>0 && currentProcessedActorPtr->speed<4)
+          currentProcessedActorPtr->speed = 5; */
+
+
+        lastTimeForward = timer;
+      }
+      else
+      {
+        if(currentProcessedActorPtr->speed>0 && currentProcessedActorPtr->speed<=4)
+        {
+          currentProcessedActorPtr->speed--;
+        }
+        else
+        {
+          currentProcessedActorPtr->speed = 0;
+        }
+      }
+
+      if(input4&2) // backward
+      {
+        if(currentProcessedActorPtr->speed == 0 || currentProcessedActorPtr->speed >= 4)
+          currentProcessedActorPtr->speed = -1;
+
+        if(currentProcessedActorPtr->speed == 5)
+          currentProcessedActorPtr->speed = 0;
+      }
+
+      break;
+    }
+  case 2: // follow
+    {
+      int followedActorIdx = objectTable[currentProcessedActorPtr->trackNumber].ownerIdx;
+
+      if(followedActorIdx == -1)
+      {
+        currentProcessedActorPtr->field_72 = 0;
+        currentProcessedActorPtr->speed = 0;
+      }
+      else
+      {
+        actorStruct* followedActorPtr = &actorTable[followedActorIdx];
+
+        int roomNumber = followedActorPtr->room;
+        int x = followedActorPtr->roomX;
+        int y = followedActorPtr->roomY;
+        int z = followedActorPtr->roomZ;
+        int angleModif;
+
+        if(currentProcessedActorPtr->room != roomNumber)
+        {
+        /*  char* link = getRoomLink(currentProcessedActorPtr->room,roomNumber);
+
+          x = *(short int*)(link)+(((*(short int*)(link+2))-(*(short int *)(link))) / 2);
+          y = *(short int*)(link+4)+(((*(short int*)(link+6))-(*(short int *)(link+4))) / 2);
+          z = *(short int*)(link+8)+(((*(short int*)(link+10))-(*(short int *)(link+8))) / 2); */
+        }
+
+        angleModif = computeAngleModificatorToPosition( currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+                                  currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
+                                  currentProcessedActorPtr->beta, x, z );
+
+        if( currentProcessedActorPtr->rotate.param == 0 || currentProcessedActorPtr->field_72 != angleModif )
+        {
+          startActorRotation( currentProcessedActorPtr->beta, currentProcessedActorPtr->beta - (angleModif << 8), 60, &currentProcessedActorPtr->rotate);
+        }
+
+        currentProcessedActorPtr->field_72 = angleModif;
+
+        if( currentProcessedActorPtr->field_72 == 0 )
+        {
+          currentProcessedActorPtr->rotate.param = 0;
+        }
+        else
+        {
+          currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
+        }
+
+        currentProcessedActorPtr->speed = 4;
+
+      }
+      break;
+    }
+  case 3: // track
+    {
+      char* trackPtr = HQR_Get(listTrack,currentProcessedActorPtr->trackNumber);
+      short int trackMacro;
+      
+      trackPtr+=currentProcessedActorPtr->positionInTrack * 2;
+
+      trackMacro = *(short int*)trackPtr;
+      trackPtr += 2;
+
+      //printf("Track macro %X\n",trackMacro);
+
+      switch(trackMacro)
+      {
+      case 0: // warp
+        {
+          int roomNumber = *(short int*)(trackPtr);
+          trackPtr += 2;
+
+          if(currentProcessedActorPtr->room != roomNumber)
+          {
+            if(genVar9 == currentProcessedActorIdx)
+            {
+              needChangeRoom = 1;
+              newRoom = roomNumber;
+            }
+
+            currentProcessedActorPtr->room = roomNumber;
+          }
+
+          currentProcessedActorPtr->zv.ZVX1 -= currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+          currentProcessedActorPtr->zv.ZVX2 -= currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+          currentProcessedActorPtr->zv.ZVY1 -= currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+          currentProcessedActorPtr->zv.ZVY2 -= currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+          currentProcessedActorPtr->zv.ZVZ1 -= currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+          currentProcessedActorPtr->zv.ZVZ2 -= currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+
+          currentProcessedActorPtr->worldX = currentProcessedActorPtr->roomX = *(short int*)(trackPtr);
+          trackPtr += 2;
+          currentProcessedActorPtr->worldY = currentProcessedActorPtr->roomY = *(short int*)(trackPtr);
+          trackPtr += 2;
+          currentProcessedActorPtr->worldZ = currentProcessedActorPtr->roomZ = *(short int*)(trackPtr);
+          trackPtr += 2;
+
+          currentProcessedActorPtr->worldX -= (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[currentProcessedActorPtr->room].worldX) * 10;
+          currentProcessedActorPtr->worldY += (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[currentProcessedActorPtr->room].worldY) * 10;
+          currentProcessedActorPtr->worldZ += (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[currentProcessedActorPtr->room].worldZ) * 10;
+
+          currentProcessedActorPtr->zv.ZVX1 += currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+          currentProcessedActorPtr->zv.ZVX2 += currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+          currentProcessedActorPtr->zv.ZVY1 += currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+          currentProcessedActorPtr->zv.ZVY2 += currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+          currentProcessedActorPtr->zv.ZVZ1 += currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+          currentProcessedActorPtr->zv.ZVZ2 += currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+
+          currentProcessedActorPtr->speed = 0;
+          currentProcessedActorPtr->field_72 = 0;
+          currentProcessedActorPtr->rotate.param = 0;
+          currentProcessedActorPtr->positionInTrack += 5;
+
+          break;
+        }
+      case 1: // goToPosition
+        {
+          int roomNumber = *(short int*)(trackPtr);
+          int x;
+          int y;
+          int z;
+          unsigned int distanceToPoint;
+          
+          trackPtr += 2;
+
+          x = *(short int*)(trackPtr);
+          trackPtr += 2;
+          y = 0;
+          z = *(short int*)(trackPtr);
+          trackPtr += 2;
+    
+          if(roomNumber != currentProcessedActorPtr->room)
+          {
+            // TODO: fix bug here...
+            x -= (roomDataTable[currentProcessedActorPtr->room].worldX - roomDataTable[roomNumber].worldX) * 10;
+            z -= (roomDataTable[currentProcessedActorPtr->room].worldZ - roomDataTable[roomNumber].worldZ) * 10;
+          }
+
+          distanceToPoint = computeDistanceToPoint( currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+                                      currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
+                                      x,z );
+
+
+          if(distanceToPoint >= DISTANCE_TO_POINT_TRESSHOLD) // not yet at position
+          {
+            int angleModif = computeAngleModificatorToPosition( currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+                                      currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
+                                      currentProcessedActorPtr->beta,
+                                      x,z );
+
+            if(currentProcessedActorPtr->rotate.param == 0 || currentProcessedActorPtr->field_72 != angleModif)
+            {
+              startActorRotation(currentProcessedActorPtr->beta, currentProcessedActorPtr->beta - (angleModif<<6), 15, &currentProcessedActorPtr->rotate);
+            }
+
+            currentProcessedActorPtr->field_72 = angleModif;
+
+            if(!angleModif)
+            {
+              currentProcessedActorPtr->rotate.param = 0;
+            }
+            else
+            {
+              currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
+            }
+          }
+          else // reached position
+          {
+            currentProcessedActorPtr->positionInTrack += 4;
+          }
+            
+          break;
+        }
+      case 2: // stop
+        {
+          currentProcessedActorPtr->speed = 0;
+          currentProcessedActorPtr->trackNumber = -1;
+          setMoveMode(0,0);
+          break;
+        }
+      case 3:
+        {
+          currentProcessedActorPtr->positionInTrack = 0;
+          break;
+        }
+      case 4: // MARK
+        {
+          currentProcessedActorPtr->MARK = *(short int*)(trackPtr);
+          trackPtr += 2;
+          currentProcessedActorPtr->positionInTrack += 2;
+          break;
+        }
+      case 5:
+        {
+          break;
+        }
+      case 0x6:
+        {
+          int betaDif = *(short int*)(trackPtr);
+          trackPtr += 2;
+
+          if(((currentProcessedActorPtr->beta - betaDif)&0x3FF) > 0x200)
+          {
+            currentProcessedActorPtr->field_72 = 1;
+          }
+          else
+          {
+            currentProcessedActorPtr->field_72 = -1;
+          }
+
+          if(!currentProcessedActorPtr->rotate.param)
+          {
+            startActorRotation(currentProcessedActorPtr->beta, betaDif, 120, &currentProcessedActorPtr->rotate);
+          }
+
+          currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
+
+          if(currentProcessedActorPtr->beta == betaDif)
+          {
+            currentProcessedActorPtr->field_72 = 0;
+
+            currentProcessedActorPtr->positionInTrack+=2;
+          }
+
+          break;
+        }
+      case 0x7:
+        {
+          currentProcessedActorPtr->dynFlags &= 0xFFFE;
+          currentProcessedActorPtr->positionInTrack++;
+          break;
+        }
+      case 0x8:
+        {
+          currentProcessedActorPtr->dynFlags |= 1;
+          currentProcessedActorPtr->positionInTrack++;
+          break;
+        }
+      case 0xA:
+        {
+          currentProcessedActorPtr->flags &= 0xFFBF;
+          currentProcessedActorPtr->positionInTrack++;
+          break;
+        }
+      case 0xB:
+        {
+          currentProcessedActorPtr->flags |= 0x40;
+          currentProcessedActorPtr->positionInTrack++;
+          break;
+        }/*
+      case 0x10:
+        {
+          int objNum = currentProcessedActorPtr->field_0;
+
+          objectTable[objNum].x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+          objectTable[objNum].y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+          objectTable[objNum].z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+
+          currentProcessedActorPtr->positionInTrack++;
+
+          break;
+        }
+      case 0x11: // walk up/down stairs on X
+        {
+          int x;
+          int y;
+          int z;
+          int objX;
+          int objY;
+          int objZ;
+          
+          x = *(short int*)(trackPtr);
+          trackPtr += 2;
+          y = *(short int*)(trackPtr);
+          trackPtr += 2;
+          z = *(short int*)(trackPtr);
+          trackPtr += 2;
+          
+          objX = objectTable[currentProcessedActorPtr->field_0].x;
+          objY = objectTable[currentProcessedActorPtr->field_0].y;
+          objZ = objectTable[currentProcessedActorPtr->field_0].z;
+
+          if(   currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY < y - 100
+            ||  currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY > y + 100)
+          {
+            int propX = makeProportional(objY, y, x - objX, (currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX) - objX);
+
+            int difY = propX - currentProcessedActorPtr->worldY;
+            int angleModif;
+
+            currentProcessedActorPtr->worldY += difY;
+            currentProcessedActorPtr->roomY += difY;
+            currentProcessedActorPtr->zv.ZVY1 += difY;
+            currentProcessedActorPtr->zv.ZVY2 += difY;
+
+            angleModif = computeAngleModificatorToPosition( currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+                                      currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
+                                      currentProcessedActorPtr->beta,
+                                      x,z );
+
+            if(!currentProcessedActorPtr->rotate.param || currentProcessedActorPtr->field_72 != angleModif)
+            {
+              startActorRotation(currentProcessedActorPtr->beta, currentProcessedActorPtr->beta - (angleModif<<8), 60, &currentProcessedActorPtr->rotate);
+            }
+
+            currentProcessedActorPtr->field_72 = angleModif;
+
+            if(angleModif)
+            {
+              currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
+            }
+            else
+            {
+              currentProcessedActorPtr->rotate.param = 0;
+            }
+
+          }
+          else
+          {
+            int difY = y - currentProcessedActorPtr->worldY;
+
+            currentProcessedActorPtr->modY = 0;
+            currentProcessedActorPtr->worldY += difY;
+            currentProcessedActorPtr->roomY += difY;
+            currentProcessedActorPtr->zv.ZVY1 += difY;
+            currentProcessedActorPtr->zv.ZVY2 += difY;
+
+            currentProcessedActorPtr->positionInTrack +=4;
+          }
+          
+          break;
+        }
+      case 0x12: // walk up/down stairs on Z
+        {
+          int x;
+          int y;
+          int z;
+          int objX;
+          int objY;
+          int objZ;
+          
+          x = *(short int*)(trackPtr);
+          trackPtr += 2;
+          y = *(short int*)(trackPtr);
+          trackPtr += 2;
+          z = *(short int*)(trackPtr);
+          trackPtr += 2;
+
+          objX = objectTable[currentProcessedActorPtr->field_0].x;
+          objY = objectTable[currentProcessedActorPtr->field_0].y;
+          objZ = objectTable[currentProcessedActorPtr->field_0].z;
+
+          if(   currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY < y - 100
+            ||  currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY > y + 100)
+          {
+            int propZ = makeProportional(objY, y, z - objZ, (currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ) - objZ);
+
+            int difY = propZ - currentProcessedActorPtr->worldY;
+            
+            int angleModif;
+
+            currentProcessedActorPtr->worldY += difY;
+            currentProcessedActorPtr->roomY += difY;
+            currentProcessedActorPtr->zv.ZVY1 += difY;
+            currentProcessedActorPtr->zv.ZVY2 += difY;
+
+            angleModif = computeAngleModificatorToPosition( currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+                                      currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
+                                      currentProcessedActorPtr->beta,
+                                      x,z );
+
+            if(!currentProcessedActorPtr->rotate.param || currentProcessedActorPtr->field_72 != angleModif)
+            {
+              startActorRotation(currentProcessedActorPtr->beta, currentProcessedActorPtr->beta - (angleModif<<8), 60, &currentProcessedActorPtr->rotate);
+            }
+
+            currentProcessedActorPtr->field_72 = angleModif;
+
+            if(angleModif)
+            {
+              currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
+            }
+            else
+            {
+              currentProcessedActorPtr->rotate.param = 0;
+            }
+
+          }
+          else
+          {
+            int difY = y - currentProcessedActorPtr->worldY;
+
+            currentProcessedActorPtr->modY = 0;
+            currentProcessedActorPtr->worldY += difY;
+            currentProcessedActorPtr->roomY += difY;
+            currentProcessedActorPtr->zv.ZVY1 += difY;
+            currentProcessedActorPtr->zv.ZVY2 += difY;
+
+            currentProcessedActorPtr->positionInTrack +=4;
+          }
+          
+          break;
+        }
+      case 0x13: // rotate
+        {
+          currentProcessedActorPtr->alpha = *(short int*)(trackPtr);
+          trackPtr += 2;
+          currentProcessedActorPtr->beta = *(short int*)(trackPtr);
+          trackPtr += 2;
+          currentProcessedActorPtr->gamma = *(short int*)(trackPtr);
+          trackPtr += 2;
+
+          currentProcessedActorPtr->field_72 = 0;
+
+          currentProcessedActorPtr->positionInTrack +=4;
+
+          break;
+        } */
+      default:
+        {
+          printf("Unknown track macro %X\n",trackMacro);
+          exit(1);
+          break;
+        }
+      }
+
+      break;
+    }
+  }
+
+  currentProcessedActorPtr->beta &= 0x3FF;
+}

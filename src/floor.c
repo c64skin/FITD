@@ -11,6 +11,7 @@ void loadFloor(int floorNumber)
   int expectedNumberOfCamera;
   unsigned int cameraDataSize;
   char buffer[256];
+  char buffer2[256];
 
   if(etageVar1)
   {
@@ -25,13 +26,16 @@ void loadFloor(int floorNumber)
 
   currentEtage = floorNumber;
 
-  sprintf(buffer,"ETAGE%02d",floorNumber);
+  if(gameId < AITD3)
+  {
+    sprintf(buffer,"ETAGE%02d",floorNumber);
 
-  etageVar0Size = getPakSize(buffer,0);
-  cameraDataSize = getPakSize(buffer,1);
+    etageVar0Size = getPakSize(buffer,0);
+    cameraDataSize = getPakSize(buffer,1);
 
-  etageVar0 = loadPakSafe(buffer,0);
-  etageVar1 = loadPakSafe(buffer,1);
+    etageVar0 = loadPakSafe(buffer,0);
+    etageVar1 = loadPakSafe(buffer,1);
+  }
 
   currentCamera = -1;
   needChangeRoom = 1;
@@ -64,7 +68,17 @@ void loadFloor(int floorNumber)
       roomDataTable = (roomDataStruct*)malloc(sizeof(roomDataStruct));
     }
 
-    roomData = (etageVar0 + *(unsigned int*)(etageVar0 + i * 4));
+    if(gameId >= AITD3)
+    {
+      char buffer[256];
+      sprintf(buffer,"SAL%02d",floorNumber);
+
+      roomData = loadPakSafe(buffer,i);
+    }
+    else
+    {
+      roomData = (etageVar0 + *(unsigned int*)(etageVar0 + i * 4));
+    }
     currentRoomDataPtr = &roomDataTable[i];
 
     currentRoomDataPtr->worldX = READ_LE_S16(roomData+4);
@@ -153,7 +167,17 @@ void loadFloor(int floorNumber)
   /////////////////////////////////////////////////
   // camera stuff
 
-  expectedNumberOfCamera = ((*(unsigned int*)(etageVar1))/4);
+  if(gameId >= AITD3)
+  {
+    char buffer[256];
+    sprintf(buffer,"CAM%02d",floorNumber);
+
+    expectedNumberOfCamera = PAK_getNumFiles(buffer);
+  }
+  else
+  {
+    expectedNumberOfCamera = ((*(unsigned int*)(etageVar1))/4);
+  }
 
   globalCameraDataTable = (cameraDataStruct*)malloc(sizeof(cameraDataStruct)*expectedNumberOfCamera);
 
@@ -163,14 +187,29 @@ void loadFloor(int floorNumber)
     unsigned int offset;
     unsigned char* currentCameraData;
 
-    offset = *(unsigned int*)(etageVar1 + i * 4);
+    if(gameId >= AITD3)
+    {
+      char buffer[256];
+      sprintf(buffer,"CAM%02d",floorNumber);
+
+      offset = 0;
+      cameraDataSize = 1;
+      currentCameraData = loadPakSafe(buffer,i);
+    }
+    else
+    {
+      offset = *(unsigned int*)(etageVar1 + i * 4);
+    }
 
     // load cameras
     if(offset<cameraDataSize)
     {
       unsigned char* backupDataPtr;
 
-      currentCameraData = (etageVar1 + *(unsigned int*)(etageVar1 + i * 4));
+      if(gameId<AITD3)
+      {
+        currentCameraData = (etageVar1 + *(unsigned int*)(etageVar1 + i * 4));
+      }
 
       backupDataPtr = currentCameraData;
 
@@ -227,7 +266,7 @@ void loadFloor(int floorNumber)
 
           pCurrentCameraZoneDefEntry->cameraZoneEntryTable = (cameraZoneEntryStruct*)malloc(sizeof(cameraZoneEntryStruct)*numZones);
 
-          ASSERT(pCurrentCameraZoneDefEntry->cameraZoneEntryTable);
+          assert(pCurrentCameraZoneDefEntry->cameraZoneEntryTable);
 
           for(j=0;j<pCurrentCameraZoneDefEntry->numZones;j++)
           {

@@ -12,4 +12,3 @@ void getHardClip();
 void throwObj(int animThrow, int frameThrow, int arg_4, int objToThrowIdx, int throwRotated, int throwForce, int animNext);
 
 #endif
-

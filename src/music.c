@@ -1240,6 +1240,10 @@ int fadeMusic(int param1, int param2, int param3)
 
 void playMusic(int musicNumber)
 {
+  if(gameId == AITD3)
+  {
+    return;
+  }
 #ifdef NO_SOUND
   return;
 #endif

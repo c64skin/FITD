@@ -11,7 +11,33 @@ typedef struct  // warning: allignement unsafe
   short int offset;
 }pakInfoStruct;
 
+
 //#define USE_UNPACKED_DATA
+
+unsigned int PAK_getNumFiles(char* name)
+{
+  char bufferName[256];
+  FILE* fileHandle;
+  long int fileOffset;
+  long int additionalDescriptorSize;
+  pakInfoStruct pakInfo;
+  char* ptr=0;
+  long int size=0;
+
+  strcpy(bufferName, name); // temporary until makeExtention is coded
+  strcat(bufferName,".PAK");
+
+  fileHandle = fopen(bufferName,"rb");
+
+  ASSERT(fileHandle);
+
+  fseek(fileHandle,4,SEEK_CUR);
+  fread(&fileOffset,4,1,fileHandle);
+
+  fclose(fileHandle);
+
+  return((fileOffset/4)-2);
+}
 
 int loadPakToPtr(char* name, int index, char* ptr)
 {
@@ -105,6 +131,10 @@ int getPakSize(char* name, int index)
     {
       size = pakInfo.uncompressedSize;
     }
+    else if(pakInfo.compressionFlag == 4)
+    {
+      size = pakInfo.uncompressedSize;
+    }
 
     fclose(fileHandle);
   }
@@ -166,28 +196,37 @@ char* loadPak(char* name, int index)
 
     fseek(fileHandle,pakInfo.offset,SEEK_CUR);
 
-    if(pakInfo.compressionFlag == 0) // uncompressed
+    switch(pakInfo.compressionFlag)
     {
-      ptr = (char*)malloc(pakInfo.discSize);
-      fread(ptr,pakInfo.discSize,1,fileHandle);
+    case 0:
+      {
+        ptr = (char*)malloc(pakInfo.discSize);
+        fread(ptr,pakInfo.discSize,1,fileHandle);
+        break;
+      }
+    case 1:
+      {
+        char * compressedDataPtr = (char *) malloc(pakInfo.discSize);
+        fread(compressedDataPtr, pakInfo.discSize, 1, fileHandle);
+        ptr = (char *) malloc(pakInfo.uncompressedSize);
 
+        PAK_explode(compressedDataPtr, ptr, pakInfo.discSize, pakInfo.uncompressedSize, pakInfo.info5);
+
+        free(compressedDataPtr);
+        break;
+      }
+    case 4:
+      {
+        char * compressedDataPtr = (char *) malloc(pakInfo.discSize);
+        fread(compressedDataPtr, pakInfo.discSize, 1, fileHandle);
+        ptr = (char *) malloc(pakInfo.uncompressedSize);
+
+        PAK_deflate(compressedDataPtr, ptr, pakInfo.discSize, pakInfo.uncompressedSize);
+
+        free(compressedDataPtr);
+        break;
+      }
     }
-    else if(pakInfo.compressionFlag == 1) // compressed
-    {
-      char * compressedDataPtr = (char *) malloc(pakInfo.discSize);
-
-#ifdef DEBUG
-      printf("Loading RES %d in %s... FLAGS : %02X\n", index, bufferName, pakInfo.info5);
-#endif
-      fread(compressedDataPtr, pakInfo.discSize, 1, fileHandle);
-
-      ptr = (char *) malloc(pakInfo.uncompressedSize);
-
-      unpack_CV(pakInfo.info5, compressedDataPtr, ptr, pakInfo.discSize, pakInfo.uncompressedSize);
-
-      free(compressedDataPtr);
-    }
-
     fclose(fileHandle);
   }
 
