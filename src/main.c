@@ -2973,10 +2973,7 @@ void drawConverZone(char* src, int param)
 			int zoneX2= *(short int*)dest;
 			int zoneZ2= *(short int*)(dest+2);
 
-			drawProjectedLine(zoneX1*10,0,zoneZ1*10,zoneX1*10,0,zoneZ2*10,20);
-			drawProjectedLine(zoneX1*10,0,zoneZ2*10,zoneX2*10,0,zoneZ2*10,20);
-			drawProjectedLine(zoneX2*10,0,zoneZ2*10,zoneX2*10,0,zoneZ1*10,20);
-			drawProjectedLine(zoneX2*10,0,zoneZ1*10,zoneX1*10,0,zoneZ1*10,20);
+			drawProjectedLine(zoneX1*10,0,zoneZ1*10,zoneX2*10,0,zoneZ2*10,20);
 		}
 	}
 }

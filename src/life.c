@@ -991,6 +991,20 @@ processOpcode:
 
 					break;
 				}
+			case 0x48: // HIT_OBJECT
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar2 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					currentProcessedActorPtr->field_8E = 8;
+					currentProcessedActorPtr->field_94 = lifeTempVar1;
+					currentProcessedActorPtr->hitForce = lifeTempVar2;
+					currentProcessedActorPtr->field_98 = -1;
+
+					break;
+				}
 			case 0x4A:
 				{
 					currentProcessedActorPtr->alpha = *(short int*)currentLifePtr;
