@@ -3071,6 +3071,9 @@ void foundObject(int objIdx, int param)
 
 			if(input3 == 28 || button !=0)
 			{
+				while(input2)
+					readKeyboard();
+
 				var_C = 1;
 			}
 		}
@@ -4443,6 +4446,10 @@ int main(int argc, char** argv)
 						exit(-1);
 					}
 */
+					readKeyboard();
+					while(input2)
+						readKeyboard();
+
 					startGame(0,0,1);
 /*
 					if(giveUp == 0)

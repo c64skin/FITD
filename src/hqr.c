@@ -296,6 +296,9 @@ void HQR_Free(hqrEntryStruct* hqrPtr)
 {
   int i;
 
+  if(!hqrPtr)
+    return;
+
   for(i=0;i<hqrPtr->numMaxEntry;i++)
   {
     if(hqrPtr->entries[i].ptr)

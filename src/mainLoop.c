@@ -41,6 +41,8 @@ int frames=0;                   /* Number of frames displayed */
 s32 t_start,t_end,t_left;
 s32 q=0;                     /* Dummy */
 
+  //atexit(cleanupAndExit);
+
 	while(1)
 	{
     frames++;
