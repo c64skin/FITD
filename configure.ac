@@ -341,4 +341,4 @@ echo SDL ....................... :  `$SDL_CONFIG --version`
 echo
 echo Warning level ............. : $WARNING_LEVEL
 echo
-echo "Now type 'make' to build cinE"
+echo "Now type 'make' to build fitd"
