@@ -17,7 +17,7 @@ struct channelTable2Element
   u16 var4;
   u8* dataPtr;
   u8* commandPtr;
-  u16 varE;
+  s16 varE;
   u16 var10;
   u8 var12;
   u16 var13;
@@ -50,17 +50,17 @@ typedef struct channelTableElement channelTableElement;
 
 channelTableElement channelTable[11] = 
 {
-  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C},
-  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C},
-  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C},
-  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C},
-  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C},
-  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C},
-  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C},
-  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C},
-  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C},
-  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C},
-  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C}
+  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
+  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
+  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
+  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
+  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
+  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
+  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
+  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
+  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
+  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF},
+  {0xFFFF, 0x40, 0xFF, 0xFF, 0xFF, 0x9C, 0xFFFF}
 };
 
 extern channelTable2Element channelTable3[11];
@@ -68,37 +68,37 @@ extern channelTable2Element channelTable2[11];
 
 channelTable2Element channelTable3[11] = 
 {
-  {0,&channelTable2[0],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {1,&channelTable2[1],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {2,&channelTable2[2],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {3,&channelTable2[3],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {4,&channelTable2[4],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {5,&channelTable2[5],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {6,&channelTable2[6],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {7,&channelTable2[7],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {8,&channelTable2[8],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {9,&channelTable2[9],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 0, &channelTable2[0],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 1, &channelTable2[1],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 2, &channelTable2[2],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 3, &channelTable2[3],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 4, &channelTable2[4],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 5, &channelTable2[5],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 6, &channelTable2[6],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 7, &channelTable2[7],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 8, &channelTable2[8],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 9, &channelTable2[9],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
   {10,&channelTable2[10],0x8040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0}
 };
 
 channelTable2Element channelTable2[11] = 
 {
-  {0,&channelTable3[0],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {1,&channelTable3[1],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {2,&channelTable3[2],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {3,&channelTable3[3],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {4,&channelTable3[4],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {5,&channelTable3[5],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {6,&channelTable3[6],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {7,&channelTable3[7],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {8,&channelTable3[8],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
-  {9,&channelTable3[9],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 0, &channelTable3[0],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 1, &channelTable3[1],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 2, &channelTable3[2],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 3, &channelTable3[3],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 4, &channelTable3[4],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 5, &channelTable3[5],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 6, &channelTable3[6],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 7, &channelTable3[7],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 8, &channelTable3[8],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
+  { 9, &channelTable3[9],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
   {10,&channelTable3[10],0x0040,NULL,NULL,0,0,0,0,0,0,0,0x7F,1,1,0x7F,0},
 };
 
 unsigned char regBDConf = 0xC0;
 
-unsigned char table1[] =
+unsigned char operatorTableMelodic[] =
 {
   0x00,
   0x03,
@@ -126,7 +126,33 @@ unsigned char table1[] =
   0xFF
 };
 
-unsigned char* tablePtr;
+unsigned char operatorTableRythme[] =
+{
+  0x00,
+  0x03,
+  0x01,
+  0x04,
+  0x02,
+  0x05,
+  0x08,
+  0x0B,
+  0x09,
+  0x0C,
+  0x0A,
+  0x0D,
+  0x10,
+  0x13,
+  0x14,
+  0xFF,
+  0x12,
+  0xFF,
+  0x15,
+  0xFF,
+  0x11,
+  0xFF
+};
+
+unsigned char* operatorTable;
 
 // global table is 300 entry long
 u16 globTableEntry[300] = {
@@ -514,7 +540,7 @@ void setupChannelFrequency(int channelIdx, int cl, int dx,int bp)
 
   sendAdlib(0xA0+channelIdx,frequencyLow);
 
-  frequencyHigh = (frequency>>8)+((cl&0x7F)>>2);
+  frequencyHigh = (frequency>>8)+((cl&0x70)>>2);
 
   if(!(dx&0x40))
   {
@@ -534,8 +560,8 @@ int musicStart(void* dummy)
 
   for(i=0;i<18;i++)
   {
-    sendAdlib(0x60+table1[i],0xFF);
-    sendAdlib(0x80+table1[i],0xFF);
+    sendAdlib(0x60+operatorTableMelodic[i],0xFF);
+    sendAdlib(0x80+operatorTableMelodic[i],0xFF);
   }
 
   for(i=0;i<9;i++)
@@ -570,24 +596,28 @@ int musicLoad(void* ptr)
 
   u8* musicPtr = (u8*)ptr;
 
-  tablePtr = table1;
+  operatorTable = operatorTableMelodic;
 
   flag1 = musicPtr[0x3C] & 0xC0;
   musicParam1 = musicPtr[0x3D];
 
   if(!musicParam1)
   {
-    exit(1);
-    //tablePtr = table2;
+    flag1 |= 0x20;
+    operatorTable = operatorTableRythme;
   }
 
   regBDConf = flag1;
 
   for(i=0;i<11;i++)
   {
-    if(*((u32*)(musicPtr + i*4 + 8)))
+    unsigned long int offset;
+
+    offset = *((u32*)(musicPtr + i*4 + 8));
+
+    if(offset)
     {
-      channelTable2[i].dataPtr = musicPtr + *((u32*)(musicPtr + i*4 + 8));
+      channelTable2[i].dataPtr = musicPtr + offset;
     }
     else
     {
@@ -597,7 +627,7 @@ int musicLoad(void* ptr)
     channelTable2[i].var4 |= 0x40;
   }
 
-  currentMusicPtr = musicPtr + *((u32*)(musicPtr + 0x34));
+  currentMusicPtr = musicPtr + *((u16*)(musicPtr + 0x34));
 }
 
 int initialialize(void* dummy)
@@ -656,13 +686,13 @@ void command0(channelTable2Element* entry, int param,u8* ptr)
 
 void command1(channelTable2Element* entry, int param,u8* ptr)
 {
-  int ax;
+  u16 ax;
 
-  ax = (*ptr);
+  ax = *(u16*)(ptr-1);
 
   entry->var10 = entry->varE = ax+entry->var13;
 
-  entry->commandPtr = ptr+1;
+  entry->commandPtr ++;
 }
 
 void command2(channelTable2Element* entry, int param,u8* ptr)
@@ -712,7 +742,7 @@ void executeMusicCommand(channelTable2Element* entry)
   if(entry->var4&0x40)
     return;
 
-  if(entry->var4&0x02)
+  if(entry->var4&0x02) // start channel
   {
     entry->commandPtr = entry->dataPtr;
     entry->var4 &= 0xFFFD;
@@ -725,11 +755,15 @@ void executeMusicCommand(channelTable2Element* entry)
       exit(1);
     }
 
-    entry->var1E--; // voice delay
+    entry->varE--; // voice delay
 
-    if(entry->var1E<=0)
+    if(entry->varE<0)
     {
-      entry->var1E = entry->var10;
+      entry->varE = entry->var10;
+    }
+    else
+    {
+      return;
     }
   }
 
@@ -846,6 +880,7 @@ void configChannel(u8 value, u8* data)
 {
   if(smallData2[value] != 0xFF)
   {
+//    assert(data[2]&0xF == data[2]);
     sendAdlib(0xC0 + smallData2[value], data[2]);
   }
 
@@ -880,10 +915,12 @@ void applyToOpl2(u8 value, u8* data,int bp)
 
 void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement* element)
 {
-  u16 value;
   char al;
   u16 dx;
   u16 bp;
+
+  u8 operator1;
+  u8 operator2;
 
   if((element2->var4 & 0x40) == element->var2)
   {
@@ -909,20 +946,21 @@ void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement*
     element->var7 = 0x9C;
   }
 
-  value = *((u16*)&tablePtr[element2->index*2]);
+  operator1 = operatorTable[element2->index*2];
+  operator2 = operatorTable[(element2->index*2)+1];
 
-  if(value == 0xFFFF)
+  if(operator1 == 0xFF && operator2 == 0xFF) // do we have an operator ?
     return;
 
   if(element2->var12 != element->var4) // change channel main config
   {
     element->var4 = element2->var12;
 
-    configChannel(value&0xFF,(currentMusicPtr2+0xD*element2->var12)+1);
+    configChannel(operator1,(currentMusicPtr2+0xD*element2->var12)+1);
 
-    if((value>>8) != 0xFF)
+    if(operator2 != 0xFF)
     {
-      configChannel((value>>8)&0xFF,(currentMusicPtr2+0xD*element2->var12)+7);
+      configChannel(operator2,(currentMusicPtr2+0xD*element2->var12)+7);
     }
 
     element->var5 = 0xFF;
@@ -941,16 +979,16 @@ void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement*
 
     dx = element2->var1D;
 
-    if(((value>>8)&0xFF)==0xFF)
+    if(operator2==0xFF)
     {
       dx = element->var5;
     }
 
-    applyToOpl2(value&0xFF,currentMusicPtr2+0xD*element2->var12,dx);
+    applyToOpl2(operator1,currentMusicPtr2+0xD*element2->var12,dx);
 
-      if(((value>>8)&0xFF) != 0xFF)
+      if(operator2 != 0xFF)
       {
-        applyToOpl2((value>>8)&0xFF,(currentMusicPtr2+0xD*element2->var12)+6,0);
+        applyToOpl2(operator2,(currentMusicPtr2+0xD*element2->var12)+6,0);
       }
   }
 
@@ -999,9 +1037,8 @@ int update(void* dummy)
     {
       currentMusicPtr2 = currentMusicPtr3;
 
-      executeMusicCommand(channelTable2[i].var2);
-
       si = channelTable2[i].var2;
+      executeMusicCommand(channelTable2[i].var2);
     }
 
     applyMusicCommandToOPL(si,&channelTable[i]);
@@ -1164,13 +1201,20 @@ void playMusic(int musicNumber)
 
 int updateLoop = 0;
 
+int oldTimer = 0;
+
 void callMusicUpdate(void)
 {
-  updateLoop++;
-
-  if(updateLoop == 25)
+  if(timer>oldTimer)
   {
-    callMusicDrv(0,NULL);
-    updateLoop = 0;
+    oldTimer = timer;
+
+    updateLoop++;
+
+   // if(updateLoop == 2)
+    {
+      callMusicDrv(0,NULL);
+      updateLoop = 0;
+    }
   }
 }
