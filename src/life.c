@@ -456,6 +456,17 @@ void processLife(int lifeNum)
                 objectTable[var_6].field_2A = 1;
                 break;
               }
+            case 0xF: // MOVE
+              {
+                objectTable[var_6].stage = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+
+                objectTable[var_6].room = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+
+                objectTable[var_6].lifeMode = 0;
+                break;
+              }
             case 0x1F:
               {
                 objectTable[var_6].life = *(short int*)(currentLifePtr);

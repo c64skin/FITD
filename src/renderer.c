@@ -51,7 +51,7 @@ int boneRotateZCos;
 int boneRotateZSin;
 
 #ifdef USE_GL
-char primBuffer[18000];
+char primBuffer[30000];
 #else
 char primBuffer[8000];
 #endif
@@ -935,112 +935,152 @@ void primType1(int primType, char** ptr, char** out) // poly
   }
 }
 
-void primType2(int primType, char** ptr, char** out)
+void primType2(int primType, char** ptr, char** out) // point
 {
-  return;
-/*  primVar1 = *out;
+  int pointNumber;
+  int ax2;
 
-  *(short int*)(*out) = *(short int*)(*ptr);
-  *out+=2;
-  *ptr+=3;
+  primVar1 = *out;
 
-  int ax = *(short int*)(*ptr);
-  *ptr+=2;
+	*(short int*)(*out) = *(short int*)(*ptr);
+	*out+=2;
+	*ptr+=3;
 
-  *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
-  ax+=2;
-  *out+=2;
-  *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Y
-  ax+=2;
-  *out+=2;
-  int ax2 = *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Z
-  ax+=2;
-  *out+=2;
+	pointNumber = *(short int*)(*ptr);
+	*ptr+=2;
 
-  primVar2 = *out;
+	*(float*)(*out) = renderPointList[pointNumber/2]; // X
+	*out+=sizeof(float);
+	*(float*)(*out) = renderPointList[pointNumber/2+1]; // Y
+	*out+=sizeof(float);
+	ax2 = *(float*)(*out) = renderPointList[pointNumber/2+2]; // Z
+	*out+=sizeof(float);
 
-  //debug: dummy
-  ax2 = 0;
+	primVar2 = *out;
 
-  if(ax2<=0)
-  {
-    *out = primVar1; // do not add the prim
-  }
-  else
-  {
-    numOfPolyToRender++;
+	//debug: dummy
 
-    *out = renderVar2;
+/*	if(ax2<=0)
+	{
+		*out = primVar1; // do not add the prim
+	}
+	else*/
+	{
+		numOfPolyToRender++;
 
-    *(short int*)(*out) = ax2;
-    *out+=2;
-    *(short int*)(*out) = ax2;
-    *out+=2;
-    *(short int*)(*out) = primType;
-    *out+=2;
+		*out = renderVar2;
 
-    *(char**)(*out) = primVar1;
-    *out+=4;
+		*(short int*)(*out) = ax2;
+		*out+=2;
+		*(short int*)(*out) = ax2;
+		*out+=2;
+		*(short int*)(*out) = primType;
+		*out+=2;
 
-    renderVar2 = *out;
-    *out = primVar2;
-  } */
+		*(char**)(*out) = primVar1;
+		*out+=4;
+
+		renderVar2 = *out;
+		*out = primVar2;
+	} 
 
 }
 
-void primType3(int primType, char** ptr, char** out)
+void primType3(int primType, char** ptr, char** out) // sphere
 {
-  return;
-/*  primVar1 = *out;
+  int pointNumber;
+  int ax2;
 
-  *(short int*)(*out) = *(short int*)(*ptr);
-  *out+=2;
-  *ptr+=3;
+	primVar1 = *out;
 
-  int ax = *(short int*)(*ptr);
-  *ptr+=2;
+	*(short int*)(*out) = *(short int*)(*ptr);
+	*out+=2;
+	*ptr+=3;
 
-  *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
-  ax+=2;
-  *out+=2;
-  *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Y
-  ax+=2;
-  *out+=2;
-  int ax2 = *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Z
-  ax+=2;
-  *out+=2;
+	*(short int*)(*out) = *(short int*)(*ptr);
+	*out+=2;
+	*ptr+=2;
 
-  primVar2 = *out;
+	pointNumber = *(short int*)(*ptr);
+	*ptr+=2;
 
-  ax2 = 0;
-  if(ax2<=0)
-  {
-    *out = primVar1; // do not add the prim
-  }
-  else
-  {
-    numOfPolyToRender++;
+	*(float*)(*out) = renderPointList[pointNumber/2]; // X
+	*out+=sizeof(float);
+	*(float*)(*out) = renderPointList[pointNumber/2+1]; // Y
+	*out+=sizeof(float);
+	ax2 = *(float*)(*out) = renderPointList[pointNumber/2+2]; // Z
+	*out+=sizeof(float);
 
-    *out = renderVar2;
+	primVar2 = *out;
 
-    *(short int*)(*out) = ax2;
-    *out+=2;
-    *(short int*)(*out) = ax2;
-    *out+=2;
-    *(short int*)(*out) = 3;
-    *out+=2;
+	{
+		numOfPolyToRender++;
 
-    *(char**)(*out) = primVar1;
-    *out+=4;
+		*out = renderVar2;
 
-    renderVar2 = *out;
-    *out = primVar2;
-  }*/
+		*(short int*)(*out) = ax2;
+		*out+=2;
+		*(short int*)(*out) = ax2;
+		*out+=2;
+		*(short int*)(*out) = 3;
+		*out+=2;
+
+		*(char**)(*out) = primVar1;
+		*out+=4;
+
+		renderVar2 = *out;
+		*out = primVar2;
+	}
+}
+
+void primType5(int primType, char** ptr, char** out) // draw out of hardClip
+{
+  int pointNumber;
+  int ax2;
+
+	primVar1 = *out;
+
+	*(short int*)(*out) = *(short int*)(*ptr);
+	*out+=2;
+	*ptr+=3;
+
+	pointNumber = *(short int*)(*ptr);
+	*ptr+=2;
+
+	// here, should check for clip on X Y Z
+
+	*(float*)(*out) = renderPointList[pointNumber/2]; // X
+	*out+=sizeof(float);
+	*(float*)(*out) = renderPointList[pointNumber/2+1]; // Y
+	*out+=sizeof(float);
+	ax2 = *(float*)(*out) = renderPointList[pointNumber/2+2]; // Z
+	*out+=sizeof(float);
+
+	primVar2 = *out;
+
+	{
+		numOfPolyToRender++;
+
+		*out = renderVar2;
+
+		*(short int*)(*out) = ax2;
+		*out+=2;
+		*(short int*)(*out) = ax2;
+		*out+=2;
+		*(short int*)(*out) = primType;
+		*out+=2;
+
+		*(char**)(*out) = primVar1;
+		*out+=4;
+
+		renderVar2 = *out;
+		*out = primVar2;
+	}
 }
 
 void line(int x1, int y1, int x2, int y2, char c);
 
-void renderStyle0(char* buffer)
+void renderStyle0(char* buffer) // line
 {
   char color;
 #ifdef USE_GL
@@ -1098,6 +1138,7 @@ void renderStyle0(char* buffer)
 #endif
 }
 
+
 // buffer is made of:
 // numPoint (short int)
 // color (short int)
@@ -1106,18 +1147,17 @@ void renderStyle0(char* buffer)
 //  Y
 //  Z
 // } * numPoint
-void renderStyle1(char* buffer)
+void renderStyle1(char* buffer) // poly
 {
   int i;
 
   int max = 3000;
   int min = -3000;
 
-  int numPoint = *(short int*)buffer;
+  u8 numPoint = *(u8*)buffer;
+  u8 polyType = *(u8*)(buffer+1); 
   int color;
   buffer+=2;
-
-  numPoint &= 0xF;
 
   color = *(short int*)buffer;
   buffer+=2;
@@ -1141,12 +1181,65 @@ void renderStyle1(char* buffer)
   }
 
 #ifdef USE_GL
-  osystem_fillPoly((float *)buffer,numPoint,color);
+  osystem_fillPoly((float *)buffer,numPoint,color,polyType);
 #else
   if(max>=0 && min <320)
     fillpoly((short *)buffer,numPoint,color);
 #endif
 }
+
+void renderStyle2(char* buffer) // point
+{
+	char color;
+	float X;
+	float Y;
+	float Z;
+  float transformedSize;
+	
+	buffer++;
+
+	color = *(buffer++);
+
+	X = *(float*)buffer;
+	buffer+=sizeof(float);
+	Y = *(float*)buffer;
+	buffer+=sizeof(float);
+	Z = *(float*)buffer;
+	buffer+=sizeof(float);
+
+  transformedSize = ((5.f * (float)cameraY) / (float)(Z+cameraX));
+
+  osystem_drawSphere(X,Y,Z,color,transformedSize);
+}
+
+void renderStyle3(char* buffer)
+{
+  unsigned char var1;
+  short int var2;
+	float X;
+	float Y;
+	float Z;
+  float transformedSize;
+
+	buffer+=1;
+	var1 = *(char*)buffer;
+	buffer+=1;
+
+	var2 = *(short int*)buffer;
+	buffer+=2;
+
+	X = *(float*)buffer;
+	buffer+=sizeof(float);
+	Y = *(float*)buffer;
+	buffer+=sizeof(float);
+	Z = *(float*)buffer;
+	buffer+=sizeof(float);
+
+  transformedSize = (((float)var2 * (float)cameraY) / (float)(Z+cameraX));
+
+  osystem_drawSphere(X,Y,Z,var1,transformedSize);
+}
+
 
 void defaultRenderFunction(char* buffer)
 {
@@ -1156,10 +1249,10 @@ void defaultRenderFunction(char* buffer)
 typedef void (*renderFunction)(char* buffer);
 
 renderFunction renderFunctions[]={
-  renderStyle0,
-  renderStyle1,
-  defaultRenderFunction,
-  defaultRenderFunction,
+  renderStyle0, // line
+  renderStyle1, // poly
+  renderStyle2, // point
+  renderStyle3, // sphere
   renderStyle1,
   defaultRenderFunction,
   defaultRenderFunction,
@@ -1175,7 +1268,7 @@ primFunction primFunctionTable[]={
   primType3,
   primFunctionDefault,
   primFunctionDefault,
-  primFunctionDefault,
+  primType5,
   primFunctionDefault,
   primFunctionDefault,
   primFunctionDefault,
@@ -1293,7 +1386,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
   {
     unsigned char primType = *(ptr++);
 
-    if(primType==1)
+    if(primFunctionTable[primType]!=primFunctionDefault)
     {
       primFunctionTable[primType](primType,&ptr,&out);
     }
@@ -1362,8 +1455,10 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
     bufferSource = *(char**)(source);
     source+=4;
 
-    if(renderType == 0 || renderType == 1)
+    if(renderFunctions[renderType] != defaultRenderFunction)
+    {
       renderFunctions[renderType](bufferSource);
+    }
   }
 
 //DEBUG

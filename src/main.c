@@ -2797,6 +2797,7 @@ void mainDraw(int mode)
 
         renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
               actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
+        
 
         if(actorPtr->animActionType && actorPtr->field_98 != -1)
         {
