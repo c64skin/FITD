@@ -1,0 +1,1 @@
+extern short int cosTable[];

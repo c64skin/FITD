@@ -1,3 +1,5 @@
+#include "common.h"
+
 /***************************************************************************
                           mainSDL.cpp  -  description
                              -------------------
@@ -22,6 +24,7 @@
 char *tempBuffer;
 SDL_Surface *sdl_buffer;
 SDL_Surface *sdl_buffer320x200;
+SDL_Surface *sdl_buffer640x400;
 SDL_Surface *sdl_bufferStretch;
 SDL_Surface *sdl_bufferRGBA;
 SDL_Surface *sdl_screen;	// that's the SDL global object for the screen
@@ -55,7 +58,6 @@ OSystem::OSystem()	// that's the constructor of the system dependent
 {
     unsigned char *keyboard;
     int size;
-    int i;
 
     Uint32 rmask, gmask, bmask, amask;
 
@@ -115,11 +117,11 @@ OSystem::OSystem()	// that's the constructor of the system dependent
 
     keyboard[SDLK_RETURN] = 0;
 
-    sdl_screen = SDL_SetVideoMode(320, 200, 32, SDL_SWSURFACE/*|SDL_FULLSCREEN*/);
+    sdl_screen = SDL_SetVideoMode(640, 400, 32, SDL_SWSURFACE/*|SDL_FULLSCREEN*/);
 
     if (sdl_screen == NULL)
 	{
-	    fprintf(stderr, "Couldn't set 640x480x32 video mode: %s\n", SDL_GetError());
+	    fprintf(stderr, "Couldn't set 640x400x32 video mode: %s\n", SDL_GetError());
 	    exit(1);
 	}
 
@@ -224,31 +226,9 @@ void OSystem::CopyBlockPhys(unsigned char *videoBuffer, int left, int top, int r
     SDL_UpdateRect(sdl_screen, left, top, right - left +1, bottom - top+1);
 }
 
-void OSystem::initVideoBuffer(char *buffer, int width, int height)
-{
-    Uint32 rmask, gmask, bmask, amask;
-
-    /* SDL interprets each pixel as a 32-bit number, so our masks must depend
-       on the endianness (byte order) of the machine */
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    rmask = 0xff000000;
-    gmask = 0x00ff0000;
-    bmask = 0x0000ff00;
-    amask = 0x000000ff;
-#else
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
-    amask = 0xff000000;
-#endif
-
-	sdl_bufferRGBA=SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 200, 32,rmask, gmask, bmask, amask);
-	sdl_buffer320x200 = SDL_CreateRGBSurfaceFrom(buffer, width, height, 8, 320, 0, 0, 0, 0);
-}
-
 void OSystem::initBuffer(char *buffer, int width, int height)
 {   
-	sdl_buffer = SDL_CreateRGBSurfaceFrom(buffer, width, height, 8, 320, 0, 0, 0, 0);
+	sdl_buffer = SDL_CreateRGBSurfaceFrom(buffer, width, height, 8, width, 0, 0, 0, 0);
 }
 
 void OSystem::crossFade(char *buffer, char *palette)
@@ -317,59 +297,3 @@ void OSystem::crossFade(char *buffer, char *palette)
     SDL_FreeSurface(tempSurface);
 }
 
-void OSystem::drawText(int X, int Y, char *string)
-{
-    SDL_Color white = { 0xFF, 0xFF, 0xFF, 0 };
-    SDL_Color black = { 0x00, 0x00, 0x00, 0 };
-    SDL_Color *forecol = &black;
-    SDL_Rect rectangle;
-
-    SDL_Surface *text;
-
-//    text = TTF_RenderText_Solid(font, string, *forecol);
-
-    rectangle.x = X;
-    rectangle.y = Y - 2;
-    rectangle.w = text->w;
-    rectangle.h = text->h;
-
-    SDL_BlitSurface(text, NULL, sdl_buffer, &rectangle);
-    SDL_FreeSurface(text);
-}
-
-void OSystem::drawTextColor(int X, int Y, char *string, unsigned char r, unsigned char g, unsigned char b)
-{
-    SDL_Color forecol;
-    SDL_Color white = { 0, 0, 0xFF, 0 };
-    SDL_Rect rectangle;
-
-    forecol.r = r;
-    forecol.g = g;
-    forecol.b = b;
-    forecol.unused = 0;
-
-    SDL_Surface *text;
-
-//    text = TTF_RenderText_Solid(font, string, forecol);
-
-    rectangle.x = X;
-    rectangle.y = Y - 2;
-    rectangle.w = text->w;
-    rectangle.h = text->h;
-
-    SDL_BlitSurface(text, NULL, sdl_buffer, &rectangle);
-    SDL_FreeSurface(text);
-}
-
-void OSystem::drawLine(int X1, int Y1, int X2, int Y2, unsigned char color, unsigned char* palette)
-{
-    palette += color*3;
-    Uint32 colorRGBA = *(Uint32*)palette;
-    colorRGBA |= 0xFF;
-
-//    lineColor(sdl_buffer, X1, Y1, X2, Y2, colorRGBA);
-}
-
-void OSystem::set320x200Mode( bool mode )
-{
-}

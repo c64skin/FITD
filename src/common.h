@@ -6,6 +6,8 @@
 #include <time.h>
 #include <string.h>
 
+#include "stdafx.h"
+
 #include "vars.h"
 
 #include "main.h"
@@ -18,6 +20,8 @@
 #include "threadCode.h"
 #include "renderer.h"
 #include "input.h"
+#include "version.h"
+#include "cosTable.h"
 
 #include "osystem.h"
 

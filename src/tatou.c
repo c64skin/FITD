@@ -82,7 +82,7 @@ void flip()
 		paletteRGBA[i*4] = palette[i*3];
 		paletteRGBA[i*4+1] = palette[i*3+1];
 		paletteRGBA[i*4+2] = palette[i*3+2];
-		paletteRGBA[i*4+3] = 0xFF;
+		paletteRGBA[i*4+3] = -1;
 	}
 	osystem.setPalette(paletteRGBA);
 	osystem.Flip((unsigned char*)unkScreenVar);
@@ -161,8 +161,6 @@ int make3dTatou(void)
 
 	startChrono(&localChrono);
 
-	return(0);
-
 	do
 	{
 		process_events();
@@ -196,7 +194,7 @@ int make3dTatou(void)
 			fadeIn(palette);
 
 		//	while(input2==0 && input1 == 0 && inputKey == 0) // boucle de rotation du tatou
-			while(1)
+		//	while(1)
 			{
 				process_events();
 
@@ -209,9 +207,9 @@ int make3dTatou(void)
 
 			/*	clearScreenTatou();
 
-				rotateModel(0,0,0,unk1,rotation,0,time);
+				rotateModel(0,0,0,unk1,rotation,0,time);*/
 
-				renderModel(0,0,0,0,0,0,tatou3d); */
+				renderModel(0,0,0,0,0,0,tatou3d);
 
 				blitScreenTatou();
 			}
@@ -224,18 +222,18 @@ int make3dTatou(void)
 	free(tatou3d);
 	free(tatou2d);
 
-	/*if(!(input2!=0 || input1 != 0 || inputKey != 0))
+	if(input2!=0 || input1 != 0 || inputKey != 0)
 	{
-		fadeOut(32,0);
-		copyPalette(localPalette,palette);
+//		fadeOut(32,0);
+		copyPalette(paletteBackup,palette);
 		return(1);
 	}
 	else
 	{
-		fadeOut(16,0);
-		copyPalette(localPalette,palette);
+//		fadeOut(16,0);
+		copyPalette(paletteBackup,palette);
 		return(0);
-	}*/
+	}
 
 	return(0);
 }

@@ -17,7 +17,7 @@ struct definesStruct // warning ! Used to read data from a file. Alignement chec
 	short int field_12;
 	short int field_14;
 	short int field_16;
-	short int field_18;
+	short int lightVar;
 	short int field_1A;
 	short int field_1C;
 	short int field_1E;
@@ -345,5 +345,29 @@ extern char* roomVar5[15];
 extern short int roomVar6[15];
 extern int startGameVar1;
 
+extern int transformX;
+extern int transformY;
+extern int transformZ;
+extern int transformXCos;
+extern int transformXSin;
+extern int transformYCos;
+extern int transformYSin;
+extern int transformZCos;
+extern int transformZSin;
+extern bool transfromUseX;
+extern bool transfromUseY;
+extern bool transfromUseZ;
+
+extern int translateX;
+extern int translateY;
+extern int translateZ;
+
+extern int cameraCenterX;
+extern int cameraCenterY;
+extern int cameraX;
+extern int cameraY;
+extern int cameraZ;
+
+extern char cameraDataTab[30];
 
 #endif

@@ -139,3 +139,29 @@ char* roomVar4;
 char* roomVar5[15];
 short int roomVar6[15];
 int startGameVar1;
+
+int transformX;
+int transformY;
+int transformZ;
+int transformXCos;
+int transformXSin;
+int transformYCos;
+int transformYSin;
+int transformZCos;
+int transformZSin;
+bool transfromUseX;
+bool transfromUseY;
+bool transfromUseZ;
+
+int translateX;
+int translateY;
+int translateZ;
+
+int cameraCenterX;
+int cameraCenterY;
+int cameraX;
+int cameraY;
+int cameraZ;
+
+char cameraDataTab[30];
+

@@ -4,6 +4,8 @@
 
 #include "common.h"
 
+char scaledScreen[640*400];
+
 void sysInitSub1(char* var0, char* var1)
 {
 	screenSm1 = var0;
@@ -420,7 +422,7 @@ void drawAITDBox(int x, int y, int width, int height)
 
 }
 
-char flagTable[]= {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
+unsigned char flagTable[]= {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
 void renderText(int x, int y, char* surface, char* string)
 {
@@ -476,7 +478,7 @@ void renderText(int x, int y, char* surface, char* string)
 				{
 					if(dh & al)
 					{
-						*(outPtr) = fontSm3;
+						*(outPtr) = (char)fontSm3;
 					}
 
 					outPtr++;
@@ -617,15 +619,33 @@ void flipScreen()
 		paletteRGBA[i*4] = palette[i*3];
 		paletteRGBA[i*4+1] = palette[i*3+1];
 		paletteRGBA[i*4+2] = palette[i*3+2];
-		paletteRGBA[i*4+3] = 0xFF;
+		paletteRGBA[i*4+3] = -1;
 	}
-	osystem.setPalette(paletteRGBA);
-	osystem.Flip((unsigned char*)unkScreenVar);
 
-/*	FILE* fileHandle;
-	fileHandle = fopen("dump.raw","wb+");
-	fwrite(screen,320,200,fileHandle);
-	fclose(fileHandle);*/
+	char* outPtr = scaledScreen;
+	char* inPtr = unkScreenVar;
+
+	for(i=0;i<200;i++)
+	{
+		int j;
+		char* copySource = outPtr;
+
+		for(j=0;j<320;j++)
+		{
+			*(outPtr++) = *(inPtr);
+			*(outPtr++) = *(inPtr++);
+		}
+
+		// copy line
+		for(j=0;j<640;j++)
+		{
+			*(outPtr++) = *(copySource++);
+		}
+		
+	}
+
+	osystem.setPalette(paletteRGBA);
+	osystem.Flip((unsigned char*)scaledScreen);
 }
 
 void flushScreen(void)
@@ -1650,6 +1670,218 @@ void loadRoom(int roomNumber)
 //	unfreezeTime();
 }
 
+void loadCamera(int cameraIdx)
+{
+	char name[16];
+	int useSpecial = -1;
+
+	sprintf(name,"CAMERA0%d",currentEtage);
+	//strcat(name,".PAK");
+
+	if(defines.lightVar==1)
+	{
+		switch(currentEtage)
+		{
+		case 6:
+			{
+				if(cameraIdx == 0)
+				{
+					useSpecial = 17;
+				}
+				if(cameraIdx == 5)
+				{
+					useSpecial = 18;
+				}
+				break;
+			}
+		case 7:
+			{
+				if(cameraIdx == 1)
+				{
+					useSpecial = 16;
+				}
+				break;
+			}
+		}
+	}
+
+	if(useSpecial != -1)
+	{
+		strcpy(name,"ITD_RESS");
+		cameraIdx = useSpecial;
+	}
+
+	if(!loadPakToPtr(name,cameraIdx,aux))
+	{
+		theEnd(0,name);
+	}
+}
+
+void setupPointTransformSM(int x, int y, int z)
+{
+	transformX = x&0x3FF;
+	if(transformX)
+	{
+		transformXCos = cosTable[transformX];
+		transformXSin = cosTable[(transformX+0x100)&0x3FF];
+		transfromUseX = true;
+	}
+	else
+	{
+		transfromUseX = false;
+	}
+
+	transformY = y&0x3FF;
+	if(transformY)
+	{
+		transformYCos = cosTable[transformY];
+		transformYSin = cosTable[(transformY+0x100)&0x3FF];
+		transfromUseY = true;
+	}
+	else
+	{
+		transfromUseY = false;
+	}
+
+	transformZ = z&0x3FF;
+	if(transformZ)
+	{
+		transformZCos = cosTable[transformZ];
+		transformZSin = cosTable[(transformZ+0x100)&0x3FF];
+		transfromUseZ = true;
+	}
+	else
+	{
+		transfromUseZ = false;
+	}
+}
+
+void setupSelfModifyingCode(int x, int y, int z)
+{
+	translateX = x;
+	translateY = y;
+	translateZ = z;
+}
+
+void setupSMCode(int centerX, int centerY, int x, int y, int z)
+{
+	cameraCenterX = centerX;
+	cameraCenterY = centerY;
+	
+	cameraX = x;
+	cameraY = y;
+	cameraZ = z;
+}
+
+int setupCameraSub1Sub1(int value)
+{
+	char* ptr = cameraDataTab;
+	int var;
+
+	while((var=*(ptr++))!=-1)
+	{
+		if(value == var)
+		{
+			return(1);
+		}
+	}
+
+	return(0);
+}
+
+void setupCameraSub1()
+{
+	int i;
+	int j;
+	int var_10;
+	int var_6;
+
+	char* dataTabPos = cameraDataTab;
+	short int* ptr = (short int*)(etageVar0 + currentDisplayedRoom*4);
+
+	ptr+= (unsigned short int)*(ptr+1);
+	*dataTabPos = -1;
+
+	var_6 = *(ptr++);
+
+	for(i=0;i<var_6;i++)
+	{
+		if(*(ptr+7) == 0)
+		{
+			var_10 = *(ptr+6);
+			if(!setupCameraSub1Sub1(var_10))
+			{
+				*(dataTabPos++) = var_10;
+				*(dataTabPos) = -1;
+			}
+		}
+	}
+
+	short int* ptr2 = (short int*)(roomVar5[currentCamera] + 18);
+
+	int var_12 = *(ptr2++);
+
+	for(j=0;j<var_12;j++)
+	{
+		var_10 = *(ptr2);
+
+		if(!setupCameraSub1Sub1(var_10))
+		{
+			*(dataTabPos++) == var_10;
+			*(dataTabPos) = -1;
+		}
+
+		ptr2 += 6;
+	}
+}
+
+void setupCamera()
+{
+//	freezeTime();
+
+	currentCamera = startGameVar1;
+
+	loadCamera(*(cameraPtr+(startGameVar1+6)*2));
+
+	char* ptr = roomVar5[currentCamera];
+
+	setupPointTransformSM(*(short int*)(ptr),*(short int*)(ptr+2),*(short int*)(ptr+4));
+	ptr+= 6;
+
+	int x = (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+4))) << 3) + (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+4))) << 1);
+	ptr+=2;
+	int y = (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+6))) << 3) + (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+6))) << 1);
+	ptr+=2;
+	int z = (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+8))) << 3) + (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+8))) << 1);
+	ptr+=2;
+
+	setupSelfModifyingCode(x,y,z);
+	setupSMCode(160,100,*(short int*)(ptr),*(short int*)(ptr+2),*(short int*)(ptr+4));
+	ptr+=6;
+
+	setupCameraSub1();
+	updateAllActorAndObjects();
+/*	setupCameraSub2();
+	setupCameraSub3();
+	setupCameraSub4();
+	setupCameraSub5();
+
+	if(mainVar1==2)
+	{
+		setupCameraVar1 = 2;
+	}
+	else
+	{
+		if(setupCameraVar1!=2)
+		{
+			setupCameraVar1 = 1;
+		}
+	}*/
+
+	mainVar1 = 0;
+//unfreezeTime();
+}
+
 void startGame(int startupFloor, int startupRoom, int allowSystemMenu)
 {
 	initEngine();
@@ -1664,7 +1896,7 @@ void startGame(int startupFloor, int startupRoom, int allowSystemMenu)
 	startGameVar1 = 0;
 	mainVar1 = 2;
 
-//	setupCamera();
+	setupCamera();
 
 	/*mainLoop(allowSystemMenu);
 
@@ -1677,8 +1909,12 @@ int main(int argc, char** argv)
 {
 	int startupMenuResult;
 	int protectionToBeDone = 1;
+	char version[256];
+	getVersion(version);
 
-	osystem.initBuffer(unkScreenVar,320,200);
+	printf(version);
+
+	osystem.initBuffer(scaledScreen,640,400);
 	startThreadTimer();
 
 	sysInit();
@@ -1688,7 +1924,7 @@ int main(int argc, char** argv)
 
 	preloadResource();
 
-	//if(!make3dTatou())
+	if(!make3dTatou())
 	{
 		makeIntroScreens();
 	}
@@ -1792,3 +2028,4 @@ int main(int argc, char** argv)
 
 	return(0);
 }
+
