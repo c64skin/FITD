@@ -2537,12 +2537,6 @@ int anim(int animNum,int arg_2, int arg_4)
 void line(int x1, int y1, int x2, int y2, char c);
 void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
 {
-/*	x1 += renderX;
-	x2 += renderX;
-
-	y1 += renderY;
-	y2 += renderY;*/
-
 	x1 -= translateX;
 	x2 -= translateX;
 
@@ -2552,14 +2546,11 @@ void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
 	z1 -= translateZ;
 	z2 -= translateZ;
 
-	/*z1 += renderZ;
-	z2 += renderZ;*/
-
 	transformPoint(&x1,&y1,&z1);
 	transformPoint(&x2,&y2,&z2);
 
-/*	z1 += cameraX;
-	z2 += cameraX; */
+	z1 += cameraX;
+	z2 += cameraX;
 
 	int transformedX1 = ((x1 * cameraY) / z1) + cameraCenterX;
 	int transformedX2 = ((x2 * cameraY) / z2) + cameraCenterX;
@@ -2567,7 +2558,8 @@ void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
 	int transformedY1 = ((y1 * cameraZ) / z1) + cameraCenterY;
 	int transformedY2 = ((y2 * cameraZ) / z2) + cameraCenterY;
 
-	line(transformedX1,transformedY1,transformedX2,transformedY2,c);
+	if(z1>0 && z2>0)
+		line(transformedX1,transformedY1,transformedX2,transformedY2,c);
 }
 
 void drawZv(actorStruct* actorPtr)
@@ -2596,6 +2588,60 @@ void drawZv(actorStruct* actorPtr)
 
 }
 
+void drawConverZone(char* src, int param)
+{
+	int i;
+
+	for(i=0;i<param;i++)
+	{
+		char* dest = cameraBuffer;
+
+		int var1 = *(short int*)src;
+		src+=2;
+
+		memcpy(dest,src,var1<<2);
+		dest+= var1<<2;
+
+		*(short int*)dest = *(short int*)src;
+		dest+=2;
+		*(short int*)dest = *(short int*)(src+2);
+		dest+=2;
+
+		src += (var1)<<2;
+
+		dest = cameraBuffer;
+
+		int j;
+
+		for(j=0;j<var1;j++)
+		{
+			int zoneX1= *(short int*)dest;
+			dest+=2;
+			int zoneX2= *(short int*)dest;
+			dest+=2;
+			int zoneZ1= *(short int*)dest;
+			dest+=2;
+			int zoneZ2= *(short int*)dest;
+
+			drawProjectedLine(zoneX1*10,0,zoneZ1*10,zoneX1*10,0,zoneZ2*10,20);
+			drawProjectedLine(zoneX1*10,0,zoneZ2*10,zoneX2*10,0,zoneZ2*10,20);
+			drawProjectedLine(zoneX2*10,0,zoneZ2*10,zoneX2*10,0,zoneZ1*10,20);
+			drawProjectedLine(zoneX2*10,0,zoneZ1*10,zoneX1*10,0,zoneZ1*10,20);
+		}
+	}
+}
+
+void drawConverZones()
+{
+	int i;
+	for(i=0;i<numCameraInRoom;i++)
+	{
+		char* cameraDataPtr = roomVar5[i] + 2*roomVar6[i];
+
+		drawConverZone(cameraDataPtr+2,*(short int*)cameraDataPtr);
+	}
+}
+
 void mainDraw(int mode)
 {
 	if(mode == 0)
@@ -2615,6 +2661,8 @@ void mainDraw(int mode)
 	genVar6 = 0;
 
 	int i;
+
+	drawConverZones();
 
 	for(i=0;i<numActorInList;i++)
 	{
@@ -3586,7 +3634,7 @@ int changeCameraSub1Sub1(int x1, int z1, int x2, int z2, int x3, int z3, int x4,
 
 	int result2 = (var5 * var2) - (var3 * var6);
 
-	int result3 = (-var1 * var6) + (var6 * var4);
+	int result3 = (-var1 * var6) + (var5 * var4);
 
 	if(result1<0)
 	{
@@ -3595,12 +3643,12 @@ int changeCameraSub1Sub1(int x1, int z1, int x2, int z2, int x3, int z3, int x4,
 		result3 = -result3;
 	}
 
-	if(!result2 || !result3)
+	if(result2<=0 || result3<=0)
 	{
 		return(returnFlag);
 	}
 
-	if(result1 > result2 && result1 < result3)
+	if(result1 > result2 && result1 > result3)
 	{
 		returnFlag = 1;
 	}
@@ -3641,13 +3689,13 @@ int changeCameraSub1(int x1, int x2, int z1, int z2, char* ptr, short int param)
 
 		for(j=0;j<var1;j++)
 		{
-			int zoneX1= *(unsigned short int*)dest;
+			int zoneX1= *(short int*)dest;
 			dest+=2;
-			int zoneZ1= *(unsigned short int*)dest;
+			int zoneX2= *(short int*)dest;
 			dest+=2;
-			int zoneX2= *(unsigned short int*)dest;
+			int zoneZ1= *(short int*)dest;
 			dest+=2;
-			int zoneZ2= *(unsigned short int*)dest;
+			int zoneZ2= *(short int*)dest;
 
 			if(changeCameraSub1Sub1(xMid,zMid,xMid-10000,zMid,zoneX1,zoneZ1,zoneX2,zoneZ2))
 			{

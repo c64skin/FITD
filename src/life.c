@@ -57,6 +57,7 @@ processOpcode:
 				}
 			case 0x1: // ANIM
 				{
+					printf("Anim\n");
 					lifeTempVar1 = *(short int*)currentLifePtr;
 					currentLifePtr +=2;
 					lifeTempVar2 = *(short int*)currentLifePtr;

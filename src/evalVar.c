@@ -17,8 +17,10 @@ int evalVar(void)
 	else
 	if(var1 == 0)
 	{
-		printf("Unimplemented code in evalVar: var1 == 0\n");
-		exit(1);
+		int temp = *(short int*)(currentLifePtr);
+		currentLifePtr+=2;
+
+		return(vars[temp]);
 	}
 	else
 	{
@@ -50,6 +52,11 @@ int evalVar(void)
 
 			switch(var1)
 			{
+			case 0x2:
+				{
+					return(actorPtr->HARD_COL);
+					break;
+				}
 			case 0x5:
 				{
 					return(actorPtr->ANIM);

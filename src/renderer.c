@@ -260,7 +260,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 	char* tempPtr = ptr;
 
 	*(short int*)(ptr+0xA) = alpha;
-	*(short int*)(ptr+0xC) = beta+0x100;
+	*(short int*)(ptr+0xC) = beta;
 	*(short int*)(ptr+0xE) = gamma;
 
 	int i;
