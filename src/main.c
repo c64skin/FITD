@@ -1034,24 +1034,14 @@ void initEngine(void)
 
 	defines.hero = i;
 
-/*	listLife = HQR_InitRessource("LISTLIFE", 10000, 100);
-	listTrack = HQR_InitRessource("LISTTRAK", 1000, 10); */
+	listLife = HQR_InitRessource("LISTLIFE", 10000, 100);
+	listTrack = HQR_InitRessource("LISTTRAK", 1000, 10); 
 
+ // TODO: missing dos memory check here
 
-	listLife = HQR_InitRessource("LISTLIFE",  10000000, 1000);
-	listTrack = HQR_InitRessource("LISTTRAK", 10000000, 1000); 
-
-
-
-	// TODO: missing dos memory check here
-
-/*
 	listBody = HQR_InitRessource(listBodySelect[defines.hero],100000, 50); // was calculated from free mem size
 	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],100000, 50); // was calculated from free mem size
-*/
 
-	listBody = HQR_InitRessource(listBodySelect[defines.hero],10000000, 1000); // was calculated from free mem size
-	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],10000000, 1000); // was calculated from free mem size
 
 	for(i=0;i<NUM_MAX_ACTOR;i++)
 	{
@@ -4633,4 +4623,30 @@ void setClipSize(int left, int top, int right, int bottom)
 	clipTop = top;
 	clipRight = right;
 	clipBottom = bottom;
+}
+
+void Sound_Quit(void);
+
+void cleanupAndExit(void)
+{
+  Sound_Quit();
+
+  HQR_Free(listMus);
+  HQR_Free(listSamp);
+  HQR_Free(hqrUnk);
+  HQR_Free(listLife);
+  HQR_Free(listTrack);
+  HQR_Free(listBody);
+  HQR_Free(listAnim);
+
+  free(tabTextes);
+  free(aux);
+  free(aux2);
+  free(bufferAnim);
+
+  free(screen);
+
+  destroyMusicDriver();
+
+  exit(0);
 }

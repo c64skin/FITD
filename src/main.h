@@ -28,6 +28,7 @@ void configureHqrHero(hqrEntryStruct* hqrPtr, char* name);
 void flushScreen(void);
 int parseAllSaves(int arg);
 textEntryStruct* getTextFromIdx(int index);
+void cleanupAndExit(void);
 
 extern char scaledScreen[640*400];
 

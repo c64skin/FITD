@@ -1271,3 +1271,8 @@ void callMusicUpdate(void)
     callMusicDrv(0,NULL);
   }
 }
+
+void destroyMusicDriver(void)
+{
+  OPLDestroy(virtualOpl);
+}

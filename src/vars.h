@@ -93,6 +93,16 @@ struct regularTextEntryStruct
 
 typedef struct regularTextEntryStruct regularTextEntryStruct;
 
+struct hqrSubEntryStruct
+{
+	short int key;
+	short int size;
+	unsigned int lastTimeUsed;
+  char* ptr;
+};
+
+typedef struct hqrSubEntryStruct hqrSubEntryStruct;
+
 struct hqrEntryStruct
 {
 	char string[10];
@@ -100,21 +110,10 @@ struct hqrEntryStruct
 	unsigned short int sizeFreeData;
 	unsigned short int numMaxEntry;
 	unsigned short int numUsedEntry;
-	char* dataPtr;
+	hqrSubEntryStruct* entries;
 };
 
 typedef struct hqrEntryStruct hqrEntryStruct;
-
-struct hqrSubEntryStruct
-{
-	short int key;
-	short int offset;
-	short int size;
-	unsigned int lastTimeUsed;
-  char* ptr;
-};
-
-typedef struct hqrSubEntryStruct hqrSubEntryStruct;
 
 struct ZVStruct
 {

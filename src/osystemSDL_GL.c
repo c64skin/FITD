@@ -188,7 +188,7 @@ osystem_init()	// that's the constructor of the system dependent
 	    exit(1);
 	}
 
-  atexit(Sound_Quit);
+  //atexit(Sound_Quit);
   //  atexit(SDL_Quit);
 
 /*    if (TTF_Init() < 0)

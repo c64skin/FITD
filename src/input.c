@@ -3,6 +3,7 @@
 
 void readKeyboard(void)
 {
+  SDL_Event event;
     int size;
     int j;
 	unsigned char *keyboard;
@@ -11,7 +12,15 @@ void readKeyboard(void)
 	input1 = 0;
 	input2 = 0;
 
-    SDL_PumpEvents();
+    while( SDL_PollEvent( &event ) ) {
+
+        switch( event.type ) {
+        case SDL_QUIT:
+            cleanupAndExit();
+            break;
+        }
+
+    }
 
     keyboard = SDL_GetKeyState(&size);
 
@@ -51,7 +60,6 @@ void readKeyboard(void)
 				debugger_enterMainDebug();
 				break;
 #endif
-				
 			}
 		}
 	}
