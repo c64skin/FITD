@@ -510,6 +510,49 @@ void drawText(int x, int y, int index, int color)
 	renderText(x,y+1,screen,textPtr);
 }
 
+void fillBox(int x1, int y1, int x2, int y2, char color) // fast recode. No RE
+{
+	int width = x2 - x1 + 1;
+	int height = y2 - y1 + 1;
+
+	char* dest = screen + y1*320 + x1;
+
+	int i;
+	int j;
+
+	for(i=0;i<height;i++)
+	{
+		for(j=0;j<width;j++)
+		{
+			*(dest++)= color;
+		}
+
+		dest += 320-width;
+	}
+}
+
+void drawSlectedText(int x, int y, int index, int color1, int color2)
+{
+	textEntryStruct* entryPtr;
+	char* textPtr;
+
+	entryPtr = getTextFromIdx(index);
+
+	if(!entryPtr)
+		return;
+
+	x -= (entryPtr->width/2); // center
+
+	textPtr = entryPtr->textPtr;
+
+	initFont(fontData,color2);
+	renderText(x,y+1,screen,textPtr);
+
+	initFont(fontData,color1);
+	renderText(x,y,screen,textPtr);
+
+}
+
 void drawStartupMenu(int selectedEntry)
 {
 	int currentY = 76;
@@ -521,8 +564,8 @@ void drawStartupMenu(int selectedEntry)
 	{
 		if(currentTextNum == selectedEntry) // hilight selected entry
 		{
-//			fillBox(10,currentY,309,currentY+16,100);
-//			drawSlectedText(160,currentY,currentTextNum+11,15,4);
+			fillBox(10,currentY,309,currentY+16,100);
+			drawSlectedText(160,currentY,currentTextNum+11,15,4);
 		}
 		else
 		{
