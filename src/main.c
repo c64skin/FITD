@@ -2935,13 +2935,33 @@ void deleteObject(int objIdx)
 	objPtr->stage = -1;
 
 	removeObjFromInventory(objIdx);
-
 }
 
 int anim(int animNum,int arg_2, int arg_4)
 {
 	if(animNum == currentProcessedActorPtr->ANIM)
 	{
+		if(!(currentProcessedActorPtr->flags & 1))
+		{
+			if(currentProcessedActorPtr->flags & 8)
+			{
+				deleteSub(currentProcessedActorIdx);
+			}
+
+			currentProcessedActorPtr->flags |= 1;
+
+			initAnimInBody(currentProcessedActorPtr->FRAME, HQR_Get(listAnim,animNum), HQR_Get(listBody, currentProcessedActorPtr->bodyNum));
+
+			currentProcessedActorPtr->field_40 = arg_2;
+			currentProcessedActorPtr->field_42 = arg_4;
+		}
+		else
+		{
+			currentProcessedActorPtr->field_40 = arg_2;
+			currentProcessedActorPtr->field_42 = arg_4;
+
+			return(0);
+		}
 	}
 	else
 	{
@@ -4012,17 +4032,13 @@ void hardColSuB1Sub1(int flag)
 	}
 }
 
-void hardColSuB1(ZVStruct* zvPtr1, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
+void hardColSuB1(ZVStruct* startZv, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
 {
-	int flag;
+	int flag = 0;
 
-	if(zvPtr1->ZVX2 > zvPtr3->ZVX1)
+	if(startZv->ZVX2 > zvPtr3->ZVX1)
 	{
-		if(zvPtr3->ZVX2 > zvPtr1->ZVX1)
-		{
-			flag = 0;
-		}
-		else
+		if(zvPtr3->ZVX2 <= startZv->ZVX1)
 		{
 			flag = 8;
 		}
@@ -4032,13 +4048,9 @@ void hardColSuB1(ZVStruct* zvPtr1, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
 		flag = 4;
 	}
 
-	if(zvPtr1->ZVZ2 > zvPtr3->ZVZ1)
+	if(startZv->ZVZ2 > zvPtr3->ZVZ1)
 	{
-		if(zvPtr1->ZVX1 < zvPtr3->ZVX2)
-		{
-			flag |= 0; // really stupid, but it's actualy written like that in the original code
-		}
-		else
+		if(startZv->ZVZ1 >= zvPtr3->ZVZ2)
 		{
 			flag |= 2;
 		}
@@ -4140,8 +4152,8 @@ void hardColSuB1(ZVStruct* zvPtr1, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
 
 	if(var_A == flag || flag == 15)
 	{
-		int Xmod = (zvPtr2->ZVX1 - zvPtr1->ZVX1); // recheck
-		int Zmod = abs(zvPtr2->ZVZ1 - zvPtr1->ZVZ1);
+		int Xmod = abs(zvPtr2->ZVX1 - startZv->ZVX1); // recheck
+		int Zmod = abs(zvPtr2->ZVZ1 - startZv->ZVZ1);
 
 		if(Xmod > Zmod)
 		{
@@ -4227,9 +4239,9 @@ void processActor1(void)
 	short int localTable[3];
 	ZVStruct zvLocal;
 
-	if(var_6 != -1)
+	if(var_6 != -1) // next anim ?
 	{
-		if(var_6 == -2)
+		if(var_6 == -2) // completly stop anim
 		{
 			stopAnim(currentProcessedActorIdx);
 			currentProcessedActorPtr->field_44 = -1;
@@ -4357,7 +4369,7 @@ void processActor1(void)
 
 	ZVStruct* zvPtr;
 
-	if(var_52 || var_50 || var_4E)
+	if(var_52 || var_50 || var_4E) // start of movement management
 	{
 		zvPtr = &currentProcessedActorPtr->zv;
 		copyZv(&currentProcessedActorPtr->zv,&zvLocal);
@@ -4391,7 +4403,7 @@ void processActor1(void)
 					currentProcessedActorPtr->HARD_COL = 255;
 				}
 
-				if(var_52 || var_50)
+				if(var_52 || var_50) // move on the X or Y axis ? update to avoid entering the hard col
 				{
 					hardColVar1 = var_52;
 					hardColVar2 = var_50;
@@ -4420,15 +4432,17 @@ void processActor1(void)
 			}
 		}
 
-		var_42 = processActor1Sub1(currentProcessedActorIdx,&zvLocal);
+		var_42 = processActor1Sub1(currentProcessedActorIdx,&zvLocal); // get the number of actor/actor collision
 
 		int j;
 
-		for(j=0;j<var_42;j++)
+		for(j=0;j<var_42;j++) // process the actor/actor collision
 		{
 			actorStruct* actorTouchedPtr;
 
-			actorTouchedPtr = &actorTable[currentProcessedActorPtr->COL[j]];
+			var_56 = currentProcessedActorPtr->COL[j];
+
+			actorTouchedPtr = &actorTable[var_56];
 
 			actorTouchedPtr->COL_BY = currentProcessedActorIdx;
 
@@ -4471,7 +4485,7 @@ void processActor1(void)
 
 					if(!isPushPossible)
 					{
-						if(!var_52 || !var_50) //if we're trying to move
+						if(var_52 || var_50) //if we're trying to move
 						{
 							if(actorTouchedPtr->room != currentProcessedActorPtr->room)
 							{
@@ -4485,6 +4499,16 @@ void processActor1(void)
 								hardColVar2 = var_50;
 
 								hardColSuB1(zvPtr, &zvLocal, &localZv3);
+
+								var_52 = hardColVar1;
+								var_50 = hardColVar2;
+							}
+							else
+							{
+								hardColVar1 = var_52;
+								hardColVar2 = var_50;
+
+								hardColSuB1(zvPtr, &zvLocal, touchedZv); // manage as hard collision
 
 								var_52 = hardColVar1;
 								var_50 = hardColVar2;
@@ -4545,7 +4569,7 @@ void processActor1(void)
 					}
 				}
 			}
-		}
+		} // end of actor/actor collision
 
 		currentProcessedActorPtr->modX = var_52 + var_4C;
 		currentProcessedActorPtr->modY = var_4E + var_4A;
@@ -4559,8 +4583,7 @@ void processActor1(void)
 
 		currentProcessedActorPtr->zv.ZVZ1 += var_50;
 		currentProcessedActorPtr->zv.ZVZ2 += var_50;
-
-	}
+	} // end of movement management
 
 	if(!currentProcessedActorPtr->field_60.param)
 	{
@@ -5306,7 +5329,7 @@ void processActor2()
 	case 10:
 		{
 // FIXME: fix the stairs zone in green room
-			if(*(short int*) (ptr + 0xC) == 1 && currentProcessedActorPtr->zv.ZVZ1 >= -1600)
+			if(*(short int*) (ptr + 0xC) == 1/* && currentProcessedActorPtr->zv.ZVZ1 >= -1600*/)
 				break;
 
 			int life = objectTable[currentProcessedActorPtr->field_0].field_24;
@@ -5372,7 +5395,7 @@ int checkLineProjectionWithActors( int actorIdx, int X, int Y, int Z, int beta, 
 
 			for(i=0;i<50;i++)
 			{
-				if(currentActorPtr->field_0 != -1 && i != actorIdx && !currentActorPtr->flags & 0x20)
+				if(currentActorPtr->field_0 != -1 && i != actorIdx && !(currentActorPtr->flags & 0x20))
 				{
 					ZVStruct* zvPtr = &currentActorPtr->zv;
 
@@ -5545,8 +5568,6 @@ void processAnimAction(void)
 			ZVStruct rangeZv;
 
 			int range = currentProcessedActorPtr->animActionParam;
-
-			range = 2000;
 
 			rangeZv.ZVX1 = x - range;
 			rangeZv.ZVX2 = x + range;

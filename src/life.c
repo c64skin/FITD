@@ -223,7 +223,7 @@ void animMove(int a,int b,int c,int d,int e,int f,int g)
 		}
 		else
 		{
-			anim(e,1,-1);
+			anim(e,1,-1); // walk backward
 		}
 	}
 	if(currentProcessedActorPtr->speed == 0)
@@ -301,6 +301,23 @@ void setStage(int newStage, int newRoomLocal, int X, int Y, int Z)
 	}
 }
 
+void doRealZv(actorStruct* actorPtr)
+{
+	computeScreenBox(0,0,0,actorPtr->alpha, actorPtr->beta, actorPtr->gamma, HQR_Get(listBody, actorPtr->bodyNum) );
+
+	ZVStruct* zvPtr = &actorPtr->zv;
+
+	printf("implement setupRealZv\n");
+//	setupRealZv(zvPtr);
+
+	zvPtr->ZVX1 += actorPtr->roomX;
+	zvPtr->ZVX2 += actorPtr->roomX;
+	zvPtr->ZVY1 += actorPtr->roomY;
+	zvPtr->ZVY2 += actorPtr->roomY;
+	zvPtr->ZVZ1 += actorPtr->roomZ;
+	zvPtr->ZVZ2 += actorPtr->roomZ;
+}
+
 void processLife(int lifeNum)
 {
 	int exitLife = 0;
@@ -330,7 +347,7 @@ void processLife(int lifeNum)
 		short int currentOpcode = *(short int*)(currentLifePtr);
 		currentLifePtr+=2;
 
-		printf("%d:opcode: %04X\n",lifeNum, currentOpcode);
+//		printf("%d:opcode: %04X\n",lifeNum, currentOpcode);
 
 		if(currentOpcode & 0x8000)
 		{
@@ -990,6 +1007,11 @@ processOpcode:
 					}
 					break;
 				}
+			case 0x26:
+				{
+					doRealZv(currentProcessedActorPtr);
+					break;
+				}
 			case 0x27:
 				{
 					playSound(evalVar());
@@ -1191,6 +1213,25 @@ processOpcode:
 				{
 					objectTable[currentProcessedActorPtr->field_0].foundBody = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
+
+					break;
+				}
+			case 0x38: // SET_ALPHA
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar2 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					if(currentProcessedActorPtr->alpha != lifeTempVar1)
+					{
+						if(currentProcessedActorPtr->rotate.param == 0 || lifeTempVar1!= currentProcessedActorPtr->rotate.newAngle)
+						{
+							startActorRotation(currentProcessedActorPtr->alpha, lifeTempVar1, lifeTempVar2, &currentProcessedActorPtr->rotate);
+						}
+
+						currentProcessedActorPtr->alpha = updateActorRotation(&currentProcessedActorPtr->rotate);
+					}
 
 					break;
 				}

@@ -246,6 +246,9 @@ void manualRot(int param)
 
 #define DISTANCE_TO_POINT_TRESSHOLD 400
 
+unsigned int lastTimeForward = 0;
+
+
 void processTrack(void)
 {
 	switch(currentProcessedActorPtr->trackMode)
@@ -255,11 +258,17 @@ void processTrack(void)
 			manualRot(60);
 			if(input4&1) // forward
 			{
+				if(timer - lastTimeForward < 10 && currentProcessedActorPtr->speed != 4)
+					currentProcessedActorPtr->speed = 5;
+				else
 				if(currentProcessedActorPtr->speed == 0 || currentProcessedActorPtr->speed == -1)
 					currentProcessedActorPtr->speed = 4;
 
-				if(currentProcessedActorPtr->speed>0 && currentProcessedActorPtr->speed<4)
-					currentProcessedActorPtr->speed = 5;
+/*				if(currentProcessedActorPtr->speed>0 && currentProcessedActorPtr->speed<4)
+					currentProcessedActorPtr->speed = 5; */
+
+
+				lastTimeForward = timer;
 			}
 			else
 			{

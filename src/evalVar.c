@@ -154,7 +154,16 @@ int evalVar(void)
 			{
 			case 0x0:
 				{
-					return(actorPtr->COL[0]);
+					int temp1 = actorPtr->COL[0];
+
+					if(temp1 != -1)
+					{
+						return(actorTable[temp1].field_0);
+					}
+					else
+					{
+						return(-1);
+					}
 					break;
 				}
 			case 0x1:
@@ -182,7 +191,7 @@ int evalVar(void)
 
 					break;
 				}
-			case 0x4: // TODO
+			case 0x4:
 				{
 					int temp = actorPtr->HIT_BY;
 

@@ -1306,3 +1306,31 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 
 	return(0);
 }
+
+void computeScreenBox(int x, int y, int z, int alpha, int beta, int gamma, char* bodyPtr)
+{
+	char* ptr = (char*)bodyPtr;
+
+	BBox3D1 = 0x7FFF;
+	BBox3D2 = 0x7FFF;
+
+	BBox3D3 = -0x7FFF;
+	BBox3D4 = -0x7FFF;
+
+	renderVar1 = 0;
+
+	numOfPolyToRender = 0;
+	
+	renderVar2 = renderBuffer;
+
+	modelFlags = *(short int*)ptr;
+	ptr+=2;
+	ptr+=12;
+
+	ptr+=*(short int*)ptr + 2;
+	
+	if(modelFlags&2)
+	{
+		computeModel(x,y,z,alpha,beta,gamma,bodyPtr,ptr);
+	}
+}
