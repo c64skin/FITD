@@ -338,7 +338,7 @@ int evalVar(void)
             return(actorTable[actorPtr->COL_BY].field_0);
           break;
         }
-      case 0x10:
+      case 0x10: // found
         {
           if(objectTable[evalVar()].flags2 & 0x8000)
           {

@@ -495,6 +495,7 @@ void processLife(int lifeNum)
                 lifeTempVar1 = *(short int*)(currentLifePtr);
                 currentLifePtr+=2;
 
+
                 if(lifeTempVar1 != objectTable[var_6].lifeMode)
                 {
                   objectTable[var_6].lifeMode = lifeTempVar1;
@@ -1248,11 +1249,11 @@ processOpcode:
           lifeTempVar1 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
-          if(lifeTempVar1 != currentCameraTarget)
+          if(lifeTempVar1 != currentCameraTarget) // same stage
           {
             lifeTempVar2 = objectTable[lifeTempVar1].ownerIdx;
 
-            if(lifeTempVar1 != -1)
+            if(lifeTempVar2 != -1)
             {
               currentCameraTarget = lifeTempVar1;
               genVar9 = lifeTempVar2;
@@ -1265,10 +1266,22 @@ processOpcode:
                 newRoom = lifeTempVar3;
               }
             }
-            else
+            else // different stage
             {
-              printf("Partialy unimplemented life opcode 0x33\n");
-              exit(1);
+              if(objectTable[lifeTempVar1].stage != currentEtage)
+              {
+                changeFloor = 1;
+                newFloor = objectTable[lifeTempVar1].stage;
+                newRoom = objectTable[lifeTempVar1].room;
+              }
+              else
+              {
+                if(currentDisplayedRoom!=objectTable[lifeTempVar1].room)
+                {
+                  needChangeRoom = 1;
+                  newRoom = objectTable[lifeTempVar1].room;
+                }
+              }
             }
           }
 
@@ -1514,6 +1527,7 @@ processOpcode:
         }
       case 0x4B: // sample
         {
+          evalVar();
           currentLifePtr+=2;
           break;
         }
@@ -1646,6 +1660,11 @@ processOpcode:
         {
           // TODO !
           currentLifePtr+=2;
+          break;
+        }
+      case 0x54: // ENDING
+        {
+          // TODO!
           break;
         }
       default:

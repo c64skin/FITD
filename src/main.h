@@ -22,7 +22,7 @@ void getZvNormal(char* bodyPtr, ZVStruct* zvPtr);
 int checkForHardCol(ZVStruct* zvPtr, roomDataStruct* pRoomData);
 void removeObjFromInventory(int objIdx);
 void walkStep(int angle1, int angle2, int angle3);
-void objectHitActor(int x, int z);
+void throwStoppedAt(int x, int z);
 sceZoneStruct* processActor2Sub(int x, int y, int z, roomDataStruct* pRoomData);
 void initEngine(void);
 void initVars();

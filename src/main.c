@@ -2812,7 +2812,7 @@ void mainDraw(int mode)
 #ifdef INTERNAL_DEBUGGER
       //  if(debuggerVar_drawModelZv)
         {
-          drawZv(actorPtr);
+       //   drawZv(actorPtr);
         }
 #endif
 /////////////////////////////////////
@@ -4431,8 +4431,103 @@ void putAt(int objIdx, int objIdxToPutAt)
   }
 }
 
-void objectHitActor(int x, int z)
+void throwStoppedAt(int x, int z)
 {
+  int x2;
+  int y2;
+  int z2;
+  int foundPosition;
+  int step;
+
+  ZVStruct zvCopy;
+  ZVStruct zvLocal;
+  u8* bodyPtr;
+
+  bodyPtr = HQR_Get(listBody,currentProcessedActorPtr->bodyNum);
+
+  getZvNormal(bodyPtr,&zvLocal);
+
+  x2 = x;
+  y2 = (currentProcessedActorPtr->roomY/2000)*2000;
+  z2 = z;
+
+  foundPosition = 0;
+  step = 0;
+
+  while(!foundPosition)
+  {
+    walkStep(0,-step,currentProcessedActorPtr->beta+0x200);
+    copyZv(&zvLocal,&zvCopy);
+
+    x2 = x + animMoveX;
+    z2 = z + animMoveY;
+
+    zvCopy.ZVX1 += x2;
+    zvCopy.ZVX2 += x2;
+
+    zvCopy.ZVY1 += y2;
+    zvCopy.ZVY2 += y2;
+
+    zvCopy.ZVZ1 += z2;
+    zvCopy.ZVZ2 += z2;
+
+    if(!checkForHardCol(&zvCopy,&roomDataTable[currentProcessedActorPtr->room]))
+    {
+      foundPosition = 1;
+    }
+
+    if(foundPosition)
+    {
+      if(y2<-500)
+      {
+        zvCopy.ZVY1 += 100; // is the object reachable ? (100 is Carnby height. If hard col at Y + 100, carnby can't reach that spot)
+        zvCopy.ZVY2 += 100;
+
+        if(!checkForHardCol(&zvCopy,&roomDataTable[currentProcessedActorPtr->room]))
+        {
+          y2 += 2000;
+          foundPosition = 0;
+        }
+        else
+        {
+          zvCopy.ZVY1 -= 100;
+          zvCopy.ZVY2 -= 100;
+        }
+      }
+    }
+    else
+    {
+      step+=100;
+    }
+  }
+
+  currentProcessedActorPtr->worldX = x2;
+  currentProcessedActorPtr->roomX = x2;
+  currentProcessedActorPtr->worldY = y2;
+  currentProcessedActorPtr->roomY = y2;
+  currentProcessedActorPtr->worldZ = z2;
+  currentProcessedActorPtr->roomZ = z2;
+
+  currentProcessedActorPtr->modX = 0;
+  currentProcessedActorPtr->modZ = 0;
+
+  currentProcessedActorPtr->animActionType = 0;
+  currentProcessedActorPtr->speed = 0;
+  currentProcessedActorPtr->gamma = 0;
+
+  getZvNormal(bodyPtr,&currentProcessedActorPtr->zv);
+
+  currentProcessedActorPtr->zv.ZVX1 += x2;
+  currentProcessedActorPtr->zv.ZVX2 += x2;
+  currentProcessedActorPtr->zv.ZVY1 += y2;
+  currentProcessedActorPtr->zv.ZVY2 += y2;
+  currentProcessedActorPtr->zv.ZVZ1 += z2;
+  currentProcessedActorPtr->zv.ZVZ2 += z2;
+
+  objectTable[currentProcessedActorPtr->field_0].flags2 |= 0x4000;
+  objectTable[currentProcessedActorPtr->field_0].flags2 &= 0xEFFF;
+
+  stopAnim(currentProcessedActorIdx);
 }
 
 void startGame(int startupFloor, int startupRoom, int allowSystemMenu)

@@ -185,7 +185,7 @@ void processAnimAction(void)
             objPtr->room = currentProcessedActorPtr->room;
             objPtr->stage = currentProcessedActorPtr->stage;
             objPtr->alpha = currentProcessedActorPtr->alpha;
-            objPtr->beta = currentProcessedActorPtr->beta; 
+            objPtr->beta = currentProcessedActorPtr->beta+0x200; 
 
             objPtr->flags2 &= 0xBFFF;
             objPtr->flags |= 0x85;
@@ -398,7 +398,7 @@ void processAnimAction(void)
           if(collision2)
           {
             playSound(defines.field_12);
-            objectHitActor(x3,z3);
+            throwStoppedAt(x3,z3);
             return;
           }
         }
@@ -410,7 +410,7 @@ void processAnimAction(void)
           if(ptr->type == 0 || ptr->type == 10)
           {
              playSound(defines.field_12);
-             objectHitActor(x3,z3);
+             throwStoppedAt(x3,z3);
              return;
           }
         }
@@ -422,7 +422,7 @@ void processAnimAction(void)
           currentProcessedActorPtr->hotPoint.z = 0;
 
           playSound(defines.field_12);
-          objectHitActor(x3,z3);
+          throwStoppedAt(x3,z3);
           return;
         }
       }while(   currentProcessedActorPtr->zv.ZVX1 - 100 > x2 ||
