@@ -61,7 +61,7 @@ char input1 = 0;
 char input2 = 0;
 char input3;
 char input4;
-char joy;
+char button;
 
 char languageNameString[] = "FRANCAIS";
 
@@ -99,7 +99,7 @@ int varSize;
 char* messageVar1[5]; // may be bigger
 
 int currentMusic;
-int found;
+int action;
 
 boxStruct genVar2[15]; // recheckSize
 boxStruct genVar4[50];
@@ -182,3 +182,22 @@ unsigned short int renderPointList[6400];
 
 int numActorInList;
 int sortedActorTable[50];
+
+int angleCompX;
+int angleCompZ;
+int angleCompBeta;
+
+int bufferAnimCounter = 0;
+
+int animCurrentTime;
+int animKeyframeLength;
+int animMoveX;
+int animMoveY;
+int animMoveZ;
+int animRot1;
+int animRot2;
+int animRot3;
+char* animVar1;
+char* animVar3;
+char* animVar4;
+

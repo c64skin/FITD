@@ -93,6 +93,14 @@ struct ZVStruct
 	short int ZVZ2;
 };
 
+struct rotateStruct
+{
+	short int oldAngle;
+	short int newAngle;
+	short int param;
+	short int timeOfRotate;
+};
+
 struct actorStruct
 {
 	short int field_0;
@@ -117,21 +125,21 @@ struct actorStruct
 	short int room;
 	short int lifeMode;
 	short int life;
-	unsigned int field_36;
-	unsigned int chronoStructure;
-	short int hitBy;
+	unsigned int CHRONO;
+	unsigned int ROOM_CHRONO;
+	short int ANIM;
 	short int field_40;
 	short int field_42;
 	short int field_44;
 	short int field_46;
 	short int field_48;
-	short int endAnim;
+	short int FRAME;
 	short int field_4C;
-	short int frame;
-	short int anim;
+	short int END_FRAME;
+	short int END_ANIM;
 	short int trackMode;
 	short int trackNumber;
-	short int body;
+	short int MARK;
 	short int positionInTrack;
 	short int field_5A;
 	short int field_5C;
@@ -141,22 +149,19 @@ struct actorStruct
 	short int field_64;
 	short int field_66;
 	short int falling;
-	short int field_6A;
-	short int field_6C;
-	short int field_6E;
-	short int field_70;
+	rotateStruct rotate;
 	short int field_72;
 	short int speed;
 	short int field_76;
 	short int field_78;
 	short int field_7A;
 	short int field_7C;
-	short int field_7E[3];
-	short int field_84;
-	short int col;
-	short int hardDec;
-	short int hardCol;
-	short int hit;
+	short int COL[3];
+	short int COL_BY;
+	short int HARD_DEC;
+	short int HARD_COL;
+	short int HIT;
+	short int HIT_BY;
 	short int field_8E;
 	short int field_90;
 	short int field_92;
@@ -268,7 +273,7 @@ extern char input1;
 extern char input2;
 extern char input3;
 extern char input4;
-extern char joy;
+extern char button;
 
 extern char languageNameString[];
 
@@ -306,7 +311,7 @@ extern int varSize;
 extern char* messageVar1[5]; // may be bigger
 
 extern int currentMusic;
-extern int found;
+extern int action;
 
 extern boxStruct genVar2[15]; // recheckSize
 extern boxStruct genVar4[50];
@@ -389,5 +394,23 @@ extern unsigned short int renderPointList[6400];
 
 extern int numActorInList;
 extern int sortedActorTable[50];
+
+extern int angleCompX;
+extern int angleCompZ;
+extern int angleCompBeta;
+
+extern int bufferAnimCounter;
+
+extern int animCurrentTime;
+extern int animKeyframeLength;
+extern int animMoveX;
+extern int animMoveY;
+extern int animMoveZ;
+extern int animRot1;
+extern int animRot2;
+extern int animRot3;
+extern char* animVar1;
+extern char* animVar3;
+extern char* animVar4;
 
 #endif

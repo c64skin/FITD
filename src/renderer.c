@@ -229,6 +229,8 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 	
 	if(modelFlags&2)
 	{
+		//computeModel(x,y,z,alpha,beta,gamma,modelPtr,ptr);
+		prerenderFlag0(x,y,z,alpha,beta,gamma,modelPtr,ptr);
 	}
 	else
 	if(!(modelFlags&4))

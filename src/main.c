@@ -927,7 +927,7 @@ hqrSubEntryStruct* quickFindEntry(int index, int numMax, hqrSubEntryStruct* ptr)
 	{
 		if(ptr[i].key == index)
 		{
-			return(ptr);
+			return(&ptr[i]);
 		}
 	}
 
@@ -1277,9 +1277,9 @@ pageChange:	if(lastPageReached)
 
 				input3 = input2 & 0xFF;
 				input4 = inputKey & 0xFF;
-				joy = input1;
+				button = input1;
 
-				if(input3==1 || joy)
+				if(input3==1 || button)
 				{
 					quit = 1;
 				}
@@ -1440,6 +1440,19 @@ void initEngine(void)
 
 	fclose(fHandle);
 
+//
+	fHandle = fopen("objDump.txt","w+");
+	for(i=0;i<maxObjects;i++)
+	{
+		fprintf(fHandle,"Object %d:", i);
+
+		fprintf(fHandle,"\t body:%03d",objectTable[i].field_2);
+		fprintf(fHandle,"\t anim:%03d",objectTable[i].field_26);
+
+		fprintf(fHandle,"\n");
+	}
+//
+
 	vars = (short int*)loadFromItd("VARS.ITD");
 
 	varSize = fileSize;
@@ -1511,7 +1524,7 @@ void initVars()
 	giveUp = 0;
 	inHand = -1;
 	numObjInInventory = 0;
-	found = 0;
+	action = 0;
 
 	genVar1 = genVar2;
 	genVar3 = genVar4;
@@ -1843,12 +1856,12 @@ void updateAllActorAndObjectsSub1(int index)
 	{
 		actorPtr->field_0 = -1;
 
-		if(actorPtr->hitBy == 4 )
+		if(actorPtr->ANIM == 4 )
 		{
 			defines.field_1C = 0;
 		}
 
-		printTextSub6(hqrUnk,actorPtr->endAnim);
+		printTextSub6(hqrUnk,actorPtr->FRAME);
 	}
 	else
 	{
@@ -1860,8 +1873,8 @@ void updateAllActorAndObjectsSub1(int index)
 			actorPtr->field_0 = -1;
 
 			objectPtr->field_2 = actorPtr->bodyNum;
-			objectPtr->field_26 = actorPtr->hitBy;
-			objectPtr->field_28 = actorPtr->endAnim;
+			objectPtr->field_26 = actorPtr->ANIM;
+			objectPtr->field_28 = actorPtr->FRAME;
 			objectPtr->field_2A = actorPtr->field_40;
 			objectPtr->field_2C = actorPtr->field_42;
 			objectPtr->flags = actorPtr->flags &0xFFF7;
@@ -1978,7 +1991,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	actorPtr->field_24 = actorPtr->y = y;
 	actorPtr->field_26 = actorPtr->z = z;
 
-	if(room == currentDisplayedRoom)
+	if(room != currentDisplayedRoom)
 	{
 		char* roomPtr = etageVar0+room*4;
 
@@ -1993,14 +2006,14 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 
 	actorPtr->dynFlags = 1;
 	
-	actorPtr->hitBy = var2;
-	actorPtr->endAnim = var3;
+	actorPtr->ANIM = var2;
+	actorPtr->FRAME = var3;
 
 	actorPtr->field_40 = var4;
 	actorPtr->field_42 = var5;
 
-	actorPtr->frame = 1;
-	actorPtr->anim = 1;
+	actorPtr->END_FRAME = 1;
+	actorPtr->END_ANIM = 1;
 	actorPtr->field_44 = -1;
 	actorPtr->field_46 = 0;
 	actorPtr->field_48 = -1;
@@ -2010,16 +2023,16 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 
 	for(j=0;j<3;j++)
 	{
-		actorPtr->field_7E[j] = -1;
+		actorPtr->COL[j] = -1;
 	}
 
-	actorPtr->field_84 = -1;
-	actorPtr->col = -1;
-	actorPtr->hardDec = -1;
+	actorPtr->COL_BY = -1;
+	actorPtr->HARD_DEC = -1;
+	actorPtr->HARD_COL = -1;
 
-	actorPtr->field_6A = 0;
-	actorPtr->field_6C = 0;
-	actorPtr->field_6E = 0;
+	actorPtr->rotate.oldAngle = 0;
+	actorPtr->rotate.newAngle = 0;
+	actorPtr->rotate.param = 0;
 
 	actorPtr->field_60 = 0;
 	actorPtr->field_62 = 0;
@@ -2035,8 +2048,8 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	actorPtr->trackNumber = -1;
 
 	actorPtr->field_8E = 0;
-	actorPtr->hardCol = -1;
-	actorPtr->hit = -1;
+	actorPtr->HIT = -1;
+	actorPtr->HIT_BY = -1;
 
 	if(flag2 != -1)
 	{
@@ -2049,7 +2062,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 //			initAnimInBody(var3,animPtr,bodyPtr);
 
 //			actorPtr->field_4C = getAnimParam(animPtr);
-			actorPtr->anim = 0;
+			actorPtr->END_ANIM = 0;
 			actorPtr->flags |= 1;
 
 //			computeScreenBox(actorPtr->field_22 + actorPtr->field_5A, actorPtr->field_24 + actorPtr->field_5C, actorPtr->field_26 + actorPtr->field_5E, actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
@@ -2080,8 +2093,8 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 		}
 	}
 
-	startChrono(&actorPtr->chronoStructure);
-	startChrono(&actorPtr->field_36);
+	startChrono(&actorPtr->ROOM_CHRONO);
+	startChrono(&actorPtr->CHRONO);
 
 	ZVStruct* zvPtr = &actorPtr->zv;
 
@@ -2129,15 +2142,14 @@ void setMoveMode(int trackMode, int trackNumber)
 	case 2:
 		{
 			currentProcessedActorPtr->trackNumber = trackNumber;
-			currentProcessedActorPtr->body = -1;
+			currentProcessedActorPtr->MARK = -1;
 			break;
 		}
 	case 3:
 		{
 			currentProcessedActorPtr->trackNumber = trackNumber;
-			currentProcessedActorPtr->body = -1;
 			currentProcessedActorPtr->positionInTrack = 0;
-			currentProcessedActorPtr->body = -1;
+			currentProcessedActorPtr->MARK = -1;
 			break;
 		}
 	}
@@ -2244,10 +2256,10 @@ void updateAllActorAndObjects()
 						}
 
 						int var_C = currentObject->flags & 0xFFDF;
-						int var_E = currentObject->flags2;
+						int var_E = currentObject->field_2;
 						int var_A = currentObject->field_26;
 
-						int actorIdx = copyObjectToActor(	currentObject->flags2, currentObject->field_6, currentObject->foundName,
+						int actorIdx = copyObjectToActor(	currentObject->field_2, currentObject->field_6, currentObject->foundName,
 															currentObject->flags & 0xFFDF,
 															currentObject->x, currentObject->y, currentObject->z,
 															currentObject->stage, currentObject->room,
@@ -2421,16 +2433,36 @@ int evalVar(void)
 			int actorIdx = currentLifeActorIdx;
 			actorStruct* actorPtr = currentLifeActorPtr;
 
+			var1--;
+
 			switch(var1)
 			{
-			case 0xC: // NUM_TRACK ?
+			case 0x9:
 				{
-					return(evalChrono(&actorPtr->field_36) / 0x3C0000); // recheck
+					return(actorPtr->bodyNum);
 					break;
 				}
-			case 0xB: // MARK ?
+			case 0xA: // MARK
+				{
+					return(actorPtr->MARK);
+					break;
+				}
+			case 0xB: // NUM_TRACK
 				{
 					return(actorPtr->trackNumber);
+					break;
+				}
+			case 0xC: // CHRONO
+				{
+					return(evalChrono(&actorPtr->CHRONO) / 0x3C0000); // recheck
+					break;
+				}
+			case 0xF: // COL_BY
+				{
+					if(actorPtr->COL_BY == -1)
+						return(-1);
+					else
+						return(actorTable[actorPtr->COL_BY].field_0);
 					break;
 				}
 			default:
@@ -2442,6 +2474,80 @@ int evalVar(void)
 			}
 		}
 	}
+}
+
+short int computeDistanceToPoint(int x1, int z1, int x2, int z2)
+{
+	x1 -= x2;
+	if(x1 < 0)
+	{
+		x1 = -x1;
+	}
+
+	z1 -= z2;
+	if(z1 < 0)
+	{
+		z1 = -z1;
+	}
+
+	if((x1+z1)> 0xFFFF)
+	{
+		return(0x7D00);
+	}
+	else
+	{
+		return((x1+z1));
+	}
+}
+
+int computeAngleModificatorToPositionSub1(int ax)
+{
+	int xOut;
+	int yOut;
+
+	makeRotationMtx(ax,0,1000,&xOut,&yOut);
+
+	yOut *= angleCompX;
+	xOut *= angleCompZ;
+
+	yOut -= xOut;
+
+	return(abs(yOut));
+}
+
+int computeAngleModificatorToPosition(int x1,int z1, int beta, int x2, int z2)
+{
+	angleCompX = x2 - x1;
+	angleCompZ = z2 - z1;
+	angleCompBeta = beta;
+
+	int resultMin = computeAngleModificatorToPositionSub1(beta - 4);
+	int resultMax = computeAngleModificatorToPositionSub1(beta + 4);
+
+	if(resultMax == -1 && resultMin == 1) // in the middle
+	{
+		return(computeAngleModificatorToPositionSub1(beta));
+	}
+	else
+	{
+		return(((resultMax+resultMin)+1)>>1);
+	}
+}
+
+void startActorRotation(short int beta, short int newBeta, short int param, rotateStruct* rotatePtr)
+{
+	rotatePtr->oldAngle = beta;
+	rotatePtr->newAngle = newBeta;
+	rotatePtr->param = param;
+
+	// TODO: implement time stuff
+}
+
+short int updateActorRotation(rotateStruct* rotatePtr)
+{
+	// TODO: proper implementation;
+
+	return(rotatePtr->newAngle);
 }
 
 void processTrack(void)
@@ -2470,11 +2576,88 @@ void processTrack(void)
 
 			switch(trackMacro)
 			{
-			case 4: // BODY
+			case 1: // goToPosition
 				{
-					currentProcessedActorPtr->body = *(short int*)(trackPtr);
+					int roomNumber = *(short int*)(trackPtr);
+					trackPtr += 2;
+
+					int x = *(short int*)(trackPtr);
+					trackPtr += 2;
+					int y = *(short int*)(trackPtr);
+					trackPtr += 2;
+					int z = *(short int*)(trackPtr);
+					trackPtr += 2;
+		
+					if(roomNumber != currentProcessedActorPtr->room)
+					{
+						char* roomDestDataPtr = etageVar0 + *(unsigned int*)(etageVar0+roomNumber*4);
+						char* roomSourceDataPtr = etageVar0 + *(unsigned int*)(etageVar0+currentProcessedActorPtr->room*4);
+
+						x -= ((*(short int*)(roomSourceDataPtr+4)) - (*(short int*)(roomDestDataPtr+4))) * 10;
+						z -= ((*(short int*)(roomSourceDataPtr+8)) - (*(short int*)(roomDestDataPtr+8))) * 10;
+					}
+
+					int distanceToPoint = computeDistanceToPoint(	currentProcessedActorPtr->x + currentProcessedActorPtr->field_5A,
+																	currentProcessedActorPtr->z + currentProcessedActorPtr->field_5E,
+																	x,z );
+
+					if(distanceToPoint >= 400) // not yet at position
+					{
+						int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->x + currentProcessedActorPtr->field_5A,
+																			currentProcessedActorPtr->z + currentProcessedActorPtr->field_5E,
+																			currentProcessedActorPtr->beta,
+																			x,z );
+
+						if(currentProcessedActorPtr->rotate.param == 0 || (currentProcessedActorPtr->rotate.param != 0 && currentProcessedActorPtr->field_72 != angleModif))
+						{
+							startActorRotation(currentProcessedActorPtr->beta, currentProcessedActorPtr->beta - (angleModif<<6), 15, &currentProcessedActorPtr->rotate);
+						}
+
+						currentProcessedActorPtr->field_72 = angleModif;
+
+						if(angleModif)
+						{
+							currentProcessedActorPtr->rotate.param = 0;
+						}
+						else
+						{
+							currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
+						}
+					}
+					else // reached position
+					{
+						currentProcessedActorPtr->positionInTrack += 4;
+					}
+						
+					break;
+				}
+			case 2: // stop
+				{
+					currentProcessedActorPtr->speed = 0;
+					currentProcessedActorPtr->trackNumber = -1;
+					setMoveMode(0,0);
+					break;
+				}
+			case 4: // MARK
+				{
+					currentProcessedActorPtr->MARK = *(short int*)(trackPtr);
 					trackPtr += 2;
 					currentProcessedActorPtr->positionInTrack += 2;
+					break;
+				}
+			case 0x13: // rotate
+				{
+					currentProcessedActorPtr->alpha = *(short int*)(trackPtr);
+					trackPtr += 2;
+					currentProcessedActorPtr->beta = *(short int*)(trackPtr);
+					trackPtr += 2;
+					currentProcessedActorPtr->gamma = *(short int*)(trackPtr);
+					trackPtr += 2;
+
+					currentProcessedActorPtr->field_72 = 0;
+
+					currentProcessedActorPtr->positionInTrack +=4;
+
 					break;
 				}
 			default:
@@ -2490,6 +2673,35 @@ void processTrack(void)
 	}
 
 	currentProcessedActorPtr->beta &= 0x3FF;
+}
+
+int anim(int animNum,int arg_2, int arg_4)
+{
+	if(animNum == currentProcessedActorPtr->ANIM)
+	{
+	}
+	else
+	{
+		if(animNum == -1)
+		{
+			currentProcessedActorPtr->field_44 = -2;
+			return(1);
+		}
+
+		if(!currentProcessedActorPtr->flags & 1)
+		{
+		}
+		else
+		{
+			if((currentProcessedActorPtr->field_40 & 2) || (currentProcessedActorPtr->field_46 & 2))
+				return(0);
+
+		}
+
+		currentProcessedActorPtr->field_44 = animNum;
+		currentProcessedActorPtr->field_46 = arg_2;
+		currentProcessedActorPtr->field_48 = arg_4;
+	}
 }
 
 void processLife(int lifeNum)
@@ -2519,16 +2731,49 @@ void processLife(int lifeNum)
 
 		if(currentOpcode & 0x8000)
 		{
-			printf("Unimplemented code in processLife\n");
-			exit(1);
+				var_6 = *(short int*)(currentLifePtr);
+				currentLifePtr+=2;
+
+				if(var_6==-1)
+				{
+					printf("Unsupported newVar = -1\n");
+					exit(1);
+				}
+				else
+				{
+					currentProcessedActorIdx = objectTable[var_6].ownerIdx;
+					currentProcessedActorPtr = &actorTable[currentProcessedActorIdx];
+
+					goto processOpcode;
+				}
 		}
 		else
 		{
+processOpcode:
 			switch(currentOpcode & 0x7FFF)
 			{
 			case 0x0: // DO_MOVE
 				{
 					processTrack();
+					break;
+				}
+			case 0x1: // ANIM
+				{
+					lifeTempVar1 = *(short int*)currentLifePtr;
+					currentLifePtr +=2;
+					lifeTempVar2 = *(short int*)currentLifePtr;
+					currentLifePtr +=2;
+
+					if(lifeTempVar1==-1)
+					{
+						currentProcessedActorPtr->ANIM = -1;
+						currentProcessedActorPtr->field_44 = -2;
+					}
+					else
+					{
+						anim(lifeTempVar1,0,lifeTempVar2);
+					}
+
 					break;
 				}
 			case 0x4: // IF_DIF
@@ -2559,7 +2804,7 @@ void processLife(int lifeNum)
 					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
-					//anim(lifeTempVar1, 1, -1);
+					anim(lifeTempVar1, 1, -1);
 
 					break;
 				}
@@ -2611,6 +2856,16 @@ void processLife(int lifeNum)
 				{
 					currentProcessedActorPtr->life = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
+					break;
+				}
+			case 0x20: // DELETE TODO
+				{
+					currentLifePtr+=2;
+					break;
+				}
+			case 0x2F: // STAGE TODO
+				{
+					currentLifePtr+=10;
 					break;
 				}
 			case 0x33: // CAMERA_TARGET
@@ -2824,6 +3079,524 @@ void mainDraw(int mode)
 	flipScreen();
 }
 
+void initBufferAnim(char* buffer, char* bodyPtr)
+{
+	if((*(short int*)bodyPtr) & 2)
+	{
+		char* source = bodyPtr+0x10;
+
+		*(unsigned short int*)(source+4) = (unsigned short int)timer;
+		*(char**)(source) = buffer;
+
+		source += *(short int*)(source-2);
+
+		short int ax = *(short int*)(source);
+
+		ax = (((ax * 2) + ax)*2)+2;
+
+		source += ax;
+
+		int cx = *(short int*)source;
+		
+		source += cx*2;
+
+		buffer+= 8;
+		source+= 10;
+
+		int i;
+
+		for(i=0;i<cx;i++)
+		{
+			*(short int*)(buffer) = *(short int*)(source);
+			*(short int*)(buffer+2) = *(short int*)(source+2);
+			*(short int*)(buffer+4) = *(short int*)(source+4);
+			*(short int*)(buffer+6) = *(short int*)(source+6);
+
+			buffer+=8;
+			source+=8;
+
+			source+=8;
+		}
+
+	}
+}
+
+short int getAnimParam(char* animPtr)
+{
+	return(*(short int*)animPtr);
+}
+
+short int getAnimType(char** bodyPtr)
+{
+	short int temp = *(short int*)animVar1;
+
+	animVar1+=2;
+
+	animVar4+=2;
+
+	*(short int*)(*bodyPtr) = temp;
+	(*bodyPtr)+=2;
+
+	return(temp);
+}
+
+void processAnimRotation(char** bodyPtr, int bp, int bx)
+{
+	short int cx = *(short int*)animVar4;
+	animVar4+=2;
+
+	short int dx = *(short int*)animVar1;
+	animVar1+=2;
+
+	short int ax = dx;
+
+	ax -= cx;
+
+	if(cx == dx)
+	{
+		*(short int*)(*bodyPtr) = cx;
+	}
+	else
+	{
+		if(ax <= 0x200)
+		{
+			if(ax >= -0x200)
+			{
+				*(short int*)(*bodyPtr) = ((ax/bp)*bx) + cx;
+			}
+			else
+			{
+				dx += 0x400;
+				dx -= cx;
+
+				*(short int*)(*bodyPtr) = ((dx/bp)*bx) + cx;
+			}
+		}
+		else
+		{
+			cx += 0x400;
+			dx -= cx;
+
+			*(short int*)(*bodyPtr) = ((dx/bp)*bx) + cx;
+		}
+	}
+
+	(*bodyPtr)+=2;
+}
+
+void processAnimTranslation(char** bodyPtr, int bp, int bx)
+{
+	short int cx = *(short int*)animVar4;
+	animVar4+=2;
+
+	short int ax = *(short int*)animVar1;
+	animVar1+=2;
+
+	if(ax == cx)
+	{
+		*(short int*)(*bodyPtr) = ax;
+	}
+	else
+	{
+		*(short int*)(*bodyPtr) = (((ax - cx)/bp)*bx) + cx;
+	}
+
+	(*bodyPtr)+=2;
+}
+
+short int processAnim(int frame, char* animPtr, char* bodyPtr)
+{
+	short int ax = *(short int*)(animPtr+2);
+	animPtr+=4;
+
+	short int cx = ax;
+
+	ax = ((ax+1)<<3)*frame; // seek to keyframe
+
+	animPtr += ax;
+
+	animVar1 = animPtr;
+
+	unsigned short int dx = *(unsigned short int*)animPtr;
+
+	if(!((*(short int*)bodyPtr) & 2)) // do not anim if the model can't be animated
+	{
+		return(0);
+	}
+
+	bodyPtr+=16;
+
+	animVar3 = bodyPtr;
+
+	unsigned short int bp = *(unsigned short int*)(bodyPtr+4); // time of start of keyframe
+	
+	char* tempPtr = *(char**)(bodyPtr);
+
+	if(!tempPtr)
+	{
+		tempPtr = animVar1;
+	}
+
+	animVar4 = tempPtr;
+
+	bodyPtr+= *(short int*)(bodyPtr-2);
+
+	ax = *(short int*)bodyPtr;
+
+	ax = (((ax<<1)+ax)<<1)+2;
+
+	bodyPtr+=ax;
+
+	ax = *(short int*)bodyPtr; // length of keyframe ?
+
+	unsigned short int bx = ax;
+
+	bodyPtr+=bx*2;
+
+	if(cx > ax)
+	{
+		cx = ax;
+	}
+
+	bodyPtr+=10;
+
+	unsigned short int time = (unsigned short int)timer - bp;
+
+	bx = dx;
+	bp = ax;
+
+	if(time<dx) // interpole keyframe
+	{
+		animVar4 += 8;
+		animVar1 += 8;
+
+		do
+		{
+			switch(getAnimType(&bodyPtr))
+			{
+			case 0:
+				{
+					processAnimRotation(&bodyPtr,bp,bx);
+					processAnimRotation(&bodyPtr,bp,bx);
+					processAnimRotation(&bodyPtr,bp,bx);
+					break;
+				}
+			case 1:
+			case 2:
+				{
+					processAnimTranslation(&bodyPtr,bp,bx);
+					processAnimTranslation(&bodyPtr,bp,bx);
+					processAnimTranslation(&bodyPtr,bp,bx);
+					break;
+				}
+			}
+
+			bodyPtr+=8;
+		}
+		while(--cx);
+
+		animVar1+=2;
+
+		animRot2 = ((*(short int*)(animVar1))*bp)/bx;
+		animRot3 = ((*(short int*)(animVar1+2))*bp)/bx;
+		animRot1 = ((*(short int*)(animVar1+4))*bp)/bx;
+
+		animVar1+=6;
+
+		animCurrentTime = bx;
+		animKeyframeLength = bp;
+
+		return(0);
+	}
+	else // change keyframe
+	{
+		char* tempBx = animVar1;
+		char* si = animVar1;
+
+		si+=8;
+
+		do
+		{
+			*(short int*)(bodyPtr) = *(short int*)(si);
+			*(short int*)(bodyPtr+2) = *(short int*)(si+2);
+			*(short int*)(bodyPtr+4) = *(short int*)(si+4);
+			*(short int*)(bodyPtr+6) = *(short int*)(si+6);
+
+			bodyPtr+=8;
+			si+=6;
+
+			bodyPtr+=8;
+
+		}while(--cx);
+
+		*(char**)animVar3 = animVar1;
+
+		*(unsigned short int*)(animVar3+4) = (unsigned short int)timer;
+
+		tempBx+=2;
+
+		animCurrentTime = bx;
+		animKeyframeLength = bp;
+
+		animRot2 = *(short int*)(tempBx);
+		animRot3 = *(short int*)(tempBx+2);
+		animRot1 = *(short int*)(tempBx+4);
+
+		tempBx += 6;
+
+		return(1);
+
+	}
+
+}
+
+void walkStep(int angle1, int angle2, int angle3)
+{
+	makeRotationMtx(angle3,angle1,angle2,&animMoveX,&animMoveY);
+}
+
+void copyZv(ZVStruct* source, ZVStruct* dest)
+{
+	memcpy(dest,source,sizeof(ZVStruct));
+}
+
+void processActor1(void)
+{
+	int var_42 = 0;
+	int var_6 = currentProcessedActorPtr->field_44;
+	int var_40;
+	int var_48;
+	int var_4A;
+	int var_4C;
+	int var_4E;
+	int var_50=0;
+	int var_52=0;
+	int var_56;
+	short int localTable[3];
+	ZVStruct zvLocal;
+
+	if(var_6 != -1)
+	{
+		if(var_6 == -2)
+		{
+			// TODO
+		}
+
+		if(currentProcessedActorPtr->END_FRAME == 0)
+		{
+		}
+
+		initBufferAnim(bufferAnim + (bufferAnimCounter++) * 248, HQR_Get(listBody,currentProcessedActorPtr->bodyNum)); 
+
+		if(bufferAnimCounter == 20)
+			bufferAnimCounter = 0;
+
+		currentProcessedActorPtr->ANIM = var_6;
+		currentProcessedActorPtr->field_40 = currentProcessedActorPtr->field_46;
+		currentProcessedActorPtr->field_42 = currentProcessedActorPtr->field_48;
+		currentProcessedActorPtr->field_44 = -1;
+		currentProcessedActorPtr->field_46 = 0;
+		currentProcessedActorPtr->field_48 = -1;
+		currentProcessedActorPtr->END_ANIM = 0;
+		currentProcessedActorPtr->FRAME = 0;
+
+		currentProcessedActorPtr->field_4C = getAnimParam(HQR_Get(listAnim,var_6));
+	}
+
+	if(currentProcessedActorPtr->ANIM == -1) // no animation
+	{
+		currentProcessedActorPtr->END_FRAME = 0;
+		if(currentProcessedActorPtr->speed == 0)
+		{
+		//	var_42 = processActor1Sub1(currentProcessedActorIdx, &currentProcessedActorPtr->zv);
+
+			if(var_42)
+			{
+				for(var_40 = 0; var_40<var_42; var_40 ++)
+				{
+					actorTable[currentProcessedActorPtr->COL[var_40]].COL_BY = currentProcessedActorIdx; // collision with current actor
+				}
+			}
+
+			var_40 = var_42;
+
+			while(var_40>0)
+			{
+				currentProcessedActorPtr->COL[var_40] = -1;
+
+				var_40 --;
+			}
+
+			var_4C = 0;
+			var_4A = 0;
+			var_48 = 0;
+			var_52 = 0;
+			var_50 = 0;
+		}
+		else
+		{
+			// TODO
+		}
+
+		var_4E = 0;
+	}
+	else // animation
+	{
+		int var_4C = currentProcessedActorPtr->field_5A;
+		int var_4A = currentProcessedActorPtr->field_5C;
+		int var_48 = currentProcessedActorPtr->field_5E;
+
+		currentProcessedActorPtr->END_FRAME = processAnim(currentProcessedActorPtr->FRAME, HQR_Get(listAnim, currentProcessedActorPtr->ANIM), HQR_Get(listBody, currentProcessedActorPtr->bodyNum));
+
+		walkStep(animRot1,animRot2,currentProcessedActorPtr->beta);
+
+		var_52 = animMoveX - var_4C;
+		var_50 = animMoveY - var_48;
+
+	}
+
+	if(currentProcessedActorPtr->field_64)
+	{
+		// TODO
+	}
+	else
+	{
+		var_4E = 0;
+	}
+
+	memcpy(localTable,currentProcessedActorPtr->COL,6);
+	var_56 = -1;
+
+	if(var_52 || var_50 || var_4E)
+	{
+		copyZv(&currentProcessedActorPtr->zv,&zvLocal);
+
+		zvLocal.ZVX1 += var_52;
+		zvLocal.ZVX2 += var_52;
+
+		zvLocal.ZVY1 += var_4E;
+		zvLocal.ZVY2 += var_4E;
+
+		zvLocal.ZVZ1 += var_50;
+		zvLocal.ZVZ2 += var_50;
+
+		if(currentProcessedActorPtr->dynFlags & 1)
+		{
+		}
+		else
+		{
+/*			if(checkForHardCol(&zvLocal,etageVar0+currentProcessedActorPtr->room*4))
+			{
+				currentProcessedActorPtr->HARD_COL = 1;
+			}
+			else
+			{
+				currentProcessedActorPtr->HARD_COL = 0;
+			}*/
+		}
+
+		// TODO -> actor/actor collision
+
+		///////// TEMP
+
+		var_4C = currentProcessedActorPtr->field_5A;
+		var_4A = currentProcessedActorPtr->field_5C;
+		var_48 = currentProcessedActorPtr->field_5E;
+
+		/////////
+
+		var_52 += var_4C;
+		currentProcessedActorPtr->field_5A = var_52;
+
+		var_4E += var_4A;
+		currentProcessedActorPtr->field_5C = var_4A;
+
+		var_50 += var_48;
+		currentProcessedActorPtr->field_5E = var_48;
+
+	}
+
+	if(!currentProcessedActorPtr->field_64)
+	{
+		// fall management ?
+		currentProcessedActorPtr->field_24 += currentProcessedActorPtr->field_5C;
+		currentProcessedActorPtr->y += currentProcessedActorPtr->field_5C;
+
+		currentProcessedActorPtr->field_5C = 0;
+
+		if(currentProcessedActorPtr->flags & 0x100)
+		{
+			// TODO
+		}
+	}
+	else
+	{
+		if((currentProcessedActorPtr->field_64 != -1) && (currentProcessedActorPtr->flags & 0x100))
+		{
+			currentProcessedActorPtr->falling = 1;
+		}
+	}
+
+	var_40 = var_42;
+
+	while(var_40>0)
+	{
+		currentProcessedActorPtr->COL[var_40] = -1;
+
+		var_40 --;
+	}
+
+	for(var_40=0; var_40<3; var_40++)
+	{
+		// TODO
+	}
+
+	if(currentProcessedActorPtr->END_FRAME) // anim management
+	{
+		currentProcessedActorPtr->FRAME++;
+
+		if(currentProcessedActorPtr->FRAME >= currentProcessedActorPtr->field_4C) // end of anim ?
+		{
+			currentProcessedActorPtr->END_ANIM = 1; // end of anim
+			currentProcessedActorPtr->FRAME = 0;
+
+			if((currentProcessedActorPtr->field_40 & 1) && (currentProcessedActorPtr->field_44 == -1)) // should we loop
+			{
+				currentProcessedActorPtr->field_40 &= 0xFFFD;
+
+				//anim(currentProcessedActorPtr->field_42, 1, -1);
+			}
+
+			currentProcessedActorPtr->field_22 += currentProcessedActorPtr->field_5A;
+			currentProcessedActorPtr->x += currentProcessedActorPtr->field_5A;
+
+			currentProcessedActorPtr->field_26 += currentProcessedActorPtr->field_5E;
+			currentProcessedActorPtr->z += currentProcessedActorPtr->field_5E;
+
+			currentProcessedActorPtr->field_5A = 0;
+			currentProcessedActorPtr->field_5E = 0;
+		}
+	}
+	else // not the end of anim
+	{
+		//if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->field_7A == 0))
+		{
+			currentProcessedActorPtr->field_22 += currentProcessedActorPtr->field_5A;
+			currentProcessedActorPtr->x += currentProcessedActorPtr->field_5A;
+
+			currentProcessedActorPtr->field_26 += currentProcessedActorPtr->field_5E;
+			currentProcessedActorPtr->z += currentProcessedActorPtr->field_5E;
+
+			currentProcessedActorPtr->field_5A = 0;
+			currentProcessedActorPtr->field_5E = 0;
+
+			//startActorRotation(0,currentProcessedActorPtr.speed,60,&currentProcessedActorPtr.field_76);
+		}
+
+		currentProcessedActorPtr->END_ANIM = 0;
+	}
+}
+
 void mainLoop(int allowSystemMenu)
 {
 	while(1)
@@ -2831,7 +3604,7 @@ void mainLoop(int allowSystemMenu)
 		process_events();
 		input3 = input2;
 		input4 = inputKey;
-		joy = input1;
+		button = input1;
 
 		if(input3)
 		{
@@ -2841,18 +3614,18 @@ void mainLoop(int allowSystemMenu)
 //			input5 = 0;
 		}
 
-		if(joy)
+		if(button)
 		{
 			if(!allowSystemMenu)
 			{
 				break;
 			}
 
-			found = 0x2000;
+			action = 0x2000;
 		}
 		else
 		{
-			found = 0;
+			action = 0;
 		}
 
 //		updateInHand(inHand);
@@ -2871,11 +3644,11 @@ void mainLoop(int allowSystemMenu)
 			{
 				if(currentProcessedActorPtr->field_0 >= 0)
 				{
-					currentProcessedActorPtr->field_84 = -1;
-					currentProcessedActorPtr->hit = -1;
-					currentProcessedActorPtr->hardCol = -1;
-					currentProcessedActorPtr->col = -1;
-					currentProcessedActorPtr->hardDec = -1;
+					currentProcessedActorPtr->COL_BY = -1;
+					currentProcessedActorPtr->HIT_BY = -1;
+					currentProcessedActorPtr->HIT = -1;
+					currentProcessedActorPtr->HARD_DEC = -1;
+					currentProcessedActorPtr->HARD_COL = -1;
 				}
 
 				currentProcessedActorPtr++;
@@ -2891,7 +3664,7 @@ void mainLoop(int allowSystemMenu)
 
 					if(flag & 1)
 					{
-//						processActor1();
+						processActor1();
 					}
 
 					if(flag & 0x40)
@@ -3065,9 +3838,9 @@ int main(int argc, char** argv)
 						freeAll();
 						exit(-1);
 					}
-
+*/
 					startGame(0,0,1);
-
+/*
 					if(giveUp == 0)
 					{
 						freeAll();
