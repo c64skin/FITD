@@ -24,6 +24,9 @@
 #include "SDL_sound.h"
 #include "osystem.h"
 
+#include <GL/gl.h>			// Header File For The OpenGL32 Library
+#include <GL/glu.h>			// Header File For The GLu32 Library
+
 int osystem_mouseRight;
 int osystem_mouseLeft;
 
@@ -71,6 +74,10 @@ char RGBA_Pal[256*4];
 GLuint		backTexture;
 GLuint		modelsDisplayList;
 
+GLUtesselator *tobj;
+
+GLdouble tesselateList[100][6];
+
 void osystem_delay(int time)
 {
     SDL_Delay(time);
@@ -91,6 +98,50 @@ void osystem_updateImage()
     mouseLeft = 0;
     mouseRight = 0;
 }*/
+
+#define CALLBACK __stdcall
+
+void CALLBACK combineCallback(GLdouble coords[3], GLdouble *vertex_data[4],GLfloat weight[4], GLdouble **dataOut)
+{
+	int i;
+	GLdouble *vertex;
+
+	ASSERT(true);.
+
+	vertex = (GLdouble *) malloc(6 * sizeof(GLdouble));
+	vertex[0] = coords[0];
+	vertex[1] = coords[1];
+	vertex[2] = coords[2];
+
+	for (i = 3; i < 6; i++)
+	{
+		vertex[i] = weight[0] * vertex_data[0][i] +
+					weight[1] * vertex_data[1][i] +
+					weight[2] * vertex_data[2][i] +
+					weight[3] * vertex_data[3][i];
+	}
+
+	*dataOut = vertex;
+}
+
+void CALLBACK vertexCallback(GLvoid *vertex)
+{
+	GLdouble *ptr;
+	GLdouble x;
+	GLdouble y;
+
+	ptr = (GLdouble *) vertex;
+//	glVertex3dv((GLdouble *) ptr);
+//	glColor3dv((GLdouble *) ptr + 3);
+
+	x = ptr[0];
+	y = ptr[1];
+
+	glColor4ub(255,255,255,255);
+	glTexCoord2f(x/(float)1024,y/(float)512);
+	glVertex3f(x,y,-100);
+}
+
 
 osystem_init()	// that's the constructor of the system dependent
 						// object used for the SDL port
@@ -188,6 +239,20 @@ osystem_init()	// that's the constructor of the system dependent
 	glLoadIdentity();									// Reset The Modelview Matrix
 
 	modelsDisplayList = glGenLists(1);
+
+	// Create a new tessellation object 
+	tobj = gluNewTess(); 
+
+	// Set callback functions
+	gluTessCallback(tobj, GLU_TESS_VERTEX, vertexCallback);
+	gluTessCallback(tobj, GLU_TESS_BEGIN, glBegin);
+	gluTessCallback(tobj, GLU_TESS_END, glEnd);
+	gluTessCallback(tobj, GLU_TESS_COMBINE, combineCallback);
+
+	gluTessCallback(tobj, GLU_TESS_VERTEX, vertexCallback);
+	gluTessCallback(tobj, GLU_TESS_BEGIN, glBegin);
+	gluTessCallback(tobj, GLU_TESS_END, glEnd);
+	gluTessCallback(tobj, GLU_TESS_COMBINE, combineCallback);
 }
 
 void osystem_setPalette(byte * palette)
@@ -399,25 +464,44 @@ void osystem_playSample(char* sampleName)
 	}
 }
 
+int tesselatePosition = 0;
+
 void osystem_startBgPoly()
 {
 	glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
 	glBindTexture(GL_TEXTURE_2D, backTexture);
-	glBegin(GL_POLYGON);
+	//glBegin(GL_POLYGON);
+
+	gluTessBeginPolygon(tobj, NULL);
+	gluTessBeginContour(tobj);
+
+	tesselatePosition = 0;
 }
 
 void osystem_endBgPoly()
 {
-	glEnd();
+	gluTessEndContour(tobj);
+	gluTessEndPolygon(tobj);
+
 	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
 }
 
 void osystem_addBgPolyPoint(int x, int y)
 {
-	glColor4ub(255,255,255,255);
-	glTexCoord2f(x/(float)1024,y/(float)512);
-	glVertex3f(x,y,-100);
+	tesselateList[tesselatePosition][0] = x;
+	tesselateList[tesselatePosition][1] = y;
+	tesselateList[tesselatePosition][2] = 0;
+	tesselateList[tesselatePosition][3] = 1.f;
+	tesselateList[tesselatePosition][4] = 1.f;
+	tesselateList[tesselatePosition][5] = 1.f;
+
+	gluTessVertex(tobj, tesselateList[tesselatePosition], tesselateList[tesselatePosition]); 
+
+	tesselatePosition++;
 }
 
 

@@ -26,6 +26,10 @@
 //#include <gl\glaux.h>		// Header File For The Glaux Library
 #endif
 
+// temp triangulation stuff
+#include <bool.h>
+#include <geometry.h>
+int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*triangles)[3]);
 #include "vars.h"
 
 #include "main.h"

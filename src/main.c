@@ -3747,7 +3747,7 @@ void mainDraw(int mode)
 
 		actorPtr = &actorTable[currentDrawActor];
 
-		if(actorPtr->flags & 0x25)
+		//if(actorPtr->flags & 0x25)
 		{
 			actorPtr->flags &= 0xFFFB;
 			
@@ -3755,7 +3755,7 @@ void mainDraw(int mode)
 			{
 				mainDrawSub2(currentDrawActor);
 			}
-			else
+			else 
 			{
 				char* bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
 
@@ -5215,14 +5215,16 @@ int drawTopStatusBox(int arg_0, int arg_2, int arg_4)
 {
 	int var_A = currentMenuTop+1;
 	int var_6 = arg_0;
-	int var_E = 0;
 	int var_8;
+	int i;
 	int currentObj;
 	objectStruct* objPtr;
 
 	drawAITDBox(160,50,320,100);
 
-	while(var_E<5)
+	var_A = currentMenuTop+1;
+
+	for(i=0;i<5;i++)
 	{
 		if(arg_0>=numObjInInventory)
 			break;
@@ -5249,7 +5251,6 @@ int drawTopStatusBox(int arg_0, int arg_2, int arg_4)
 
 		var_A += 0x10;
 		arg_0++;
-		var_E++;
 	}
 
 	printTextSub5(298,0x10,0x10,aitdBoxGfx);
@@ -6490,6 +6491,143 @@ void processAnimAction(void)
 	}
 }
 
+int sortCompareFunction(void* param1, void* param2)
+{
+	int distance1 = 0;
+	int distance2 = 0;
+	actorStruct* actor1Ptr;
+	actorStruct* actor2Ptr;
+	ZVStruct* actor1ZvPtr;
+	ZVStruct* actor2ZvPtr;
+	ZVStruct localZv1;
+	ZVStruct localZv2;
+	int flag = 0;
+	int y1;
+	int y2;
+
+	ASSERT(*(int*)param1 >=0 && *(int*)param1 < 50);
+	ASSERT(*(int*)param2 >=0 && *(int*)param2 < 50);
+
+	actor1Ptr = &actorTable[*(int*)param1];
+	actor2Ptr = &actorTable[*(int*)param2];
+
+	actor1ZvPtr = &actor1Ptr->zv;
+	actor2ZvPtr = &actor2Ptr->zv;
+
+	if(actor1Ptr->room != currentDisplayedRoom)
+	{
+		copyZv(actor1ZvPtr, &localZv1);
+		getZvRelativePosition(&localZv1, actor1Ptr->room, currentDisplayedRoom);
+		actor1ZvPtr = &localZv1;
+	}
+
+	if(actor2Ptr->room != currentDisplayedRoom)
+	{
+		copyZv(actor2ZvPtr, &localZv2);
+		getZvRelativePosition(&localZv2, actor2Ptr->room, currentDisplayedRoom);
+		actor2ZvPtr = &localZv2;
+	}
+
+	y1 = ((((actor1ZvPtr->ZVY1 + actor1ZvPtr->ZVY2) / 2) - 2000) / 2000) * 2000;
+	y2 = ((((actor2ZvPtr->ZVY1 + actor2ZvPtr->ZVY2) / 2) - 2000) / 2000) * 2000;
+
+	if(y1 == y2) // both y in the same range
+	{
+		if(
+			((actor1ZvPtr->ZVX1 > actor2ZvPtr->ZVX1) && (actor2ZvPtr->ZVX2 > actor1ZvPtr->ZVX1)) ||
+			((actor1ZvPtr->ZVX2 > actor2ZvPtr->ZVX1) && (actor1ZvPtr->ZVX2 < actor2ZvPtr->ZVX2)) ||
+			((actor2ZvPtr->ZVX1 > actor1ZvPtr->ZVX1) && (actor1ZvPtr->ZVX2 > actor2ZvPtr->ZVX1)) ||
+			((actor2ZvPtr->ZVX2 > actor1ZvPtr->ZVX1) && (actor2ZvPtr->ZVX2 < actor1ZvPtr->ZVX2)) )
+		{
+			flag |= 1;
+		}
+
+		if(
+			(actor1ZvPtr->ZVZ1 > actor2ZvPtr->ZVZ1 && actor1ZvPtr->ZVZ1 < actor2ZvPtr->ZVZ2) ||
+			(actor1ZvPtr->ZVZ2 > actor2ZvPtr->ZVZ1 && actor1ZvPtr->ZVZ2 < actor2ZvPtr->ZVZ2) ||
+			(actor2ZvPtr->ZVZ1 > actor1ZvPtr->ZVZ1 && actor1ZvPtr->ZVZ2 > actor2ZvPtr->ZVZ1) ||
+			(actor2ZvPtr->ZVZ2 > actor1ZvPtr->ZVZ1 && actor2ZvPtr->ZVZ2 < actor1ZvPtr->ZVZ2) )
+		{
+			flag |= 2;
+		}
+
+		//TODO: remove hack and find the exact cause of the bug in the sorting algorithme
+		flag = 0;
+
+		if(flag == 0)
+		{
+			distance1 = computeDistanceToPoint(translateX,translateZ,(actor1ZvPtr->ZVX1+actor1ZvPtr->ZVX2)/2,(actor1ZvPtr->ZVZ1+actor1ZvPtr->ZVZ2)/2);
+			distance2 = computeDistanceToPoint(translateX,translateZ,(actor2ZvPtr->ZVX1+actor2ZvPtr->ZVX2)/2,(actor2ZvPtr->ZVZ1+actor2ZvPtr->ZVZ2)/2);
+		}
+		else
+		{
+			if(flag & 2) // intersect on Z
+			{
+				if( abs(translateX - actor1ZvPtr->ZVX1) < abs(translateX - actor1ZvPtr->ZVX2) )
+				{
+					distance1 = translateX - actor1ZvPtr->ZVX1;
+				}
+				else
+				{
+					distance1 = translateX - actor1ZvPtr->ZVX2;
+				}
+
+				if( abs(translateX - actor2ZvPtr->ZVX1) < abs(translateX - actor2ZvPtr->ZVX2) )
+				{
+					distance2 = translateX - actor2ZvPtr->ZVX1;
+				}
+				else
+				{
+					distance2 = translateX - actor2ZvPtr->ZVX2;
+				}
+			}
+			if(flag & 1) // intersect on X
+			{
+				if( abs(translateZ - actor1ZvPtr->ZVZ1) < abs(translateZ - actor1ZvPtr->ZVZ2) )
+				{
+					distance1 += translateZ - actor1ZvPtr->ZVZ1;
+				}
+				else
+				{
+					distance1 += translateZ - actor1ZvPtr->ZVZ2;
+				}
+
+				if( abs(translateZ - actor2ZvPtr->ZVZ1) < abs(translateZ - actor2ZvPtr->ZVZ2) )
+				{
+					distance2 += translateZ - actor2ZvPtr->ZVZ1;
+				}
+				else
+				{
+					distance2 += translateZ - actor2ZvPtr->ZVZ2;
+				}
+			}
+		}
+
+	}
+	else
+	{
+		distance1 = abs(translateY - 2000 - y1);
+		distance2 = abs(translateY - 2000 - y2);
+	}
+
+	if(distance1>distance2)
+	{
+		return(-1);
+	}
+
+	if(distance1<distance2)
+	{
+		return(1);
+	}
+
+	return(0);
+}
+
+void sortActorList()
+{
+	qsort(sortedActorTable, numActorInList, sizeof(int), sortCompareFunction);
+}
+
 void mainLoop(int allowSystemMenu)
 {
 	while(1)
@@ -6639,7 +6777,7 @@ void mainLoop(int allowSystemMenu)
 //			createActorList();
 		}
 
-//		sortActorList();
+		sortActorList();
 
 //		if(objModifFlag2)
 		{
