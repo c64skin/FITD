@@ -1,4 +1,4 @@
-#ifndef USE_GL
+#ifdef USE_GL
 
 #include "common.h"
 
@@ -35,6 +35,9 @@ SDL_Color sdl_colors[256];
 SDL_Surface *surfaceTable[16];
 char RGBA_Pal[256*4];
 //TTF_Font *font;
+
+GLuint		backTexture;
+GLuint		modelsDisplayList;
 
 void OSystem::delay(int time)
 {
@@ -113,7 +116,7 @@ OSystem::OSystem()	// that's the constructor of the system dependent
 
     TTF_SetFontStyle(font, renderstyle);*/
 
-    SDL_WM_SetCaption("Alone in the dark", "AITD");
+    SDL_WM_SetCaption("Alone in the dark \"GL\"", "AITD");
 
    // SDL_ShowCursor (SDL_DISABLE);
 
@@ -125,41 +128,32 @@ OSystem::OSystem()	// that's the constructor of the system dependent
 
     keyboard[SDLK_RETURN] = 0;
 
-    sdl_screen = SDL_SetVideoMode(640, 400, 32, SDL_SWSURFACE/*|SDL_FULLSCREEN*/);
+    sdl_screen = SDL_SetVideoMode(800, 600, 32, SDL_OPENGL/*|SDL_FULLSCREEN*/);
 
     if (sdl_screen == NULL)
 	{
-	    fprintf(stderr, "Couldn't set 640x400x32 video mode: %s\n", SDL_GetError());
+	    fprintf(stderr, "Couldn't set 640x480x32 video mode: %s\n", SDL_GetError());
 	    exit(1);
 	}
 
     mouseLeft = 0;
     mouseRight = 0;
-}
 
-void OSystem::putpixel(int x, int y, int pixel)
-{
-    int bpp = sdl_screen->format->BytesPerPixel;
+	glEnable(GL_TEXTURE_2D);
+	glDisable(GL_CULL_FACE);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);				// Black Background
+	glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
+	glLoadIdentity();									// Reset The Projection Matrix
+	glOrtho(0,320,200,0,0,100);
+	glMatrixMode(GL_MODELVIEW);							// Select The Modelview Matrix
+	glLoadIdentity();									// Reset The Modelview Matrix
 
-   /*
-    * Here p is the address to the pixel we want to set 
-    */
-    Uint8 *p = (Uint8 *) sdl_screen->pixels + y * sdl_screen->pitch + x * bpp;
-
-    *p = pixel;
+	modelsDisplayList = glGenLists(1);
 }
 
 void OSystem::setPalette(byte * palette)
 {
 	memcpy(RGBA_Pal,palette,256*4);
-   // int i;
-    SDL_Color *sdl_colorsTemp = (SDL_Color *) palette;
-
-    SDL_SetColors(sdl_buffer, sdl_colorsTemp, 0, 256);
-
-    SDL_BlitSurface(sdl_buffer, NULL, sdl_screen, NULL);
-
-    SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
 }
 
 void OSystem::getPalette(char* palette)
@@ -167,138 +161,91 @@ void OSystem::getPalette(char* palette)
 	memcpy(palette,RGBA_Pal,256*4);
 }
 
-void OSystem::setPalette320x200(byte * palette)
-{
-   // int i;
-    SDL_Color *sdl_colorsTemp = (SDL_Color *) palette;
-
-    SDL_SetColors(sdl_buffer320x200, sdl_colorsTemp, 0, 256);
-
-//    SDL_BlitSurface(sdl_buffer320x200, NULL, sdl_screen, NULL);
-
-  //  SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
-}
-
-void OSystem::fadeBlackToWhite()
-{
-    int i;
-
-    SDL_Color colorPtr[256];
-
-    SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
-
-    for (i = 0; i < 256; i += 3)
-	{
-	    memset(colorPtr, i, 1024);
-	    SDL_SetPalette(sdl_screen, SDL_PHYSPAL, colorPtr, 0, 256);
-	}
-}
+char tempBuffer2[1024*512*3];
 
 void OSystem::flip(unsigned char *videoBuffer)
 {
-    SDL_BlitSurface(sdl_buffer, NULL, sdl_screen, NULL);
+	glColor3ub(255,255,255);
 
-    SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+	glBindTexture(GL_TEXTURE_2D, backTexture);
+
+	glBegin(GL_TRIANGLES);
+
+		glTexCoord2f(0,0); // triangle haut gauche
+		glVertex3i(0,0,-100.0f);
+		glTexCoord2f(640.f/1024.f,0);
+		glVertex3i(640,0,-100.0f);
+		glTexCoord2f(0.0f,480.f/512.f);
+		glVertex3i(0,480,-100.0f);
+
+		glTexCoord2f(640.f/1024.f,0); // triangle haut gauche
+		glVertex3i(640,0,-100.0f);
+		glTexCoord2f(640.f/1024.f,480.f/512.f);
+		glVertex3i(640,480,-100.0f);
+		glTexCoord2f(0.0f,480.f/512.f);
+		glVertex3i(0,480,-100.0f);
+
+	glEnd();
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glEnable(GL_DEPTH_TEST);
+	glCallList(modelsDisplayList);
+
+	SDL_GL_SwapBuffers( );
 }
 
-void OSystem::draw320x200BufferToScreen(unsigned char *videoBuffer)
-{
-	SDL_BlitSurface(sdl_buffer320x200,NULL,sdl_bufferRGBA,NULL);
-
-//	sdl_bufferStretch=zoomSurface(sdl_bufferRGBA, 2, 2.4, SMOOTHING_ON);
-
-//	SDL_FillRect(sdl_screen,NULL,0);
-
-    SDL_BlitSurface(sdl_bufferStretch, NULL, sdl_screen, NULL);
-
-    SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
-
-	SDL_FreeSurface(sdl_bufferStretch);
-}
+char tempBuffer3[320*200*3];
 
 void OSystem::CopyBlockPhys(unsigned char *videoBuffer, int left, int top, int right, int bottom)
 {
-    SDL_Rect rectangle;
+	char* out = tempBuffer3;
+	char* in = (char*)videoBuffer + left + top * 320;
 
-    rectangle.x = left;
-    rectangle.y = top;
-    rectangle.w = right - left +1 ;
-    rectangle.h = bottom - top +1 ;
+	int i;
+	int j;
 
-    SDL_BlitSurface(sdl_buffer, &rectangle, sdl_screen, &rectangle);
+	while((right-left)%4)
+	{
+		right++;
+	}
 
-    SDL_UpdateRect(sdl_screen, left, top, right - left +1, bottom - top+1);
+	while((bottom-top)%4)
+	{
+		bottom++;
+	}
+
+	for(i=top;i<bottom;i++)
+	{
+		in = (char*)videoBuffer + left + i * 320;
+		for(j=left;j<right;j++)
+		{
+			unsigned char color= *(in++);
+
+			*(out++) = palette[color*3];
+			*(out++) = palette[color*3+1];
+			*(out++) = palette[color*3+2];
+		}
+	}
+
+
+	glBindTexture(GL_TEXTURE_2D, backTexture);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, left, top, right-left, bottom-top, GL_RGB, GL_UNSIGNED_BYTE, tempBuffer3);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void OSystem::initBuffer(char *buffer, int width, int height)
 {   
-	sdl_buffer = SDL_CreateRGBSurfaceFrom(buffer, width, height, 8, width, 0, 0, 0, 0);
+	memset(tempBuffer2,0,1024*512*3);
+	glGenTextures(1, &backTexture);
+	glBindTexture(GL_TEXTURE_2D, backTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 512, 0, GL_RGB, GL_UNSIGNED_BYTE, tempBuffer2);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 }
 
 void OSystem::crossFade(char *buffer, char *palette)
 {
-    SDL_Surface *backupSurface;
-    SDL_Surface *newSurface;
-    SDL_Surface *tempSurface;
-    Uint32 rmask, gmask, bmask, amask;
-
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    rmask = 0xff000000;
-    gmask = 0x00ff0000;
-    bmask = 0x0000ff00;
-    amask = 0x000000ff;
-#else
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
-    amask = 0xff000000;
-#endif
-
-    backupSurface = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 480, 32, rmask, gmask, bmask, 0);
-    newSurface =
-	SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 640, 480, 32, rmask, gmask, bmask, 0);
-
-    tempSurface = SDL_CreateRGBSurfaceFrom(buffer, 640, 480, 8, 640, 0, 0, 0, 0);
-    SDL_SetColors(tempSurface, (SDL_Color *) palette, 0, 256);
-
-    SDL_BlitSurface(sdl_screen, NULL, backupSurface, NULL);
-    SDL_BlitSurface(tempSurface, NULL, newSurface, NULL);
-
-#ifndef FASTDEBUG
-    int i;
-
-/*    for (i = 0; i < 16; i++)
-	{
-	    SDL_BlitSurface(backupSurface, NULL, surfaceTable[i], NULL);
-	    SDL_SetAlpha(newSurface, SDL_SRCALPHA | SDL_RLEACCEL, i * 16);
-	    SDL_BlitSurface(newSurface, NULL, surfaceTable[i], NULL);
-	}
-
-    for (i = 0; i < 16; i++)
-	{
-	    SDL_BlitSurface(surfaceTable[i], NULL, sdl_screen, NULL);
-	    SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
-	}*/
-
-    for (i = 0; i < 8; i++)
-	{
-	    SDL_BlitSurface(backupSurface, NULL, surfaceTable[i], NULL);
-	    SDL_SetAlpha(newSurface, SDL_SRCALPHA | SDL_RLEACCEL, i * 32);
-	    SDL_BlitSurface(newSurface, NULL, surfaceTable[i], NULL);
-   	    SDL_BlitSurface(surfaceTable[i], NULL, sdl_screen, NULL);
-	    SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
-        SDL_Delay(20);
-
-	}
-
-#endif
-
-    SDL_BlitSurface(newSurface, NULL, sdl_screen, NULL);
-    SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
-
-    SDL_FreeSurface(backupSurface);
-    SDL_FreeSurface(newSurface);
-    SDL_FreeSurface(tempSurface);
 }
 
 int posInStream = 0;
@@ -383,6 +330,54 @@ void OSystem::playSample(char* sampleName)
 		SDL_PauseAudio(0);
 		deviceStatus = true;
 	}
+}
+
+void OSystem::startFrame()
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+}
+
+void OSystem::stopFrame()
+{
+}
+
+void OSystem::startModelRender()
+{
+	//glNewList(modelsDisplayList, GL_COMPILE);
+}
+
+void OSystem::stopModelRender()
+{
+	//glEndList();
+}
+
+void OSystem::fillPoly(short int* buffer, int numPoint, unsigned char color)
+{
+	int i;
+
+	glColor3ub(palette[color*3],palette[color*3+1],palette[color*3+2]);
+	glBegin(GL_POLYGON);
+
+	for(i=0;i<numPoint;i++)
+	{
+		glVertex3f(buffer[0],buffer[1],-buffer[2]/1000.f);
+		buffer+=3;
+	}
+
+	glEnd();
+}
+
+void OSystem::draw3dLine(int x1, int y1, int z1, int x2, int y2, int z2, unsigned char color)
+{
+	glColor3ub(palette[color*3],palette[color*3+1],palette[color*3+2]);
+
+	glBegin(GL_LINES);
+
+	glVertex3f(x1,y1,-z1/1000.f);
+	glVertex3f(x2,y2,-z2/1000.f);
+
+	glEnd();
 }
 
 #endif

@@ -114,7 +114,7 @@ void blitPalette(char* palettePtr,unsigned char startColor,unsigned char nbColor
 	}
 
 	osystem.setPalette(paletteRGBA);
-	osystem.Flip((unsigned char*)scaledScreen);
+	osystem.flip((unsigned char*)scaledScreen);
 }
 
 void flipOtherPalette(char* palettePtr)
@@ -155,7 +155,7 @@ void flipOtherPalette(char* palettePtr)
 	}
 
 	osystem.setPalette(paletteRGBA);
-	osystem.Flip((unsigned char*)scaledScreen);
+	osystem.flip((unsigned char*)scaledScreen);
 }
 
 void computeProportionalPalette(unsigned char* inPalette, unsigned char* outPalette, int coef)
@@ -227,6 +227,11 @@ void fadeIn(void* sourcePal)
 
 void flip()
 {
+#ifdef USE_GL
+	osystem.flip(NULL);
+	return;
+#endif
+
 	int i;
 	char paletteRGBA[256*4];
 
@@ -261,7 +266,7 @@ void flip()
 	}
 
 	osystem.setPalette(paletteRGBA);
-	osystem.Flip((unsigned char*)scaledScreen);
+	osystem.flip((unsigned char*)scaledScreen);
 }
 
 void process_events( void )
@@ -375,6 +380,11 @@ int make3dTatou(void)
 	copyToScreen(tatou2d+770,unkScreenVar);
 	copyToScreen(unkScreenVar,aux2);
 
+#ifdef USE_GL
+	osystem.CopyBlockPhys((unsigned char*)unkScreenVar,0,0,320,200);
+	flip();
+#endif
+
 	make3dTatouUnk1(8,0);
 
 	startChrono(&localChrono);
@@ -386,10 +396,19 @@ int make3dTatou(void)
 
 		if(evalChrono(&localChrono)<=180) // avant eclair
 		{
+#ifdef USE_GL
+			osystem.startFrame();
+#endif
+
 			if(input2 || input1)
 			{
 				break;
 			}
+
+#ifdef USE_GL
+			osystem.stopFrame();
+			flip();
+#endif
 		}
 		else // eclair
 		{
@@ -412,6 +431,9 @@ int make3dTatou(void)
 			renderModel(0,0,0,0,0,0,tatou3d);
 
 			blitScreenTatou();
+#ifdef USE_GL
+			osystem.CopyBlockPhys((unsigned char*)unkScreenVar,0,0,320,200);
+#endif
 
 			copyPalette(tatouPal,palette);
 			fadeIn(palette);
@@ -429,11 +451,19 @@ int make3dTatou(void)
 
 				clearScreenTatou();
 
+#ifdef USE_GL
+			osystem.startFrame();
+#endif
+
 				rotateModel(0,0,0,unk1,rotation,0,time);
 
 				renderModel(0,0,0,0,0,0,tatou3d);
 
 				blitScreenTatou();
+
+#ifdef USE_GL
+			osystem.stopFrame();
+#endif
 
 				flip();
 			}

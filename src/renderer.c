@@ -661,6 +661,11 @@ void primType1(int primType, char** ptr, char** out) // poly
 		int depth = *(short int*)(((char*)renderPointList) + pointNumber + 4); // Z
 		ax+=2;
 
+#ifdef USE_GL
+		*(short int*)(*out) = depth;
+		*out+=2;
+#endif
+
 		if(depth<min)
 			min = depth;
 		if(depth>max)
@@ -679,21 +684,33 @@ void primType1(int primType, char** ptr, char** out) // poly
 	{
 		renderVar3 = max;
 
+#ifdef USE_GL
+		int bx = *(short int*)((*out)+6) - *(short int*)((*out));
+		int ax = *(short int*)((*out)+2) - *(short int*)((*out)+14);
+#else
 		int bx = *(short int*)((*out)+4) - *(short int*)((*out));
 		int ax = *(short int*)((*out)+2) - *(short int*)((*out)+10);
-
+#endif
 		ax *= bx;
 
 		int prod1 = ax;
 
+#ifdef USE_GL
+		int cx = *(short int*)((*out)+8) - *(short int*)((*out)+2);
+		ax = *(short int*)((*out)) - *(short int*)((*out)+12);
+#else
 		int cx = *(short int*)((*out)+6) - *(short int*)((*out)+2);
 		ax = *(short int*)((*out)) - *(short int*)((*out)+8);
-
+#endif
 		ax *= cx;
 
 		int prod2 = ax;
 
 		int prod = prod2 - prod1;
+
+#ifdef USE_GL
+	//	prod = -1;
+#endif
 
 		if(prod>0)
 		{
@@ -876,9 +893,12 @@ void renderStyle1(char* buffer)
 		}
 	}
 
+#ifdef USE_GL
+	osystem.fillPoly((short *)buffer,numPoint,color);
+#else
 	if(max>=0 && min <320)
 		fillpoly((short *)buffer,numPoint,color);
-
+#endif
 }
 
 void defaultRenderFunction(char* buffer)

@@ -609,6 +609,11 @@ void drawStartupMenu(int selectedEntry)
 
 void flipScreen()
 {
+#ifdef USE_GL
+	osystem.flip(NULL);
+	return;
+#endif
+
 	int i;
 	char paletteRGBA[256*4];
 
@@ -645,7 +650,7 @@ void flipScreen()
 	}
 
 	//osystem.setPalette(paletteRGBA);
-	osystem.Flip((unsigned char*)scaledScreen);
+	osystem.flip((unsigned char*)scaledScreen);
 }
 
 void flushScreen(void)
@@ -671,6 +676,11 @@ int processStartupMenu(void)
 	flushScreen();
 
 	drawStartupMenu(0);
+#ifdef USE_GL
+	osystem.startFrame();
+	osystem.stopFrame();
+	osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+#endif
 	flipScreen();
 	make3dTatouUnk1(16,0);
 	startChrono(&chrono);
@@ -695,7 +705,11 @@ int processStartupMenu(void)
 			}
 
 			drawStartupMenu(currentSelectedEntry);
-
+#ifdef USE_GL
+	osystem.startFrame();
+	osystem.stopFrame();
+	osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+#endif
 			flipScreen();
 //			menuWaitVSync();
 
@@ -718,9 +732,16 @@ int processStartupMenu(void)
 			}
 
 			drawStartupMenu(currentSelectedEntry);
-
+#ifdef USE_GL
+	osystem.startFrame();
+	osystem.stopFrame();
+	osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+#endif
 			//menuWaitVSync();
 			flipScreen();
+#ifdef USE_GL
+			osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+#endif
 
 			startChrono(&chrono);
 
@@ -1556,6 +1577,7 @@ void loadRoom(int roomNumber)
 	int currentCameraIdx;
 
 //	freezeTime();
+	printf("Load room %d\n",roomNumber);
 
 	if(currentCamera == -1)
 	{
@@ -2882,8 +2904,13 @@ void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
 	int transformedY1 = ((y1 * cameraZ) / z1) + cameraCenterY;
 	int transformedY2 = ((y2 * cameraZ) / z2) + cameraCenterY;
 
+#ifdef USE_GL
+	if(z1>0 && z2>0)
+		osystem.draw3dLine(transformedX1,transformedY1,z1,transformedX2,transformedY2,z2,c);
+#else
 	if(z1>0 && z2>0)
 		line(transformedX1,transformedY1,transformedX2,transformedY2,c);
+#endif
 }
 
 void drawZv(actorStruct* actorPtr)
@@ -3025,8 +3052,14 @@ void drawZones()
 
 void mainDraw(int mode)
 {
-	if(mode == 0)
-		mode = 1; // DEBUG
+//	if(mode == 0)
+//		mode = 1; // DEBUG
+
+#ifdef USE_GL
+	if(mode == 2)
+		osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+#endif
+
 
 	if(mode== 0)
 	{
@@ -3039,6 +3072,10 @@ void mainDraw(int mode)
 		//memset(screen,0,320*200);
 	}
 
+#ifdef USE_GL
+	osystem.startFrame();
+#endif
+
 //	setClipSize(0,0,319,199);
 	genVar6 = 0;
 
@@ -3046,6 +3083,10 @@ void mainDraw(int mode)
 
 	drawConverZones();
 	drawZones();
+
+#ifdef USE_GL
+	osystem.startModelRender();
+#endif
 
 	for(i=0;i<numActorInList;i++)
 	{
@@ -3072,7 +3113,6 @@ void mainDraw(int mode)
 
 //				if(actorPtr->field_0 == 1)
 //					printf("pos: %d %d %d\n",actorPtr->worldX, actorPtr->worldY, actorPtr->worldZ); 
-
 				renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
 							actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
 
@@ -3081,6 +3121,10 @@ void mainDraw(int mode)
 			}
 		}
 	}
+
+#ifdef USE_GL
+	osystem.stopModelRender();
+#endif
 
 	if(drawTextOverlay())
 	{
@@ -3111,6 +3155,10 @@ void mainDraw(int mode)
 	else
 	{
 	}
+
+#ifdef USE_GL
+	osystem.stopFrame();
+#endif
 
 	flipScreen();
 }
