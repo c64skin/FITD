@@ -1827,12 +1827,381 @@ void setupCameraSub1()
 
 		if(!setupCameraSub1Sub1(var_10))
 		{
-			*(dataTabPos++) == var_10;
+			*(dataTabPos++) = var_10;
 			*(dataTabPos) = -1;
 		}
 
 		ptr2 += 6;
 	}
+}
+
+void updateAllActorAndObjectsSub1(int index)
+{
+	actorStruct *actorPtr = &actorTable[index];
+
+	if(actorPtr->field_0 == -2)
+	{
+		actorPtr->field_0 = -1;
+
+		if(actorPtr->hitBy == 4 )
+		{
+			defines.field_1C = 0;
+		}
+
+		printTextSub6(hqrUnk,actorPtr->endAnim);
+	}
+	else
+	{
+		if(actorPtr->field_0 >= 0)
+		{
+			objectStruct* objectPtr = &objectTable[actorPtr->field_0];
+
+			objectPtr->ownerIdx = -1;
+			actorPtr->field_0 = -1;
+
+			objectPtr->field_2 = actorPtr->bodyNum;
+			objectPtr->field_26 = actorPtr->hitBy;
+			objectPtr->field_28 = actorPtr->endAnim;
+			objectPtr->field_2A = actorPtr->field_40;
+			objectPtr->field_2C = actorPtr->field_42;
+			objectPtr->flags = actorPtr->flags &0xFFF7;
+			objectPtr->flags = actorPtr->dynFlags << 5; // ???!!!?
+			objectPtr->life = actorPtr->life;
+			objectPtr->lifeMode = actorPtr->lifeMode;
+			objectPtr->trackMode = actorPtr->trackMode;
+
+			if(objectPtr->trackMode)
+			{
+				objectPtr->trackNumber = actorPtr->trackNumber;
+				objectPtr->positionInTrack = actorPtr->positionInTrack;
+			}
+
+			objectPtr->x = actorPtr->x + actorPtr->field_5A;
+			objectPtr->y = actorPtr->y + actorPtr->field_5C;
+			objectPtr->z = actorPtr->z + actorPtr->field_5E;
+
+			objectPtr->alpha = actorPtr->alpha;
+			objectPtr->beta = actorPtr->beta;
+			objectPtr->gamma = actorPtr->gamma;
+
+			objectPtr->stage = actorPtr->stage;
+			objectPtr->room = actorPtr->room;
+
+			actorTurnedToObj = 1;
+		}
+	}
+}
+
+int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y, int z, int stage, int room, int alpha, int beta, int gamma, int var2, int var3, int var4, int var5)
+{
+	int i;
+	int j;
+	actorStruct* actorPtr = actorTable;
+
+	for(i=0;i<50;i++)
+	{
+		if(actorPtr->field_0 == -1)
+			break;
+
+		actorPtr++;
+	}
+
+	if(i==50)
+		return -1;
+
+	currentProcessedActorPtr = actorPtr;
+	currentProcessedActorIdx = i;
+
+	actorPtr->bodyNum = flag2;
+	actorPtr->flags = flag;
+	actorPtr->stage = stage;
+	actorPtr->room = room;
+	actorPtr->field_22 = actorPtr->x = x;
+	actorPtr->field_24 = actorPtr->y = y;
+	actorPtr->field_26 = actorPtr->z = z;
+
+	if(room == currentDisplayedRoom)
+	{
+		char* roomPtr = etageVar0+room*4;
+
+		actorPtr->field_22 = ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
+		actorPtr->field_24 = ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;
+		actorPtr->field_26 = ((*(short int*)(cameraPtr+8)) - (*(short int*)(roomPtr+8))) * 10;
+	}
+
+	actorPtr->alpha = alpha;
+	actorPtr->beta = beta;
+	actorPtr->gamma = gamma;
+
+	actorPtr->dynFlags = 1;
+	
+	actorPtr->hitBy = var2;
+	actorPtr->endAnim = var3;
+
+	actorPtr->field_40 = var4;
+	actorPtr->field_42 = var5;
+
+	actorPtr->frame = 1;
+	actorPtr->anim = 1;
+	actorPtr->field_44 = -1;
+	actorPtr->field_46 = 0;
+	actorPtr->field_48 = -1;
+	actorPtr->field_5A = 0;
+	actorPtr->field_5C = 0;
+	actorPtr->field_5E = 0;
+
+	for(j=0;j<3;j++)
+	{
+		actorPtr->field_7E[j] = -1;
+	}
+
+	actorPtr->field_84 = -1;
+	actorPtr->col = -1;
+	actorPtr->hardDec = -1;
+
+	actorPtr->field_6A = 0;
+	actorPtr->field_6C = 0;
+	actorPtr->field_6E = 0;
+
+	actorPtr->field_60 = 0;
+	actorPtr->field_62 = 0;
+	actorPtr->field_64 = 0;
+
+	actorPtr->falling = 0;
+
+	actorPtr->field_72 = 0;
+
+	actorPtr->speed = 0;
+
+	actorPtr->trackMode = 0;
+	actorPtr->trackNumber = -1;
+
+	actorPtr->field_8E = 0;
+	actorPtr->hardCol = -1;
+	actorPtr->hit = -1;
+
+	if(flag2 != -1)
+	{
+		char* bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
+
+		if(var2 != -1)
+		{
+			char* animPtr = HQR_Get(listAnim,var2);
+
+			initAnimInBody(var3,animPtr,bodyPtr);
+
+			actorPtr->field_4C = getAnimParam(animPtr);
+			actorPtr->anim = 0;
+			actorPtr->flags |= 1;
+
+			computeScreenBox(actorPtr->field_22 + actorPtr->field_5A, actorPtr->field_24 + actorPtr->field_5C, actorPtr->field_26 + actorPtr->field_5E, actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
+
+			if(BBox3D1<0)
+				BBox3D1 = 0;
+
+			if(BBox3D3>319)
+				BBox3D3 = 319;
+
+			if(BBox3D2<0)
+				BBox3D2 = 0;
+
+			if(BBox3D4>199)
+				BBox3D4 = 199;
+
+			actorPtr->field_14 = BBox3D1;
+			actorPtr->field_16 = BBox3D2;
+			actorPtr->field_18 = BBox3D3;
+			actorPtr->field_1A = BBox3D4;
+		}
+		else
+		{
+			if(!actorPtr->flags & 4)
+			{
+				actorPtr->flags &= 0xFFFE;
+			}
+		}
+	}
+
+	startChrono(&actorPtr->chronoStructure);
+	startChrono(&actorPtr->field_36);
+
+	ZVStruct* zvPtr = &actorPtr->zv;
+
+	switch(var1)
+	{
+	case 0:
+		{
+			break;
+		}
+	case 1:
+		{		
+			break;
+		}
+	case 2:
+		{
+			break;
+		}
+	case 3:
+		{
+			break;
+		}
+	case 4:
+		{
+			break;
+		}
+
+	}
+
+	return(0);
+}
+
+void updateAllActorAndObjects()
+{
+	int i;
+	actorStruct *currentActor = actorTable;
+
+	for(i=0;i<50;i++)
+	{
+		if(currentActor->field_0 != -1)
+		{
+			if(currentActor->stage == currentEtage)
+			{
+				if(currentActor->life != -1)
+				{
+					switch(currentActor->lifeMode)
+					{
+					case 0:
+						{
+							break;
+						}
+					case 1:
+						{
+							if(currentActor->room != currentDisplayedRoom)
+							{
+								updateAllActorAndObjectsSub1(i);
+							}
+							break;
+						}
+					case 2:
+						{
+							if(!setupCameraSub1Sub1(currentActor->room))
+							{
+								updateAllActorAndObjectsSub1(i);
+							}
+							break;
+						}
+					default:
+						{
+							updateAllActorAndObjectsSub1(i);
+							break;
+						}
+					}
+				}
+				else
+				{
+					if(!setupCameraSub1Sub1(currentActor->room))
+					{
+						updateAllActorAndObjectsSub1(i);
+					}
+				}
+			}
+			else
+			{
+				updateAllActorAndObjectsSub1(i);
+			}
+		}
+
+		currentActor++;
+	}
+
+	objectStruct* currentObject = objectTable;
+
+	for(i=0;i<maxObjects;i++)
+	{
+		if(currentObject->ownerIdx != -1)
+		{
+			if(currentCameraTarget == i)
+			{
+				genVar9 = currentObject->ownerIdx;
+			}
+		}
+		else
+		{
+			if(currentObject->stage == currentEtage)
+			{
+				if(currentObject->life != -1)
+				{
+					if(currentObject->lifeMode != -1)
+					{
+						switch(currentObject->lifeMode)
+						{
+						case 1:
+							{
+								if(currentObject->room != currentDisplayedRoom)
+								{
+									currentObject++;
+									continue;
+								}
+								break;
+							}
+						case 2:
+							{
+								if(!setupCameraSub1Sub1(currentObject->room))
+								{
+									currentObject++;
+									continue;
+								}
+								break;
+							}
+						}
+
+						int var_C = currentObject->flags & 0xFFDF;
+						int var_E = currentObject->flags2;
+						int var_A = currentObject->field_26;
+
+						int actorIdx = copyObjectToActor(	currentObject->flags2, currentObject->field_6, currentObject->foundName,
+															currentObject->flags & 0xFFDF,
+															currentObject->x, currentObject->y, currentObject->z,
+															currentObject->stage, currentObject->room,
+															currentObject->alpha, currentObject->beta, currentObject->gamma,
+															currentObject->field_26,
+															currentObject->field_28, currentObject->field_2A, currentObject->field_2C);
+
+						currentObject->ownerIdx = actorIdx;
+
+						if(actorIdx != -1)
+						{
+							currentProcessedActorPtr = &actorTable[actorIdx];
+							currentProcessedActorIdx = actorIdx;
+
+							if(currentCameraTarget == i)
+							{
+								genVar9 = currentProcessedActorIdx;
+							}
+
+							currentProcessedActorPtr->flags = (currentObject->flags & 0x20) / 0x20; // recheck
+							currentProcessedActorPtr->life = currentObject->life;
+							currentProcessedActorPtr->lifeMode = currentObject->lifeMode;
+
+							currentProcessedActorPtr->field_0 = i;
+
+//							setMoveMode(currentProcessedActorPtr->trackMode, currentProcessedActorPtr->trackNumber);
+
+							currentProcessedActorPtr->positionInTrack = currentObject->positionInTrack;
+
+							actorTurnedToObj = 1;
+						}
+					}
+				}
+			}
+		}
+
+		currentObject++;
+	}
+
+//	objModifFlag1 = 0;
+
+	//TODO: object update
 }
 
 void setupCamera()
@@ -1882,6 +2251,162 @@ void setupCamera()
 //unfreezeTime();
 }
 
+void mainLoop(int allowSystemMenu)
+{
+	while(1)
+	{
+		process_events();
+		input3 = input2;
+		input4 = inputKey;
+		joy = input1;
+
+		if(input3)
+		{
+		}
+		else
+		{
+//			input5 = 0;
+		}
+
+		if(joy)
+		{
+			if(!allowSystemMenu)
+			{
+				break;
+			}
+
+			found = 0x2000;
+		}
+		else
+		{
+			found = 0;
+		}
+
+//		updateInHand(inHand);
+
+		if(changeFloor == 0)
+		{
+			if(defines.field_1A == -1)
+			{
+//				mainVar2 = 2000;
+//				mainVar3 = 2000;
+			}
+
+			currentProcessedActorPtr = actorTable;
+
+			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < 50; currentProcessedActorIdx++)
+			{
+				if(currentProcessedActorPtr->field_0 >= 0)
+				{
+					currentProcessedActorPtr->field_84 = -1;
+					currentProcessedActorPtr->hit = -1;
+					currentProcessedActorPtr->hardCol = -1;
+					currentProcessedActorPtr->col = -1;
+					currentProcessedActorPtr->hardDec = -1;
+				}
+
+				currentProcessedActorPtr++;
+				currentProcessedActorIdx++;
+			}
+
+			currentProcessedActorPtr = actorTable;
+			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < 50; currentProcessedActorIdx++)
+			{
+				if(currentProcessedActorPtr->field_0 >= 0)
+				{
+					int flag = currentProcessedActorPtr->flags;
+
+					if(flag & 1)
+					{
+//						processActor1();
+					}
+
+					if(flag & 0x40)
+					{
+//						processActor2();
+					}
+
+					if(currentProcessedActorPtr->field_8E)
+					{
+//						processActor3();
+					}
+				}
+
+				currentProcessedActorPtr++;
+				currentProcessedActorIdx++;
+			}
+
+			currentProcessedActorPtr = actorTable;
+			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < 50; currentProcessedActorIdx++)
+			{
+				if(currentProcessedActorPtr->field_0 >= 0)
+				{
+					if(currentProcessedActorPtr->life != -1 && currentProcessedActorPtr->lifeMode != -1)
+					{
+//						processLife(currentProcessedActorPtr->life);
+					}
+				}
+
+				if(changeFloor)
+					break;
+			}
+
+			if(giveUp)
+				break;
+
+
+		}
+
+		if(changeFloor)
+		{
+			//loadFloor(newFloor);
+		}
+
+		if(needChangeRoom)
+		{
+//			loadRoom(newRoom);
+			setupCamera();
+		}
+		else
+		{
+//			checkIfCameraChangeIsRequired();
+			if(mainVar1)
+			{
+				setupCamera();
+			}
+		}
+
+//		if(objModifFlag1)
+		{
+			updateAllActorAndObjects();
+		} 
+
+		if(actorTurnedToObj)
+		{
+//			createActorList();
+		}
+
+//		sortActorList();
+
+//		if(objModifFlag2)
+		{
+//			setupCameraSub4();
+		}
+
+//		mainLoopSub1();
+
+//		renderActorList(setupCameraVar1);
+
+//		updateSound2();
+	}
+
+//	mainLoopVar1 = 0;
+//	shakingState = 0;
+
+//	stopShaking();
+//	stopSounds();
+}
+
 void startGame(int startupFloor, int startupRoom, int allowSystemMenu)
 {
 	initEngine();
@@ -1898,9 +2423,9 @@ void startGame(int startupFloor, int startupRoom, int allowSystemMenu)
 
 	setupCamera();
 
-	/*mainLoop(allowSystemMenu);
+	mainLoop(allowSystemMenu);
 
-	freeScene();
+	/*freeScene();
 
 	fadeOut(8,0);*/
 }

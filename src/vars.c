@@ -165,3 +165,8 @@ int cameraZ;
 
 char cameraDataTab[30];
 
+int actorTurnedToObj = 0;
+
+int currentProcessedActorIdx;
+actorStruct* currentProcessedActorPtr;
+

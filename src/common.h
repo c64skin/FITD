@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <search.h>
 
 #include "stdafx.h"
 

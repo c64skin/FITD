@@ -84,18 +84,23 @@ struct hqrSubEntryStruct
 	short int field_8;
 };
 
-struct actorStruct
+struct ZVStruct
 {
-	short int field_0;
-	short int bodyNum;
-	short int flags;
-	short int dynFlags;
 	short int ZVX1;
 	short int ZVX2;
 	short int ZVY1;
 	short int ZVY2;
 	short int ZVZ1;
 	short int ZVZ2;
+};
+
+struct actorStruct
+{
+	short int field_0;
+	short int bodyNum;
+	short int flags;
+	short int dynFlags;
+	ZVStruct zv;
 	short int field_14;
 	short int field_16;
 	short int field_18;
@@ -113,8 +118,7 @@ struct actorStruct
 	short int room;
 	short int lifeMode;
 	short int life;
-	short int field_36;
-	short int field_38;
+	unsigned int field_36;
 	unsigned int chronoStructure;
 	short int hitBy;
 	short int field_40;
@@ -126,7 +130,7 @@ struct actorStruct
 	short int field_4C;
 	short int frame;
 	short int anim;
-	short int field_52;
+	short int trackMode;
 	short int trackNumber;
 	short int body;
 	short int positionInTrack;
@@ -148,9 +152,7 @@ struct actorStruct
 	short int field_78;
 	short int field_7A;
 	short int field_7C;
-	short int field_7E;
-	short int field_80;
-	short int field_82;
+	short int field_7E[3];
 	short int field_84;
 	short int col;
 	short int hardDec;
@@ -169,31 +171,32 @@ struct actorStruct
 
 struct objectStruct
 {
-	int ownerIdx;
+	short int ownerIdx;
+	short int field_2;
 	short int flags;
 	short int field_6;
 	short int foundBody;
 	short int foundName;
 	short int flags2;
 	short int foundLife;
-	short int pos1;
-	short int pos2;
-	short int pos3;
-	short int pos4;
-	short int pos5;
-	short int pos6;
-	short int pos7;
-	short int pos8;
-	short int field_20;
-	short int field_22;
+	short int x;
+	short int y;
+	short int z;
+	short int alpha;
+	short int beta;
+	short int gamma;
+	short int stage;
+	short int room;
+	short int lifeMode;
+	short int life;
 	short int field_24;
 	short int field_26;
 	short int field_28;
 	short int field_2A;
 	short int field_2C;
-	short int field_2E;
-	short int field_30;
-	short int foundWeight;
+	short int trackMode;
+	short int trackNumber;
+	short int positionInTrack;
 };
 
 struct boxStruct
@@ -369,5 +372,10 @@ extern int cameraY;
 extern int cameraZ;
 
 extern char cameraDataTab[30];
+
+extern int actorTurnedToObj;
+
+extern int currentProcessedActorIdx;
+extern actorStruct* currentProcessedActorPtr;
 
 #endif
