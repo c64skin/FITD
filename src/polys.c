@@ -65,27 +65,27 @@ void fillpoly(short int * datas, int n, ColorP c) {
 	
 	step = (double) (x2 - x1) / (y2 - y1);
 	
-	printf("x1: %i, y1 = %i, x2 = %i, y2 = %i, step: %f\n", x1, y1, x2, y2, step);
+//	printf("x1: %i, y1 = %i, x2 = %i, y2 = %i, step: %f\n", x1, y1, x2, y2, step);
 	
 	curx = x1;
 	
 	if (y1 < y2) {
 	    for (j = y1; j < y2; j++, curx += step) {
-		printf("j = %i, curx = %f\n", j, curx);
+//		printf("j = %i, curx = %f\n", j, curx);
 		putdot(curx + 0.5, j);
 	    }
 	    if (dir == -1) {
-		printf("Adding extra (%i, %i)\n", x1, y1);
+//		printf("Adding extra (%i, %i)\n", x1, y1);
 		putdot(x1, y1);
 	    }
 	    dir = 1;
 	} else {
 	    for (j = y1; j > y2; j--, curx -= step) {
-		printf("j = %i, curx = %f\n", j, curx);
+//		printf("j = %i, curx = %f\n", j, curx);
 		putdot(curx + 0.5, j);
 	    }
 	    if (dir == 1) {
-		printf("Adding extra (%i, %i)\n", x1, y1);
+//		printf("Adding extra (%i, %i)\n", x1, y1);
 		putdot(x1, y1);
 	    }
 	    dir = -1;
