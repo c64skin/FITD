@@ -3703,7 +3703,7 @@ void processActor1(void)
 
       touchedZv = &actorTouchedPtr->zv;
 
-      if(actorTouchedPtr->flags & 0x80) // takable
+      if(actorTouchedPtr->bitField.tackable) // takable
       {
         if(currentProcessedActorPtr->trackMode == 1 && defines.field_1E == 0)
         {

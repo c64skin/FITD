@@ -146,11 +146,38 @@ struct rotateStruct
 
 typedef struct rotateStruct rotateStruct;
 
+struct actorFlags
+{
+  u16 flag0x0001:1;
+  u16 flag0x0002:1;
+  u16 flag0x0004:1;
+  u16 flag0x0008:1;
+  u16 flag0x0010:1;
+  u16 flag0x0020:1;
+  u16 flag0x0040:1;
+  u16 tackable:1;
+  u16 flag0x0100:1;
+  u16 flag0x0200:1;
+  u16 flag0x0400:1;
+  u16 flag0x0800:1;
+  u16 flag0x1000:1;
+  u16 flag0x2000:1;
+  u16 flag0x4000:1;
+  u16 flag0x8000:1;
+};
+
+
+typedef struct actorFlags actorFlags;
+
 struct actorStruct // used to read data from file too
 {
 	short int field_0;
 	short int bodyNum;
-	short int flags;
+  union
+  {
+	  short int flags;
+    actorFlags bitField;
+  };
 	short int dynFlags;
 	ZVStruct zv;
 	short int field_14;
@@ -218,8 +245,12 @@ struct objectStruct
 {
 	short int ownerIdx;
 	short int field_2;
-	short int flags;
-	short int field_6;
+  union
+  {
+	  short int flags;
+    actorFlags bitField;
+  };
+  short int field_6;
 	short int foundBody;
 	short int foundName;
 	short int flags2;
