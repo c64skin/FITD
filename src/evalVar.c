@@ -34,7 +34,7 @@ int getPosRel(actorStruct* actor1, actorStruct* actor2)
 	int centerX = (localZv.ZVX1 + localZv.ZVX2) / 2;
 	int centerZ = (localZv.ZVZ1 + localZv.ZVZ2) / 2;
 
-	if(actor1->zv.ZVZ1 >= centerZ && actor1->zv.ZVZ2 <= centerZ)
+	if(actor1->zv.ZVZ2 >= centerZ && actor1->zv.ZVZ1 <= centerZ)
 	{
 		if(actor1->zv.ZVX2 < centerX)
 		{
@@ -53,12 +53,8 @@ int getPosRel(actorStruct* actor1, actorStruct* actor2)
 		}
 	}
 	else
+	if(actor1->zv.ZVX2 >= centerX || actor1->zv.ZVX1 <= centerX)
 	{
-		if(actor1->zv.ZVX2 < centerX || actor1->zv.ZVX1 > centerX)
-		{
-			return(0);
-		}
-
 		if(actor1->zv.ZVZ2 < centerZ )
 		{
 			counter+=2;
@@ -70,6 +66,10 @@ int getPosRel(actorStruct* actor1, actorStruct* actor2)
 				return(0);
 			}
 		}
+	}
+	else
+	{
+		return(0);
 	}
 
 	return(getPosRelTable[counter]);
@@ -290,15 +290,14 @@ int evalVar(void)
 					objNum = *(short int*)currentLifePtr;
 					currentLifePtr+=2;
 
-					int temp = *(short int*)currentLifePtr;
-					currentLifePtr+=2;
-
 					if(objectTable[objNum].ownerIdx == -1)
 					{
 						return 0;
 					}
 
-					return(getPosRel(actorPtr, &actorTable[objectTable[objNum].ownerIdx]));
+					int posRel = getPosRel(actorPtr, &actorTable[objectTable[objNum].ownerIdx]);
+					printf("PosRel: %d\n",posRel);
+					return(posRel);
 
 					break;
 				}

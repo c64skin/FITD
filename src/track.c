@@ -296,6 +296,8 @@ void processTrack(void)
 			short int trackMacro = *(short int*)trackPtr;
 			trackPtr += 2;
 
+			printf("Track macro %X\n",trackMacro);
+
 			switch(trackMacro)
 			{
 			case 0: // warp

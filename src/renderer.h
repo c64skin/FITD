@@ -6,8 +6,12 @@ extern int BBox3D2;
 extern int BBox3D3;
 extern int BBox3D4;
 
-int renderModel(int var0,int var1,int var2,int var3,int var4,int var5,void* modelPtr);
-
+#ifdef USE_GL
+void transformPoint(float* ax, float* bx, float* cx);
+#else
 void transformPoint(int* ax, int* bx, int* cx);
+#endif
+
+int renderModel(int var0,int var1,int var2,int var3,int var4,int var5,void* modelPtr);
 
 #endif

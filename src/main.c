@@ -701,6 +701,11 @@ int processStartupMenu(void)
 
 	while(evalChrono(&chrono) <= 0x10000) // exit loop only if time out or if choice made
 	{
+#ifdef USE_GL
+	osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+	osystem.startFrame();
+#endif
+
 		if(selectedEntry!=-1 || evalChrono(&chrono) > 0x10000)
 		{
 			break;
@@ -719,11 +724,6 @@ int processStartupMenu(void)
 			}
 
 			drawStartupMenu(currentSelectedEntry);
-#ifdef USE_GL
-	osystem.startFrame();
-	osystem.stopFrame();
-	osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
-#endif
 			flipScreen();
 //			menuWaitVSync();
 
@@ -746,16 +746,8 @@ int processStartupMenu(void)
 			}
 
 			drawStartupMenu(currentSelectedEntry);
-#ifdef USE_GL
-	osystem.startFrame();
-	osystem.stopFrame();
-	osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
-#endif
 			//menuWaitVSync();
 			flipScreen();
-#ifdef USE_GL
-			osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
-#endif
 
 			startChrono(&chrono);
 
@@ -769,6 +761,10 @@ int processStartupMenu(void)
 		{
 			selectedEntry = currentSelectedEntry;
 		}
+#ifdef USE_GL
+		osystem.stopFrame();
+		flipScreen();
+#endif
 	}
 
 	if(selectedEntry==2) // if exit game, do not fade
@@ -2895,7 +2891,12 @@ int anim(int animNum,int arg_2, int arg_4)
 
 
 void line(int x1, int y1, int x2, int y2, char c);
+
+#ifdef USE_GL
+void drawProjectedLine(float x1, float y1, float z1, float x2, float y2, float z2,int c)
+#else
 void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
+#endif
 {
 	x1 -= translateX;
 	x2 -= translateX;
@@ -2937,26 +2938,45 @@ void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
 
 void drawZv(actorStruct* actorPtr)
 {
+	ZVStruct localZv;
+
+	if( actorPtr->room != actorTable[genVar9].room )
+	{
+		getZvRelativePosition(&localZv, actorPtr->room, actorTable[genVar9].room);
+	}
+	else
+	{
+		copyZv(&actorPtr->zv,&localZv);
+	}
+
+
 	// bottom
-	drawProjectedLine(actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,10);
-	drawProjectedLine(actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,10);
-	drawProjectedLine(actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,10);
-	drawProjectedLine(actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,10);
+	drawProjectedLine(	localZv.ZVX1,
+						localZv.ZVY2,
+						localZv.ZVZ1,
+						localZv.ZVX1,
+						localZv.ZVY2,
+						localZv.ZVZ2,
+						10);
+
+	drawProjectedLine(localZv.ZVX1,localZv.ZVY2,localZv.ZVZ2,localZv.ZVX2,localZv.ZVY2,localZv.ZVZ2,10);
+	drawProjectedLine(localZv.ZVX2,localZv.ZVY2,localZv.ZVZ2,localZv.ZVX2,localZv.ZVY2,localZv.ZVZ1,10);
+	drawProjectedLine(localZv.ZVX2,localZv.ZVY2,localZv.ZVZ1,localZv.ZVX1,localZv.ZVY2,localZv.ZVZ1,10);
 
 	// top
-	drawProjectedLine(actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,10);
-	drawProjectedLine(actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,10);
-	drawProjectedLine(actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,10);
-	drawProjectedLine(actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,10);
+	drawProjectedLine(localZv.ZVX1,localZv.ZVY1,localZv.ZVZ1,localZv.ZVX1,localZv.ZVY1,localZv.ZVZ2,10);
+	drawProjectedLine(localZv.ZVX1,localZv.ZVY1,localZv.ZVZ2,localZv.ZVX2,localZv.ZVY1,localZv.ZVZ2,10);
+	drawProjectedLine(localZv.ZVX2,localZv.ZVY1,localZv.ZVZ2,localZv.ZVX2,localZv.ZVY1,localZv.ZVZ1,10);
+	drawProjectedLine(localZv.ZVX2,localZv.ZVY1,localZv.ZVZ1,localZv.ZVX1,localZv.ZVY1,localZv.ZVZ1,10);
 
-	drawProjectedLine(	actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,
-						actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,10);
-	drawProjectedLine(	actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,
-						actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,10);
-	drawProjectedLine(	actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,
-						actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,10);
-	drawProjectedLine(	actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,
-						actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,10);
+	drawProjectedLine(	localZv.ZVX1,localZv.ZVY2,localZv.ZVZ1,
+						localZv.ZVX1,localZv.ZVY1,localZv.ZVZ1,10);
+	drawProjectedLine(	localZv.ZVX1,localZv.ZVY2,localZv.ZVZ2,
+						localZv.ZVX1,localZv.ZVY1,localZv.ZVZ2,10);
+	drawProjectedLine(	localZv.ZVX2,localZv.ZVY2,localZv.ZVZ2,
+						localZv.ZVX2,localZv.ZVY1,localZv.ZVZ2,10);
+	drawProjectedLine(	localZv.ZVX2,localZv.ZVY2,localZv.ZVZ1,
+						localZv.ZVX2,localZv.ZVY1,localZv.ZVZ1,10);
 
 
 }
@@ -3012,7 +3032,7 @@ void drawConverZones()
 }
 
 #ifdef USE_GL
-void drawProjectedQuad(int x1,int x2, int x3, int x4, int y1,int y2, int y3, int y4, int z1,int z2, int z3, int z4, int color)
+void drawProjectedQuad(float x1,float x2, float x3, float x4, float y1,float y2, float y3, float y4, float z1,float z2, float z3, float z4, int color)
 {
 	x1 -= translateX;
 	x2 -= translateX;
@@ -3039,7 +3059,6 @@ void drawProjectedQuad(int x1,int x2, int x3, int x4, int y1,int y2, int y3, int
 	z3 += cameraX;
 	z4 += cameraX;
 
-#ifdef USE_GL
 	float transformedX1 = ((x1 * cameraY) / (float)z1) + cameraCenterX;
 	float transformedX2 = ((x2 * cameraY) / (float)z2) + cameraCenterX;
 	float transformedX3 = ((x3 * cameraY) / (float)z3) + cameraCenterX;
@@ -3049,17 +3068,7 @@ void drawProjectedQuad(int x1,int x2, int x3, int x4, int y1,int y2, int y3, int
 	float transformedY2 = ((y2 * cameraZ) / (float)z2) + cameraCenterY;
 	float transformedY3 = ((y3 * cameraZ) / (float)z3) + cameraCenterY;
 	float transformedY4 = ((y4 * cameraZ) / (float)z4) + cameraCenterY;
-#else
-	int transformedX1 = ((x1 * cameraY) / z1) + cameraCenterX;
-	int transformedX2 = ((x2 * cameraY) / z2) + cameraCenterX;
-	int transformedX3 = ((x3 * cameraY) / z3) + cameraCenterX;
-	int transformedX4 = ((x4 * cameraY) / z4) + cameraCenterX;
 
-	int transformedY1 = ((y1 * cameraZ) / z1) + cameraCenterY;
-	int transformedY2 = ((y2 * cameraZ) / z2) + cameraCenterY;
-	int transformedY3 = ((y3 * cameraZ) / z3) + cameraCenterY;
-	int transformedY4 = ((y4 * cameraZ) / z4) + cameraCenterY;
-#endif
 	if(z1>100 && z2>100 && z3>100 && z4>100)
 		osystem.draw3dQuad(transformedX1,transformedY1,z1, transformedX2,transformedY2,z2, transformedX3,transformedY3,z3, transformedX4,transformedY4,z4, color);
 }
@@ -4698,6 +4707,11 @@ void makeStatusScreen(void)
 
 	while(!exitMenu)
 	{
+#ifdef USE_GL
+		osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+		osystem.startFrame();
+#endif
+
 		readKeyboard();
 		process_events();
 
@@ -4878,6 +4892,10 @@ void makeStatusScreen(void)
 
 		flipScreen();
 	}
+
+	//unfreezeTime();
+
+	mainVar1 = 1;
 
 	readKeyboard();
 	while(input1 || input2 || inputKey)

@@ -410,7 +410,11 @@ extern char* currentLifePtr;
 
 extern int setupCameraVar1;
 
+#ifdef USE_GL
+extern float renderPointList[6400];
+#else
 extern short int renderPointList[6400];
+#endif
 
 extern int numActorInList;
 extern int sortedActorTable[50];

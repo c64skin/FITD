@@ -178,7 +178,11 @@ char* currentLifePtr;
 
 int setupCameraVar1;
 
+#ifdef USE_GL
+float renderPointList[6400];
+#else
 short int renderPointList[6400];
+#endif
 
 int numActorInList;
 int sortedActorTable[50];

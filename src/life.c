@@ -130,7 +130,7 @@ void processLife(int lifeNum)
 		short int currentOpcode = *(short int*)(currentLifePtr);
 		currentLifePtr+=2;
 
-		//printf("opcode: %04X\n",currentOpcode);
+		//printf("%d:opcode: %04X\n",lifeNum, currentOpcode);
 
 		if(currentOpcode & 0x8000)
 		{

@@ -232,7 +232,10 @@ void OSystem::flip(unsigned char *videoBuffer)
 	positionInQuadTable = 0;
 
 	SDL_GL_SwapBuffers( );
+}
 
+void OSystem::startFrame()
+{
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 
@@ -257,6 +260,7 @@ void OSystem::flip(unsigned char *videoBuffer)
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
+
 
 char tempBuffer3[320*200*3];
 
@@ -393,10 +397,6 @@ void OSystem::playSample(char* sampleName)
 		SDL_PauseAudio(0);
 		deviceStatus = true;
 	}
-}
-
-void OSystem::startFrame()
-{
 }
 
 void OSystem::stopFrame()
