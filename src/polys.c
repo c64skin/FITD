@@ -19,7 +19,7 @@ void fillpoly(short int * datas, int n, ColorP c) {
     static int dots[SCREENHEIGHT][MAXPTS];
     static int counters[SCREENHEIGHT];
     short int x1, y1, x2, y2;
-    int i, j, k, dir = 1;
+    int i, j, k, dir = -2;
     double step, curx;
     
 //    printf("fillpoly starting with n = %i dots\n", n);
@@ -60,9 +60,9 @@ void fillpoly(short int * datas, int n, ColorP c) {
 	
 	if (y1 == y2) {
 //	    printf("Horizontal line. x1: %i, y1: %i, x2: %i, y2: %i\n", x1, y1, x2, y2);
-	    // Not sure if this is right.
+	    if (!dir)
+		continue;
 	    putdot(x1, y1);
-//	    putdot(x2, y2);
 	    dir = 0;
 	    continue;
 	}
@@ -101,8 +101,8 @@ void fillpoly(short int * datas, int n, ColorP c) {
     x2 = datas[0];
     y2 = datas[1];
     
-    if (((y1 < y2) && (dir == -1)) || ((y1 >= y2) && (dir == 1))) {
-//	printf("Adding extra (%i, %i)\n", x1, y1);
+    if (((y1 < y2) && (dir == -1)) || ((y1 > y2) && (dir == 1)) || ((y1 == y2) && (dir == 0))) {
+//	printf("Adding final extra (%i, %i)\n", x1, y1);
 	putdot(x1, y1);
     }
     
@@ -125,11 +125,15 @@ void fillpoly(short int * datas, int n, ColorP c) {
     for (i = 0; i < SCREENHEIGHT; i++) {
 	if (counters[i]) {
 //	    printf("%i dots on line %i\n", counters[i], i);
-    	    for (j = 0; j < (counters[i] - 1); j += 2) {
+    	    for (j = 0; j < counters[i]; j += 2) {
 //		printf("Drawing line (%i, %i)-%i\n", dots[i][j], dots[i][j + 1], i);
 		hline(dots[i][j], dots[i][j + 1], i, c);
-		if ((!dots[i][j]) || !(dots[i][j + 1]))
+#ifdef DEBUGGING_POLYS
+		if ((!dots[i][j]) || !(dots[i][j + 1])) {
+		    printf("fillpoly: BLARGH!\n");
 		    exit(-1);
+		}
+#endif
 	    }
 	}
     }
