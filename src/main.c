@@ -920,15 +920,17 @@ parseSpe:	while(*var_1C2 == '#')
 
 				switch(*(var_1C2++))
 				{
-				case 'P':
+				case 'P': // page change
+					{
+						if(currentTextY>top) // Hu ?
+							goto pageChange;
+						break;
+					}
+				case 'T': // tab
 					{
 						break;
 					}
-				case 'T':
-					{
-						break;
-					}
-				case 'C':
+				case 'C': // center
 					{
 						var_1AA &= 0xFFFE;
 						var_1AA |= 8;
@@ -1053,7 +1055,7 @@ parseSpe:	while(*var_1C2 == '#')
 
 		if(!var_1A8 || bottom+16<currentTextY)
 		{
-			if(var_1A8)
+pageChange:	if(var_1A8)
 			{
 				*(var_1C2-1) = 0x1A;
 			}
@@ -1128,7 +1130,7 @@ parseSpe:	while(*var_1C2 == '#')
 				}
 			}
 
-			if(mode!=1) // mode != 1: normal beahior (user can flip pages)
+			if(mode!=1) // mode != 1: normal behavior (user can flip pages)
 			{
 				do
 				{
@@ -1267,7 +1269,7 @@ int main(int argc, char** argv)
 
 	preloadResource();
 
-//	if(!make3dTatou())
+	//if(!make3dTatou())
 	{
 		makeIntroScreens();
 	}
