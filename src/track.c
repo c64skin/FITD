@@ -180,13 +180,104 @@ int computeAngleModificatorToPosition(int x1,int z1, int beta, int x2, int z2)
 	}
 }
 
+void manualRot(int param)
+{
+	if(input4&4)
+	{
+		if(currentProcessedActorPtr->field_72!=1)
+		{
+			currentProcessedActorPtr->rotate.param = 0;
+		}
+
+		currentProcessedActorPtr->field_72 = 1;
+
+		if(currentProcessedActorPtr->rotate.param == 0)
+		{
+			int oldBeta = currentProcessedActorPtr->beta;
+			printf("X: %X ",oldBeta);
+
+			if(currentProcessedActorPtr->speed != 0)
+			{
+				startActorRotation(oldBeta,oldBeta+0x100,param/2,&currentProcessedActorPtr->rotate);
+			}
+			else
+			{
+				startActorRotation(oldBeta,oldBeta+0x100,param,&currentProcessedActorPtr->rotate);
+			}
+		}
+
+		currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
+		printf("beta: %X\n",currentProcessedActorPtr->beta);
+	}
+	if(input4&8)
+	{
+		if(currentProcessedActorPtr->field_72!=-1)
+		{
+			currentProcessedActorPtr->rotate.param = 0;
+		}
+
+		currentProcessedActorPtr->field_72 = -1;
+
+		if(currentProcessedActorPtr->rotate.param == 0)
+		{
+			int oldBeta = currentProcessedActorPtr->beta;
+
+			if(currentProcessedActorPtr->speed != 0)
+			{
+				startActorRotation(oldBeta,oldBeta-0x100,param/2,&currentProcessedActorPtr->rotate);
+			}
+			else
+			{
+				startActorRotation(oldBeta,oldBeta-0x100,param,&currentProcessedActorPtr->rotate);
+			}
+		}
+
+		currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
+		printf("beta: %X\n",currentProcessedActorPtr->beta);
+	}
+	if(input4==0xC)
+	{
+		currentProcessedActorPtr->field_72 = 0;
+		currentProcessedActorPtr->rotate.param = 0;
+	}
+}
+
 void processTrack(void)
 {
 	switch(currentProcessedActorPtr->trackMode)
 	{
 	case 1: // manual
 		{
-			printf("Manual move !\n");
+			manualRot(60);
+			if(input4&1) // forward
+			{
+				if(currentProcessedActorPtr->speed == 0 || currentProcessedActorPtr->speed == -1)
+					currentProcessedActorPtr->speed = 4;
+
+				if(currentProcessedActorPtr->speed>0 && currentProcessedActorPtr->speed<4)
+					currentProcessedActorPtr->speed = 5;
+			}
+			else
+			{
+				if(currentProcessedActorPtr->speed>0 && currentProcessedActorPtr->speed<=4)
+				{
+					currentProcessedActorPtr->speed--;
+				}
+				else
+				{
+					currentProcessedActorPtr->speed = 0;
+				}
+			}
+
+			if(input4&2) // backward
+			{
+				if(currentProcessedActorPtr->speed == 0 || currentProcessedActorPtr->speed >= 4)
+					currentProcessedActorPtr->speed = -1;
+
+				if(currentProcessedActorPtr->speed == 5)
+					currentProcessedActorPtr->speed = 0;
+			}
+
 			break;
 		}
 	case 2: // ?

@@ -52,9 +52,19 @@ int evalVar(void)
 
 			switch(var1)
 			{
+			case 0x1:
+				{
+					return(actorPtr->HARD_DEC);
+					break;
+				}
 			case 0x2:
 				{
 					return(actorPtr->HARD_COL);
+					break;
+				}
+			case 0x4: // TODO
+				{
+					return(-1);
 					break;
 				}
 			case 0x5:
@@ -87,12 +97,37 @@ int evalVar(void)
 					return(evalChrono(&actorPtr->CHRONO) / 0x3C0000); // recheck
 					break;
 				}
+			case 0xD:
+				{
+					return(evalChrono(&actorPtr->ROOM_CHRONO) / 0x3C0000); // recheck
+					break;
+				}
 			case 0xF: // COL_BY
 				{
 					if(actorPtr->COL_BY == -1)
 						return(-1);
 					else
 						return(actorTable[actorPtr->COL_BY].field_0);
+					break;
+				}
+			case 0x14:
+				{
+					return(button);
+					break;
+				}
+			case 0x15: // TODO
+				{
+					return(-1);
+					break;
+				}
+			case 0x1E:
+				{
+					return(actorPtr->room);
+					break;
+				}
+			case 0x1D:
+				{
+					return(actorPtr->falling);
 					break;
 				}
 			default:

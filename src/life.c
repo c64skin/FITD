@@ -1,5 +1,27 @@
 #include "common.h"
 
+void animMove(int a,int b,int c,int d,int e,int f,int g)
+{
+	if(currentProcessedActorPtr->speed == 4)
+	{
+		anim(b,1,-1);
+	}
+	if(currentProcessedActorPtr->speed == 5)
+	{
+		anim(c,1,-1);
+	}
+	if(currentProcessedActorPtr->speed == -1)
+	{
+		anim(a,1,-1);
+	}
+	if(currentProcessedActorPtr->speed == 0)
+	{
+		anim(d,0,a);
+	}
+
+
+}
+
 void processLife(int lifeNum)
 {
 	int exitLife = 0;
@@ -21,6 +43,8 @@ void processLife(int lifeNum)
 		int lifeTempVar3;
 		int lifeTempVar4;
 		int lifeTempVar5;
+		int lifeTempVar6;
+		int lifeTempVar7;
 
 		var_6 = -1;
 
@@ -57,7 +81,6 @@ processOpcode:
 				}
 			case 0x1: // ANIM
 				{
-					printf("Anim\n");
 					lifeTempVar1 = *(short int*)currentLifePtr;
 					currentLifePtr +=2;
 					lifeTempVar2 = *(short int*)currentLifePtr;
@@ -75,12 +98,71 @@ processOpcode:
 
 					break;
 				}
+			case 0x3: // todo
+				{
+					evalVar();
+					break;
+				}
 			case 0x4: // IF_DIF
 				{
 					lifeTempVar1 = evalVar();
 					lifeTempVar2 = evalVar();
 
 					if(lifeTempVar1 == lifeTempVar2)
+					{
+						currentLifePtr+=2;
+					}
+					else
+					{
+						lifeTempVar2 = *(short int*)(currentLifePtr);
+						currentLifePtr += lifeTempVar2*2;
+						currentLifePtr += 2;
+					}
+
+					break;
+				}
+			case 0x5: // IF_EQU
+				{
+					lifeTempVar1 = evalVar();
+					lifeTempVar2 = evalVar();
+
+					if(lifeTempVar1 != lifeTempVar2)
+					{
+						currentLifePtr+=2;
+					}
+					else
+					{
+						lifeTempVar2 = *(short int*)(currentLifePtr);
+						currentLifePtr += lifeTempVar2*2;
+						currentLifePtr += 2;
+					}
+
+					break;
+				}
+			case 0x6: // IF_INF
+				{
+					lifeTempVar1 = evalVar();
+					lifeTempVar2 = evalVar();
+
+					if(lifeTempVar1 > lifeTempVar2)
+					{
+						currentLifePtr+=2;
+					}
+					else
+					{
+						lifeTempVar2 = *(short int*)(currentLifePtr);
+						currentLifePtr += lifeTempVar2*2;
+						currentLifePtr += 2;
+					}
+
+					break;
+				}
+			case 0x7:
+				{
+					lifeTempVar1 = evalVar();
+					lifeTempVar2 = evalVar();
+
+					if(lifeTempVar1 > lifeTempVar2)
 					{
 						currentLifePtr+=2;
 					}
@@ -114,6 +196,27 @@ processOpcode:
 
 					break;
 				}
+			case 0xE:
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar2 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar3 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar4 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar5 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar6 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar7 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					
+					animMove(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6,lifeTempVar7);
+
+					break;
+				}
 			case 0xF: // MOVE
 				{
 					lifeTempVar1 = *(short int*)(currentLifePtr);
@@ -133,6 +236,14 @@ processOpcode:
 
 					makeMessage(lifeTempVar1);
 
+					break;
+				}
+			case 0x13:
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					vars[lifeTempVar1] = evalVar();
 					break;
 				}
 			case 0x19: // SWITCH
@@ -158,6 +269,35 @@ processOpcode:
 		
 					break;
 				}
+			case 0x1D:
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					lifeTempVar2 = 0;
+					int i;
+
+					for(i=0;i<lifeTempVar1;i++)
+					{
+						if(*(short int*)(currentLifePtr) == switchVal)
+						{
+							lifeTempVar2 = 1;
+						}
+						currentLifePtr+=2;
+					}
+
+					if(!lifeTempVar2)
+					{
+						lifeTempVar2 = *(short int*)(currentLifePtr);
+						currentLifePtr += lifeTempVar2*2;
+						currentLifePtr += 2;
+					}
+					else
+					{
+						currentLifePtr+=2;
+					}
+					break;
+				}
 			case 0x1F: // LIFE
 				{
 					currentProcessedActorPtr->life = *(short int*)(currentLifePtr);
@@ -177,6 +317,23 @@ processOpcode:
 						objectTable[lifeTempVar1].flags2 |= 0x4000;
 					}
 
+					break;
+				}
+			case 0x21: // TODO
+				{
+					currentLifePtr+=2;
+					break;
+				}
+			case 0x22:
+				{
+					inHand = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					break;
+				}
+			case 0x24:
+				{
+					evalVar();
+					currentLifePtr+=4;
 					break;
 				}
 			case 0x27:
@@ -209,6 +366,11 @@ processOpcode:
 						}
 					}
 
+					break;
+				}
+			case 0x2B:
+				{
+					currentLifePtr+=2;
 					break;
 				}
 			case 0x2F: // STAGE TODO
@@ -297,6 +459,23 @@ processOpcode:
 
 					break;
 				}
+			case 0x42:
+				{
+					statusScreenAllowed = *(short int*)currentLifePtr;
+					currentLifePtr+=2;
+					break;
+				}
+			case 0x4A:
+				{
+					currentProcessedActorPtr->alpha = *(short int*)currentLifePtr;
+					currentLifePtr+=2;
+					currentProcessedActorPtr->beta = *(short int*)currentLifePtr;
+					currentLifePtr+=2;
+					currentProcessedActorPtr->gamma = *(short int*)currentLifePtr;
+					currentLifePtr+=2;
+
+					break;
+				}
 			case 0x4B: // sample
 				{
 					currentLifePtr+=2;
@@ -318,19 +497,49 @@ processOpcode:
 
 					break;
 				}
-			case 0x4E:
+			case 0x4E: // displayScreen
 				{
-					//TODO
+				/*	loadPakToPtr("ITD_RESS", *(short int*)currentLifePtr, aux);
+					currentLifePtr+=2;
 
-					currentLifePtr+=4;
+					copyToScreen(aux,unkScreenVar);
+					flip();
+
+					unsigned int chrono;
+
+					startChrono(&chrono);
+					lifeTempVar1 = *(short int*)currentLifePtr;
+					currentLifePtr+=2;
+
+					playSound(*(short int*)currentLifePtr);
+					currentLifePtr+=2;
+
+					//soundFunc(0);
+
+					do
+					{
+						process_events();
+						readKeyboard();
+						unsigned int time;
+
+						time = evalChrono(&chrono);
+
+						if(time>lifeTempVar1)
+							break;
+					}while(!input2 && !input1);
+
+					//unfreezeTime();
+
+					mainVar1 = 1;*/
+
+					currentLifePtr += 6;
+
 					break;
 				}
 			case 0x51: // ? fade out music and play another music ?
 				{
 					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
-
-					printf("Play music %d\n",lifeTempVar1);
 
 					/*if(currentMusic!=-1)
 					{

@@ -1393,7 +1393,9 @@ void initEngine(void)
 		fprintf(fHandle,"\t body:%03d",objectTable[i].field_2);
 		fprintf(fHandle,"\t anim:%03d",objectTable[i].field_26);
 		fprintf(fHandle,"\t stage:%01d",objectTable[i].stage);
-		fprintf(fHandle,"\t room:%01d",objectTable[i].room);
+		fprintf(fHandle,"\t room:%02d",objectTable[i].room);
+		fprintf(fHandle,"\t trackMode: %01d",objectTable[i].trackMode);
+		fprintf(fHandle,"\t life: %02d",objectTable[i].life);
 
 		fprintf(fHandle,"\n");
 	}
@@ -2231,7 +2233,7 @@ addObject:				int actorIdx = copyObjectToActor(	currentObject->field_2, currentO
 
 							currentProcessedActorPtr->field_0 = i;
 
-							setMoveMode(currentProcessedActorPtr->trackMode, currentProcessedActorPtr->trackNumber);
+							setMoveMode(currentObject->trackMode, currentObject->trackNumber);
 
 							currentProcessedActorPtr->positionInTrack = currentObject->positionInTrack;
 
@@ -2680,14 +2682,14 @@ void mainDraw(int mode)
 
 		actorPtr = &actorTable[currentDrawActor];
 
-		if(actorPtr->flags & 0x25)
+//		if(actorPtr->flags & 0x25)
 		{
 			actorPtr->flags &= 0xFFFB;
 			
-			if(actorPtr->flags & 0x20)
+/*			if(actorPtr->flags & 0x20)
 			{
 			}
-			else
+			else */
 			{
 				char* bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
 
@@ -3944,6 +3946,8 @@ void mainLoop(int allowSystemMenu)
 
 				if(changeFloor)
 					break;
+
+				currentProcessedActorPtr++;
 			}
 
 			if(giveUp)
