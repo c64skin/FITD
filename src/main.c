@@ -3019,8 +3019,8 @@ void drawProjectedQuad(int x1,int x2, int x3, int x4, int y1,int y2, int y3, int
 
 	int transformedX1 = ((x1 * cameraY) / z1) + cameraCenterX;
 	int transformedX2 = ((x2 * cameraY) / z2) + cameraCenterX;
-	int transformedX3 = ((x2 * cameraY) / z3) + cameraCenterX;
-	int transformedX4 = ((x2 * cameraY) / z4) + cameraCenterX;
+	int transformedX3 = ((x3 * cameraY) / z3) + cameraCenterX;
+	int transformedX4 = ((x4 * cameraY) / z4) + cameraCenterX;
 
 	int transformedY1 = ((y1 * cameraZ) / z1) + cameraCenterY;
 	int transformedY2 = ((y2 * cameraZ) / z2) + cameraCenterY;
@@ -3034,7 +3034,17 @@ void drawProjectedQuad(int x1,int x2, int x3, int x4, int y1,int y2, int y3, int
 void drawProjectedBox(int x1,int x2,int y1,int y2,int z1,int z2, int color)
 {
 	//bottom
-	drawProjectedQuad(x1,x1,x2,x2,y1,y2,y2,y1,z1,z1,z1,z1,100);
+	drawProjectedQuad(x1,x1,x2,x2,y1,y1,y1,y1,z1,z2,z2,z1,100);
+	//top
+	drawProjectedQuad(x1,x1,x2,x2,y2,y2,y2,y2,z1,z2,z2,z1,100);
+	//left
+	drawProjectedQuad(x1,x1,x1,x1,y1,y2,y2,y1,z1,z1,z2,z2,100);
+	//right
+	drawProjectedQuad(x2,x2,x2,x2,y1,y2,y2,y1,z1,z1,z2,z2,100);
+	//front
+	drawProjectedQuad(x1,x2,x2,x1,y1,y1,y2,y2,z1,z1,z1,z1,100);
+	//back
+	drawProjectedQuad(x1,x2,x2,x1,y1,y1,y2,y2,z2,z2,z2,z2,100);
 }
 #endif
 
