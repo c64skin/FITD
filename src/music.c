@@ -517,6 +517,8 @@ void setupChannelFrequency(int channelIdx, int cl, int dx,int bp)
   u8 frequencyLow;
   u8 frequencyHigh;
 
+  u8 blockNumber;
+
   if(!(bp&0x8000))
   {
     sendAdlib(0xB0+channelIdx, 0);
@@ -534,17 +536,19 @@ void setupChannelFrequency(int channelIdx, int cl, int dx,int bp)
     dx = 0x40;
   }
 
-  frequency = di[bp];
+  frequency = di[bp&0xFF];
 
   frequencyLow = frequency&0xFF;
 
   sendAdlib(0xA0+channelIdx,frequencyLow);
 
-  frequencyHigh = (frequency>>8)+((cl&0x70)>>2);
+  blockNumber = (cl&0x70)>>2;
+
+  frequencyHigh = ((frequency>>8)&0x3)|blockNumber;
 
   if(!(dx&0x40))
   {
-    frequencyHigh |= 0x20;
+    frequencyHigh |= 0x20; // set key on
   }
 
   sendAdlib(0xB0+channelIdx,frequencyHigh);
