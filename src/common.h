@@ -1,8 +1,11 @@
-
-#ifndef _COMMON_
-#define _COMMON_
+#ifndef _COMMON_H_
+#define _COMMON_H_
 
 #include "config.h"
+
+#ifdef MACOSX
+#define UNIX
+#endif
 
 #define NUM_MAX_CAMERA_IN_ROOM 20
 
@@ -151,7 +154,11 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 
 FORCEINLINE u16 READ_LE_U16(void *ptr)
 {
+#ifdef MACOSX
   return (((u8*)ptr)[1]<<8)|((u8*)ptr)[0];
+#else
+  return *(u16*)ptr;
+#endif
 }
 
 FORCEINLINE s16 READ_LE_S16(void *ptr)
@@ -159,74 +166,46 @@ FORCEINLINE s16 READ_LE_S16(void *ptr)
   return (s16)READ_LE_U16(ptr);
 }
 
+FORCEINLINE u16 READ_BE_U16(void *ptr)
+{
+#ifdef MACOSX
+  return *(u16*)ptr;
+#else
+  return (((u8*)ptr)[1]<<8)|((u8*)ptr)[0];
+#endif
+}
+
+FORCEINLINE s16 READ_BE_S16(void *ptr)
+{
+  return (s16)READ_BE_S16(ptr);
+}
+
 FORCEINLINE u32 READ_LE_U32(void *ptr)
 {
+#ifdef MACOSX
   return (((u8*)ptr)[3]<<24)|(((u8*)ptr)[2]<<16)|(((u8*)ptr)[1]<<8)|((u8*)ptr)[0];
+#else
+  return *(u32*)ptr;
+#endif
 }
 
 FORCEINLINE s32 READ_LE_S32(void *ptr)
 {
+  return (s32)READ_LE_U32(ptr);
+}
+
+FORCEINLINE u32 READ_BE_U32(void *ptr)
+{
+#ifdef MACOSX
+  return *(u32*)ptr;
+#else
   return (((u8*)ptr)[3]<<24)|(((u8*)ptr)[2]<<16)|(((u8*)ptr)[1]<<8)|((u8*)ptr)[0];
+#endif
 }
 
-FORCEINLINE void WRITE_LE_U16(void *ptr, uint16 value)
+FORCEINLINE s32 READ_BE_S32(void *ptr)
 {
-  unsigned char val0;
-  unsigned char val1;
-
-  val1 = (unsigned char)((value>>8)&0xFF);
-  val0 = (unsigned char)((value)&0xFF);
-
-  ((byte*)ptr)[0] = val0;
-  ((byte*)ptr)[1] = val1;
-}
-
-FORCEINLINE void WRITE_LE_S16(void *ptr, int16 value)
-{
-  unsigned char val0;
-  unsigned char val1;
-
-  val1 = (unsigned char)((value>>8)&0xFF);
-  val0 = (unsigned char)((value)&0xFF);
-
-  ((byte*)ptr)[0] = val0;
-  ((byte*)ptr)[1] = val1;
-}
-
-FORCEINLINE void WRITE_LE_U32(void *ptr, uint32 value)
-{
-  unsigned char val0;
-  unsigned char val1;
-  unsigned char val2;
-  unsigned char val3;
-
-  val3 = (unsigned char)((value>>24)&0xFF);
-  val2 = (unsigned char)((value>>16)&0xFF);
-  val1 = (unsigned char)((value>>8)&0xFF);
-  val0 = (unsigned char)((value)&0xFF);
-
-  ((byte*)ptr)[0] = val0;
-  ((byte*)ptr)[1] = val1;
-  ((byte*)ptr)[2] = val2;
-  ((byte*)ptr)[3] = val3;
-}
-
-FORCEINLINE void WRITE_LE_S32(void *ptr, int32 value)
-{
-  unsigned char val0;
-  unsigned char val1;
-  unsigned char val2;
-  unsigned char val3;
-
-  val3 = (unsigned char)((value>>24)&0xFF);
-  val2 = (unsigned char)((value>>16)&0xFF);
-  val1 = (unsigned char)((value>>8)&0xFF);
-  val0 = (unsigned char)((value)&0xFF);
-
-  ((byte*)ptr)[0] = val0;
-  ((byte*)ptr)[1] = val1;
-  ((byte*)ptr)[2] = val2;
-  ((byte*)ptr)[3] = val3;
+  return (s32)READ_LE_U32(ptr);
 }
 
 #endif

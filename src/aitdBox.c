@@ -17,13 +17,13 @@ void drawPartOfAITDBox(int left, int top, int index, char* gfxData)
     return;
 
   outPtr = screen + top*320 + left;
-  inPtr = gfxData + *(short int*)(index * 2 + gfxData); // alignement unsafe
+  inPtr = gfxData + READ_LE_U16(index * 2 + gfxData); // alignement unsafe
 
   inPtr +=4;
 
-  width = *(short int*)(inPtr); // alignement unsafe
+  width = READ_LE_U16(inPtr); // alignement unsafe
   inPtr+=2;
-  height = *(short int*)(inPtr); // alignement unsafe
+  height = READ_LE_U16(inPtr); // alignement unsafe
   inPtr+=2;
 
   offset = 320 - width;

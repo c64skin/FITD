@@ -77,7 +77,7 @@ void loadFloor(int floorNumber)
     }
     else
     {
-      roomData = (etageVar0 + *(unsigned int*)(etageVar0 + i * 4));
+      roomData = (etageVar0 + READ_LE_U32(etageVar0 + i * 4));
     }
     currentRoomDataPtr = &roomDataTable[i];
 
@@ -176,7 +176,7 @@ void loadFloor(int floorNumber)
   }
   else
   {
-    expectedNumberOfCamera = ((*(unsigned int*)(etageVar1))/4);
+    expectedNumberOfCamera = ((READ_LE_U32(etageVar1))/4);
   }
 
   globalCameraDataTable = (cameraDataStruct*)malloc(sizeof(cameraDataStruct)*expectedNumberOfCamera);
@@ -198,7 +198,7 @@ void loadFloor(int floorNumber)
     }
     else
     {
-      offset = *(unsigned int*)(etageVar1 + i * 4);
+      offset = READ_LE_U32(etageVar1 + i * 4);
     }
 
     // load cameras
@@ -208,7 +208,7 @@ void loadFloor(int floorNumber)
 
       if(gameId<AITD3)
       {
-        currentCameraData = (etageVar1 + *(unsigned int*)(etageVar1 + i * 4));
+        currentCameraData = (etageVar1 + READ_LE_U32(etageVar1 + i * 4));
       }
 
       backupDataPtr = currentCameraData;

@@ -2,17 +2,31 @@
 
 #include "common.h"
 
-typedef struct  // warning: allignement unsafe
+typedef struct pakInfoStruct // warning: allignement unsafe
 {
   long int discSize;
   long int uncompressedSize;
   char compressionFlag;
   char info5;
   short int offset;
-}pakInfoStruct;
+};
 
+typedef struct pakInfoStruct pakInfoStruct;
 
 //#define USE_UNPACKED_DATA
+
+void readPakInfo(pakInfoStruct* pPakInfo, FILE* fileHandle)
+{
+  fread(&pPakInfo->discSize,4,1,fileHandle);
+  fread(&pPakInfo->uncompressedSize,4,1,fileHandle);
+  fread(&pPakInfo->compressionFlag,1,1,fileHandle);
+  fread(&pPakInfo->info5,1,1,fileHandle);
+  fread(&pPakInfo->offset,2,1,fileHandle);
+
+  pPakInfo->discSize = READ_LE_U32(&pPakInfo->discSize);
+  pPakInfo->uncompressedSize = READ_LE_U32(&pPakInfo->uncompressedSize);
+  pPakInfo->offset = READ_LE_U16(&pPakInfo->offset);
+}
 
 unsigned int PAK_getNumFiles(char* name)
 {
@@ -33,7 +47,9 @@ unsigned int PAK_getNumFiles(char* name)
 
   fseek(fileHandle,4,SEEK_CUR);
   fread(&fileOffset,4,1,fileHandle);
-
+#ifdef MACOSX
+  fileOffset = READ_LE_U32(&fileOffset);
+#endif
   fclose(fileHandle);
 
   return((fileOffset/4)-2);
@@ -114,12 +130,17 @@ int getPakSize(char* name, int index)
     fseek(fileHandle,(index+1)*4,SEEK_SET);
 
     fread(&fileOffset,4,1,fileHandle);
-
+#ifdef MACOSX
+    fileOffset = READ_LE_U32(&fileOffset);
+#endif
     fseek(fileHandle,fileOffset,SEEK_SET);
 
     fread(&additionalDescriptorSize,4,1,fileHandle);
+#ifdef MACOSX
+    additionalDescriptorSize = READ_LE_U32(&additionalDescriptorSize);
+#endif
 
-    fread(&pakInfo,sizeof(pakInfoStruct),1,fileHandle);
+    readPakInfo(&pakInfo,fileHandle);
 
     fseek(fileHandle,pakInfo.offset,SEEK_CUR);
 
@@ -188,11 +209,19 @@ char* loadPak(char* name, int index)
 
     fread(&fileOffset,4,1,fileHandle);
 
+#ifdef MACOSX
+    fileOffset = READ_LE_U32(&fileOffset);
+#endif
+
     fseek(fileHandle,fileOffset,SEEK_SET);
 
     fread(&additionalDescriptorSize,4,1,fileHandle);
 
-    fread(&pakInfo,sizeof(pakInfoStruct),1,fileHandle);
+#ifdef MACOSX
+    additionalDescriptorSize = READ_LE_U32(&additionalDescriptorSize);
+#endif
+
+    readPakInfo(&pakInfo,fileHandle);
 
     fseek(fileHandle,pakInfo.offset,SEEK_CUR);
 
