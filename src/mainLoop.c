@@ -35,7 +35,7 @@ void mainLoop(int allowSystemMenu)
 {
 #define SPEED 15              /* Ticks per Frame */
 #define SLEEP_MIN 20          /* Minimum time a sleep takes, usually 2*GRAN */
-#define SLEEP_GRAN 10         /* Granularity of sleep */
+#define SLEEP_GRAN 1         /* Granularity of sleep */
 
 int frames=0;                   /* Number of frames displayed */
 s32 t_start,t_left;
@@ -171,7 +171,20 @@ s32 q=0;                     /* Dummy */
         {
           if(currentProcessedActorPtr->life != -1 && currentProcessedActorPtr->lifeMode != -1)
           {
-            processLife(currentProcessedActorPtr->life);
+            switch(gameId)
+            {
+            case JACK:
+            case AITD2:
+              {
+                processLife2(currentProcessedActorPtr->life);
+                break;
+              }
+            case AITD1:
+              {
+                processLife(currentProcessedActorPtr->life);
+                break;
+              }
+            }
           }
         }
 
@@ -183,8 +196,6 @@ s32 q=0;                     /* Dummy */
 
       if(giveUp)
         break;
-
-
     }
 
     if(changeFloor)
@@ -216,6 +227,7 @@ s32 q=0;                     /* Dummy */
       createActorList();
     }
 
+    
     sortActorList();
 
 //    if(objModifFlag2)

@@ -1178,7 +1178,7 @@ processOpcode:
           playMusic(newMusicIdx);
           break;
         }
-      case 0x2D:
+      case 0x2D: // SET_BETA
         {
           lifeTempVar1 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
@@ -1462,7 +1462,6 @@ processOpcode:
           {
             stopShaking();
           } */
-
           break;
         }
       case 0x42: // INVENTORY
@@ -1527,7 +1526,6 @@ processOpcode:
           currentProcessedActorPtr->animActionParam = lifeTempVar1;
           currentProcessedActorPtr->hitForce = lifeTempVar2;
           currentProcessedActorPtr->field_98 = -1;
-
           break;
         }
       case 0x49: //GET_HARD_CLIP
@@ -1535,7 +1533,7 @@ processOpcode:
           getHardClip();
           break;
         }
-      case 0x4A:
+      case 0x4A: // ANGLE
         {
           currentProcessedActorPtr->alpha = *(short int*)currentLifePtr;
           currentLifePtr+=2;

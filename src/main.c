@@ -89,7 +89,20 @@ void updateInHand(int objIdx)
     currentProcessedActorPtr->ANIM = -1;
   }
 
-  processLife(foundLife);
+  switch(gameId)
+  {
+  case JACK:
+  case AITD2:
+    {
+      processLife2(foundLife);
+      break;
+    }
+  case AITD1:
+    {
+      processLife(foundLife);
+      break;
+    }
+  }
 
   if(var_2)
   {
@@ -238,12 +251,38 @@ void sysInit(void)
     theEnd(1,"BufferAnim");
   }
 
-  fontData = loadPakSafe("ITD_RESS",5);
+  switch(gameId)
+  {
+  case JACK:
+  case AITD2:
+    {
+      fontData = loadPakSafe("ITD_RESS",1);
+      break;
+    }
+  case AITD1:
+    {
+      fontData = loadPakSafe("ITD_RESS",5);
+      break;
+    }
+  }
 
   initFont(fontData, 14);
   initFont2(2,0);
 
-  aitdBoxGfx = loadPakSafe("ITD_RESS",4);
+  switch(gameId)
+  {
+  case JACK:
+  case AITD2:
+    {
+      aitdBoxGfx = loadPakSafe("ITD_RESS",0);
+      break;
+    }
+  case AITD1:
+    {
+      aitdBoxGfx = loadPakSafe("ITD_RESS",4);
+      break;
+    }
+  }
 
   priority = loadFromItd("PRIORITY.ITD");
 
@@ -351,7 +390,14 @@ void preloadResource(void)
 {
   char localPalette[768];
 
-  loadPakToPtr("ITD_RESS",3,aux);
+  if(gameId == AITD2)
+  {
+    loadPakToPtr("ITD_RESS",59,aux);
+  }
+  else
+  {
+    loadPakToPtr("ITD_RESS",3,aux);
+  }
   copyPalette(aux,palette);
 
   copyPalette(palette,localPalette);
@@ -963,6 +1009,11 @@ void initEngine(void)
   {
     fread(&objectTable[i],0x34,1,fHandle);
 
+    if(gameId == JACK || gameId == AITD2)
+    {
+      short int dummy;
+      fread(&dummy,2,1,fHandle);
+    }
     objectTable[i].flags |= 0x20;
   }
 
@@ -1041,8 +1092,17 @@ void initEngine(void)
 
  // TODO: missing dos memory check here
 
-  listBody = HQR_InitRessource(listBodySelect[defines.hero],100000, 50); // was calculated from free mem size
-  listAnim = HQR_InitRessource(listAnimSelect[defines.hero],100000, 50); // was calculated from free mem size
+  if(gameId == AITD1)
+  {
+    listBody = HQR_InitRessource(listBodySelect[defines.hero],100000, 50); // was calculated from free mem size
+    listAnim = HQR_InitRessource(listAnimSelect[defines.hero],100000, 50); // was calculated from free mem size
+  }
+  else
+  {
+    listBody = HQR_InitRessource("LISTBODY",100000, 50); // was calculated from free mem size
+    listAnim = HQR_InitRessource("LISTANIM",100000, 50); // was calculated from free mem size
+
+  }
 
 
   for(i=0;i<NUM_MAX_ACTOR;i++)
@@ -1098,7 +1158,7 @@ void loadCamera(int cameraIdx)
   char name[16];
   int useSpecial = -1;
 
-  sprintf(name,"CAMERA0%d",currentEtage);
+  sprintf(name,"CAMERA%02d",currentEtage);
   //strcat(name,".PAK");
 
   if(defines.lightVar==1)
@@ -1137,6 +1197,15 @@ void loadCamera(int cameraIdx)
   if(!loadPakToPtr(name,cameraIdx,aux))
   {
     theEnd(0,name);
+  }
+
+  if(gameId == AITD2 || gameId == JACK)
+  {
+    copyPalette(aux+64000,palette);
+    
+    convertPaletteIfRequired(palette);
+
+    osystem_setPalette(palette);
   }
 }
 
@@ -1285,7 +1354,7 @@ void updateAllActorAndObjectsSub1(int index) // remove actor
       objectPtr->field_2A = actorPtr->field_40;
       objectPtr->field_2C = actorPtr->field_42;
       objectPtr->flags = actorPtr->flags &0xFFF7;
-      objectPtr->flags = actorPtr->dynFlags << 5; // ???!!!?
+      objectPtr->flags |= actorPtr->dynFlags << 5; // ???!!!?
       objectPtr->life = actorPtr->life;
       objectPtr->lifeMode = actorPtr->lifeMode;
       objectPtr->trackMode = actorPtr->trackMode;
@@ -2494,8 +2563,8 @@ void drawBgOverlaySub2(int size)
     si += 2;
 
 #ifdef INTERNAL_DEBUGGER
-    if(backgroundMode == backgroundModeEnum_2D)
-      osystem_draw3dLine(tempBxPtr, tempCxPtr, 0, saveDx,saveAx, 0, 130);
+  /*  if(backgroundMode == backgroundModeEnum_2D)
+      osystem_draw3dLine(tempBxPtr, tempCxPtr, 0, saveDx,saveAx, 0, 130); */
 #endif
     osystem_addBgPolyPoint(tempBxPtr, tempCxPtr);
 
@@ -2802,7 +2871,7 @@ void mainDraw(int mode)
         }
 
         renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
-              actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
+              actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr); 
        
 
         if(actorPtr->animActionType && actorPtr->field_98 != -1)
@@ -2844,7 +2913,7 @@ void mainDraw(int mode)
         if(backgroundMode == backgroundModeEnum_2D)
 #endif
         {
-          drawBgOverlay(actorPtr);
+//          drawBgOverlay(actorPtr);
         }
         //addToRedrawBox();
       }
@@ -4575,6 +4644,7 @@ int main(int argc, char** argv)
   int startupMenuResult;
 //  int protectionToBeDone = 1;
   char version[256];
+
   getVersion(version);
 
   printf(version);
@@ -4586,13 +4656,27 @@ int main(int argc, char** argv)
   sysInit();
 
   paletteFill(palette,0,0,0);
-  fadeIn(palette);
 
   preloadResource();
 
-  if(!make3dTatou())
+  if(gameId == AITD1)
   {
-    makeIntroScreens();
+    fadeIn(palette);
+
+    if(!make3dTatou())
+    {
+      makeIntroScreens();
+    }
+  }
+  else
+  if(gameId == AITD2)
+  {
+    startGame(8,0,0);
+  }
+  else
+  if(gameId == JACK)
+  {
+    startGame(16,1,1);
   }
 
   while(1)
@@ -4631,19 +4715,37 @@ int main(int argc, char** argv)
             readKeyboard();
 
           defines.hero = 0;
-          startGame(7,1,0);
 
-        /*  if(!protectionState)
+          switch(gameId)
           {
-            freeAll();
-            exit(-1);
-          }
-*/
-          readKeyboard();
-          while(input2)
-            readKeyboard();
+          case JACK:
+            {
+              startGame(16,1,0);
+              break;
+            }
+          case AITD2:
+            {
+              startGame(8,7,1);
+              break;
+            }
+          case AITD1:
+            {
+              startGame(7,1,0);
 
-          startGame(0,0,1);
+          /*  if(!protectionState)
+            {
+              freeAll();
+              exit(-1);
+            }
+  */
+              readKeyboard();
+              while(input2)
+                readKeyboard();
+
+              startGame(0,0,1);
+                break;
+            }
+          }
 /*
           if(giveUp == 0)
           {

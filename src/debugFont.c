@@ -1,6 +1,7 @@
 #include "common.h"
 
 // warning, end is truncated because of compiler limits
+#if 0
 unsigned long int foutOutLong[65536] = {
   0x0,
   0x0,
@@ -65512,3 +65513,4 @@ unsigned long int foutOutLong[65536] = {
 };
 
 unsigned char* debugFont=(unsigned char*)foutOutLong;
+#endif

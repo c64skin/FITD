@@ -1138,6 +1138,10 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
   
   if(modelFlags&2)
   {
+    if(gameId == JACK)
+    {
+      return(2);
+    }
     if(!computeModel(x,y,z,alpha,beta,gamma,modelPtr,ptr))
     {
       BBox3D3 = -32000;

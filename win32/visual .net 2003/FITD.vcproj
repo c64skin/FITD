@@ -13,12 +13,12 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\Debug"
-			IntermediateDirectory=".\Debug"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			CharacterSet="0">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
@@ -43,7 +43,7 @@
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile=".\Debug/FITD.pdb"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				SubSystem="1"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -71,12 +71,12 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Release"
-			IntermediateDirectory=".\Release"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			CharacterSet="0">
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
@@ -100,7 +100,7 @@
 				OutputFile=".\Release/FITD.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				ProgramDatabaseFile=".\Release/FITD.pdb"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				SubSystem="1"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -128,12 +128,12 @@
 		</Configuration>
 		<Configuration
 			Name="DebugGL|Win32"
-			OutputDirectory="DebugGL"
-			IntermediateDirectory="DebugGL"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			CharacterSet="0">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
@@ -160,7 +160,7 @@
 				SuppressStartupBanner="TRUE"
 				IgnoreDefaultLibraryNames="MSVCRT"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile=".\Debug/FITD.pdb"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				SubSystem="1"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -188,8 +188,8 @@
 		</Configuration>
 		<Configuration
 			Name="ReleaseGL|Win32"
-			OutputDirectory="ReleaseGL"
-			IntermediateDirectory="ReleaseGL"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1">
 			<Tool
 				Name="VCCLCompilerTool"
@@ -212,6 +212,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain.lib sdl.lib winmm.lib dxguid.lib opengl32.lib glaux.lib glu32.lib SDL_mixer.lib"
 				IgnoreDefaultLibraryNames="LIBCMTD"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				SubSystem="2"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -236,8 +237,8 @@
 		</Configuration>
 		<Configuration
 			Name="ReleaseGL + DEBUG|Win32"
-			OutputDirectory="ReleaseGL + DEBUG"
-			IntermediateDirectory="ReleaseGL + DEBUG"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1">
 			<Tool
 				Name="VCCLCompilerTool"
@@ -248,9 +249,9 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				EnableFiberSafeOptimizations="TRUE"
-				OptimizeForProcessor="1"
+				OptimizeForProcessor="3"
 				OptimizeForWindowsApplication="TRUE"
-				PreprocessorDefinitions="USE_GL,INTERNAL_DEBUGGER,NO_SOUND"
+				PreprocessorDefinitions="USE_GL,INTERNAL_DEBUGGER"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="common.h"
@@ -290,7 +291,7 @@
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			CharacterSet="0">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
@@ -317,7 +318,7 @@
 				SuppressStartupBanner="TRUE"
 				IgnoreDefaultLibraryNames="MSVCRT"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile=".\DebugGL NO SOUND/FITD.pdb"
+				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 				SubSystem="1"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -460,6 +461,9 @@
 						RelativePath="..\..\src\life.c">
 					</File>
 					<File
+						RelativePath="..\..\src\life2.c">
+					</File>
+					<File
 						RelativePath="..\..\src\track.c">
 					</File>
 				</Filter>
@@ -599,6 +603,9 @@
 					</File>
 					<File
 						RelativePath="..\..\src\life.h">
+					</File>
+					<File
+						RelativePath="..\..\src\life2.h">
 					</File>
 					<File
 						RelativePath="..\..\src\track.h">

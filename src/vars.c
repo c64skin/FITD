@@ -1,5 +1,7 @@
 #include "common.h"
 
+enum gameTypeEnum gameId=AITD2;
+
 char* currentFoundBody;
 int currentFoundBodyIdx;
 int statusVar1;

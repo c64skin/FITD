@@ -281,12 +281,14 @@ void osystem_init()  // that's the constructor of the system dependent
   gluTessCallback(tobj, GLU_TESS_COMBINE, combineCallback);
 
   // init debug font
+#if 0
 #ifdef INTERNAL_DEBUGGER
   glGenTextures(1, &debugFontTexture);
   glBindTexture(GL_TEXTURE_2D, debugFontTexture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, debugFont);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+#endif
 #endif
 
   // SDL_mixer init
@@ -665,56 +667,18 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len)
 
 void osystem_playSample(char* sampleName)
 {
-/*  Sound_Sample *sample;
-  Sound_AudioInfo info;
+  Mix_Chunk *sample;
 
-  return;
-#ifdef UNIX
-  return;
-#endif
+  sample=Mix_LoadWAV_RW(SDL_RWFromFile(sampleName, "rb"), 1);
 
-  info.channels = 0;
-  info.format = 0;
-  info.rate = 0;
-
-  sample = Sound_NewSampleFromFile(sampleName,&info,5000);
-  Sound_DecodeAll(sample);
-
-  if(deviceStatus)
+  if(!sample)
   {
-    SDL_CloseAudio();
+    printf("Mix_LoadWAV_RW: %s\n", Mix_GetError());
   }
-
-  posInStream = 0;
+  else
   {
-    SDL_AudioSpec *desired, *obtained;
-    SDL_AudioSpec *hardware_spec;
-
-    desired = (SDL_AudioSpec*)malloc(sizeof(SDL_AudioSpec));
-
-    obtained = (SDL_AudioSpec*)malloc(sizeof(SDL_AudioSpec));
-
-    desired->freq=sample->actual.rate;
-
-    desired->format=sample->actual.format;
-
-    desired->channels=sample->actual.channels;
-
-    desired->samples=512;
-
-    desired->callback=my_audio_callback;
-
-    desired->userdata=(void*)sample;
-
-    if ( SDL_OpenAudio(desired, obtained) < 0 ){
-    fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
-    exit(-1);
-    }
-    free(desired);
-    hardware_spec=obtained;
-    SDL_PauseAudio(0);
-    deviceStatus = true;
-  }*/
+    Mix_PlayChannel(-1, sample, 0);
+  }
 }
 
 int tesselatePosition = 0;
@@ -1125,6 +1089,7 @@ void osystem_drawSphere(float X, float Y, float Z, u8 color, float size)
 #ifdef INTERNAL_DEBUGGER
 void osystem_drawDebugText(const u32 X, const u32 Y, const u8* string)
 {
+#if 0
   u32 currentX = X;
   u32 i;
   u32 stringLength;
@@ -1174,6 +1139,7 @@ void osystem_drawDebugText(const u32 X, const u32 Y, const u8* string)
   }
 
   glEnable(GL_DEPTH_TEST);
+#endif
 }
 #endif
 

@@ -272,7 +272,7 @@ int unpackSub1(char* param)
       if(ch<0) // reload mask
       {
         ch += 8;
-        dx |= (*(unsigned char*)si)<<ch;
+        dx |= ((unsigned short int)(*(unsigned char*)si))<<ch;
         si++;
       }
 
@@ -294,7 +294,7 @@ int unpackSub1(char* param)
       if(ch<0) // reload mask
       {
         ch += 8;
-        dx |= (*(unsigned char*)si)<<ch;
+        dx |= ((unsigned short int)(*(unsigned char*)si))<<ch;
         si++;
       }
 
@@ -330,7 +330,7 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
 
   if(param&2)
   {
-    numBitInMask = 7;
+    numBitInMask++;
     mask = 0x7F;
   }
 
@@ -435,7 +435,7 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
 
         if(ax == unV4+0x3F)
         {
-          ax+=dx;
+          ax+=(dx&0xFF);
           dx >>= 8;
           ch -= 8;
 
@@ -490,7 +490,6 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
         // TODO: finish
 
       }
-    }while(uncompressedSize - decompPos);
+    }while((uncompressedSize - decompPos)>0);
   }
-  
 }

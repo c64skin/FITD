@@ -437,14 +437,19 @@ int evalVar(void)
           return(rand()%temp);
           break;
         }
+      case 0x1D:
+        {
+          return(actorPtr->falling);
+          break;
+        }
       case 0x1E:
         {
           return(actorPtr->room);
           break;
         }
-      case 0x1D:
+      case 0x1F:
         {
-          return(actorPtr->falling);
+          return(actorPtr->life);
           break;
         }
       case 0x20:

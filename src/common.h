@@ -51,7 +51,10 @@ typedef signed long int s32;
 #define NUM_MAX_TEXT        40
 #define NUM_MAX_MESSAGE     5
 #define INVENTORY_SIZE      30
-#define NUM_MAX_TEXT_ENTRY  250
+
+
+// 250
+#define NUM_MAX_TEXT_ENTRY  1000
 
 
 ///////////////

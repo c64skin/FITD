@@ -21,7 +21,7 @@ void loadFloor(int floorNumber)
 
   currentEtage = floorNumber;
 
-  sprintf(buffer,"ETAGE0%d",floorNumber);
+  sprintf(buffer,"ETAGE%02d",floorNumber);
 
   etageVar0Size = getPakSize(buffer,0);
 

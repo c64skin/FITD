@@ -35,7 +35,7 @@ void readKeyboard(void)
     {
       switch (j)
       {
-        case SDLK_z:
+/*        case SDLK_z:
           nearVal-=1;
           break;
         case SDLK_x:
@@ -66,7 +66,7 @@ void readKeyboard(void)
           break;
         case SDLK_r:
           fov+=2;
-          break;
+          break; */
       case SDLK_RETURN:
           input2 = 0x1C;
           break;

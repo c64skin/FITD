@@ -15,6 +15,7 @@ typedef struct  // warning: allignement unsafe
 
 int loadPakToPtr(char* name, int index, char* ptr)
 {
+#ifdef USE_UNPACKED_DATA
   char buffer[256];
   FILE* fHandle;
   int size;
@@ -34,10 +35,22 @@ int loadPakToPtr(char* name, int index, char* ptr)
   fclose(fHandle);
 
   return(1);
+#else
+  char* lptr;
+
+  lptr = loadPak(name,index);
+
+  memcpy(ptr,lptr,getPakSize(name,index));
+
+  free(lptr);
+
+  return(1);
+#endif
 }
 
 int getPakSize(char* name, int index)
 {
+#ifdef USE_UNPACKED_DATA
   char buffer[256];
   FILE* fHandle;
   int size;
@@ -56,6 +69,55 @@ int getPakSize(char* name, int index)
   fclose(fHandle);
 
   return (size);
+#else
+  char bufferName[256];
+  FILE* fileHandle;
+  long int fileOffset;
+  long int additionalDescriptorSize;
+  pakInfoStruct pakInfo;
+  char* ptr=0;
+  long int size=0;
+
+  strcpy(bufferName, name); // temporary until makeExtention is coded
+  strcat(bufferName,".PAK");
+
+  fileHandle = fopen(bufferName,"rb");
+
+  if(fileHandle) // a bit stupid, should return NULL right away
+  {
+    fseek(fileHandle,(index+1)*4,SEEK_SET);
+
+    fread(&fileOffset,4,1,fileHandle);
+
+    fseek(fileHandle,fileOffset,SEEK_SET);
+
+    fread(&additionalDescriptorSize,4,1,fileHandle);
+
+    if(additionalDescriptorSize)
+    {
+      printf("Unimplemented additionalDescriptorSize in loadPak\n");
+/*      return(0);
+      exit(1); */
+    }
+
+    fread(&pakInfo,sizeof(pakInfoStruct),1,fileHandle);
+
+    fseek(fileHandle,pakInfo.offset,SEEK_CUR);
+
+    if(pakInfo.compressionFlag == 0) // uncompressed
+    {
+      size = pakInfo.discSize;
+    }
+    else if(pakInfo.compressionFlag == 1) // compressed
+    {
+      size = pakInfo.uncompressedSize;
+    }
+
+    fclose(fileHandle);
+  }
+
+  return size;
+#endif
 }
 
 char* loadPak(char* name, int index)
@@ -110,8 +172,8 @@ char* loadPak(char* name, int index)
     if(additionalDescriptorSize)
     {
       printf("Unimplemented additionalDescriptorSize in loadPak\n");
-      return(0);
-      exit(1);
+/*      return(0);
+      exit(1); */
     }
 
     fread(&pakInfo,sizeof(pakInfoStruct),1,fileHandle);
@@ -128,19 +190,15 @@ char* loadPak(char* name, int index)
     {
       char* compressedDataPtr;
 
-      ptr = (char*)malloc(pakInfo.uncompressedSize);
-
-      if(pakInfo.uncompressedSize >= 64*1024)
-      {
-        printf("Bigger!\n");
-      }
-
+      ptr = (char*)malloc(0xFFFFF);
 
       compressedDataPtr = ptr + pakInfo.uncompressedSize + 300 - pakInfo.discSize;
 
       fread(compressedDataPtr,pakInfo.discSize,1,fileHandle);
 
       unpack(pakInfo.info5, compressedDataPtr, ptr, pakInfo.uncompressedSize, ptr+pakInfo.uncompressedSize + 300);
+
+      ptr = (char*)realloc(ptr,pakInfo.uncompressedSize);
     }
 
     fclose(fileHandle);

@@ -15,7 +15,7 @@ etageVar1 -> table for camera data
 
 */
 
-roomDataStruct* roomDataTable;
+roomDataStruct* roomDataTable = NULL;
 
 roomDefStruct* getRoomData(int roomNumber)
 {
@@ -26,20 +26,23 @@ int getNumberOfRoom()
 {
   int i;
   int j = 0;
-  int numMax = (((*(unsigned int*)(etageVar0))/4));
 
-  for(i=0;i<numMax;i++)
   {
-    if(etageVar0Size >= *(unsigned int*)(etageVar0 + i * 4))
+
+    int numMax = (((*(unsigned int*)(etageVar0))/4));
+
+    for(i=0;i<numMax;i++)
     {
-      j++;
-    }
-    else
-    {
-      return j;
+      if(etageVar0Size >= *(unsigned int*)(etageVar0 + i * 4))
+      {
+        j++;
+      }
+      else
+      {
+        return j;
+      }
     }
   }
-
   return j;
 }
 
@@ -90,9 +93,11 @@ void loadRoom(int roomNumber)
   
   for(i=0;i<numCameraInRoom;i++) // build all the camera list
   {
-    int cameraIdx = *(short int*)(cameraPtr + (i+6)*2); // indexes are between the roomDefStruct and the first zone data
+    int cameraIdx;
     int j;
     char* var_8;
+
+    cameraIdx = *(short int*)(cameraPtr + (i+6)*2); // indexes are between the roomDefStruct and the first zone data
 
     if(currentCameraIdx == cameraIdx)
     {
@@ -119,12 +124,22 @@ void loadRoom(int roomNumber)
         break;
 
       var_20+=2;
-      var_20+=0xA;
+      if(gameId == AITD1)
+        var_20+=0xA;
+      else
+        var_20+=0xE;
     }
 
     var_1C = j;
 
-    var_8 = roomVar5[i] + (var_1C*12) + 0x18;
+    if(gameId == AITD1)
+    {
+      var_8 = roomVar5[i] + (var_1C*12) + 0x18;
+    }
+    else
+    {
+      var_8 = roomVar5[i] + (var_1C*16) + 0x18;
+    }
 
     roomVar6[i] = (*(short int*)var_8)/2;
   }
