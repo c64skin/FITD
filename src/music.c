@@ -939,7 +939,7 @@ void changeOuputLevel(u8 value, u8* data,int bp)
 
   outputLevel = 0x3F - ((((outputLevel*bp)*2) + 0x7F)/0xFE);
 
-  assert((outputLevel & 0x3F) == outputLevel);
+  ASSERT((outputLevel & 0x3F) == outputLevel);
 
   keyScaleLevel = data[0]&0xC0;
 

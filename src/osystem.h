@@ -20,7 +20,7 @@ class OSystem
 {
   public:
   */
-    osystem_init();
+    void osystem_init();
 
     extern int osystem_mouseRight;
     extern int osystem_mouseLeft;

@@ -168,7 +168,7 @@ void Sound_Quit(void)
 }
 
 
-osystem_init()  // that's the constructor of the system dependent
+void osystem_init()  // that's the constructor of the system dependent
             // object used for the SDL port
 {
     unsigned char *keyboard;

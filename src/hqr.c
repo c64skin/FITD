@@ -211,7 +211,7 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
       }
     }
 
-    assert(foundEntry);
+      ASSERT(foundEntry);
 
 //    foundEntry = hqrSubPtr;
 

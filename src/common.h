@@ -57,7 +57,9 @@ typedef signed long int s32;
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned long uint32;
+#ifndef UNIX
 typedef unsigned int uint;
+#endif
 typedef signed char int8;
 typedef signed short int16;
 typedef signed long int32;
