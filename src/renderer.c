@@ -865,13 +865,34 @@ void renderStyle0(char* buffer)
 
 void renderStyle1(char* buffer)
 {
+	int i;
+
+	int max = 3000;
+	int min = -3000;
+
 	int numPoint = *(short int*)buffer;
 	buffer+=2;
 
 	int color = *(short int*)buffer;
 	buffer+=2;
 
-	fillpoly((unsigned short *)buffer,numPoint,color);
+	{
+		short int* ptr = (short int*) buffer;
+
+		for(i=0;i<numPoint;i++)
+		{
+			ptr++;
+
+			if(*ptr<max)
+				max = *ptr;
+
+			if(*ptr>min)
+				min = *ptr;
+		}
+	}
+
+	if(max>=0 && min <200)
+		fillpoly((unsigned short *)buffer,numPoint,color);
 
 }
 

@@ -16,7 +16,7 @@ void fillpoly(short unsigned int * datas, int n, ColorP c) {
     static int dots[SCREENHEIGHT][MAXPTS];
     static int counters[SCREENHEIGHT];
     short unsigned int x1, y1, x2, y2;
-    int i, j, k, dir = 0;
+    int i, j, k, dir = 1;
     double step, curx;
     
     assert(n >= 3);
@@ -37,7 +37,7 @@ void fillpoly(short unsigned int * datas, int n, ColorP c) {
 	y1 = y2;
 	x2 = datas[i * 2];
 	y2 = datas[i * 2 + 1];
-
+	
 	if (y1 == y2) {
 	    dots[y1][counters[y1]++] = x1;
 	    dots[y2][counters[y2]++] = x2;
