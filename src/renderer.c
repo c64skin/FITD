@@ -1251,8 +1251,8 @@ typedef void (*renderFunction)(char* buffer);
 renderFunction renderFunctions[]={
   renderStyle0, // line
   renderStyle1, // poly
-  renderStyle2, // point
-  renderStyle3, // sphere
+ // renderStyle2, // point
+ // renderStyle3, // sphere
   renderStyle1,
   defaultRenderFunction,
   defaultRenderFunction,
