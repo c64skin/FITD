@@ -55,7 +55,7 @@ char* tempOutPtr;
 
 int renderVar3;
 
-void fillpoly(short unsigned int * datas, int n, char c);
+void fillpoly(short int * datas, int n, char c);
 
 void transformPoint(int* ax, int* bx, int* cx)
 {
@@ -892,7 +892,7 @@ void renderStyle1(char* buffer)
 	}
 
 	if(max>=0 && min <200)
-		fillpoly((unsigned short *)buffer,numPoint,color);
+		fillpoly((short *)buffer,numPoint,color);
 
 }
 
@@ -1070,7 +1070,8 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 	}
 
 
-	char* source = sortedBuffer;
+//	char* source = sortedBuffer;
+	char* source = renderBuffer;
 
 	if(!numOfPolyToRender)
 	{
@@ -1081,7 +1082,8 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 		return(1); // model ok, but out of screen
 	}
 
-	for(i=0;i<numOfPolyToRender;i++)
+	source += 10 * 1;
+//	for(i=0;i<numOfPolyToRender;i++)
 	{
 		source+=4;
 

@@ -31,7 +31,7 @@ void hline(int x1, int x2, int y, ColorP c)
 {
 	int i;
 
-	for(i=x1; i<x2;i++)
+	for(i=x1; i < (x2 + 1);i++)
 	{
 		pixel(i,y,c);
 	}
@@ -41,7 +41,7 @@ void vline(int x, int y1, int y2, ColorP c)
 {
 	int i;
 
-	for(i=y1; i<y2;i++)
+	for(i=y1; i< (y2 + 1);i++)
 	{
 		pixel(x,i,c);
 	}
