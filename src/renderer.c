@@ -964,7 +964,7 @@ void primType3(int primType, char** ptr, char** out) // sphere
 void primType5(int primType, char** ptr, char** out) // draw out of hardClip
 {
   int pointNumber;
-  int ax2;
+  short int ax2;
 
 	primVar1 = *out;
 
@@ -981,7 +981,8 @@ void primType5(int primType, char** ptr, char** out) // draw out of hardClip
 	*out+=sizeof(float);
 	*(float*)(*out) = renderPointList[pointNumber/2+1]; // Y
 	*out+=sizeof(float);
-	ax2 = *(float*)(*out) = renderPointList[pointNumber/2+2]; // Z
+	*(float*)(*out) = renderPointList[pointNumber/2+2]; // Z
+  ax2 = (short int)(*(float*)(*out));
 	*out+=sizeof(float);
 
 	primVar2 = *out;
@@ -1017,7 +1018,7 @@ void renderStyle0(primEntryStruct* pEntry) // line
 
 void renderStyle1(primEntryStruct* pEntry) // poly
 {
-  osystem_fillPoly(pEntry->polyEntry.firstPointPtr,pEntry->polyEntry.numOfPoints, pEntry->polyEntry.color, pEntry->polyEntry.polyType);
+  osystem_fillPoly((float*)pEntry->polyEntry.firstPointPtr,pEntry->polyEntry.numOfPoints, pEntry->polyEntry.color, pEntry->polyEntry.polyType);
 }
 
 void renderStyle2(primEntryStruct* pEntry) // point
@@ -1039,12 +1040,12 @@ void renderStyle3(primEntryStruct* pEntry)
 }
 
 
-void defaultRenderFunction(char* buffer)
+void defaultRenderFunction(primEntryStruct* buffer)
 {
   printf("Unsupported renderType\n");
 }
 
-typedef void (*renderFunction)(char* buffer);
+typedef void (*renderFunction)(primEntryStruct* buffer);
 
 renderFunction renderFunctions[]={
   renderStyle0, // line
@@ -1105,12 +1106,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
   int i;
   char* out;
 
-  char* source;
 #ifndef USE_GL2
-  char sortedBuffer[32000];
-
-  char* inBuffer;
-  char* outBuffer;
 #endif
 
   // reinit the 2 static tables
@@ -1254,9 +1250,6 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 //  source += 10 * 1;
   for(i=0;i<numOfPolyToRender;i++)
   {
-    int renderType;
-    char* bufferSource;
-    
     renderFunctions[primTable[i].type](&primTable[i]);
   }
 

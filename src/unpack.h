@@ -1,6 +1,6 @@
-#ifndef _UNPACK_H_
-#define _UNPACK_H_
+#ifndef _UNPACK_DAMIEN_H_
+#define _UNPACK_DAMIEN_H_
 
-void unpack(short int param, char* source, char* dest, int uncompressedSize, char* ptr);
+int unpack_CV(short param, char * src, char * dst, int compressedSize, int uncompressedSize);
 
 #endif

@@ -137,12 +137,12 @@ typedef struct hqrEntryStruct hqrEntryStruct;
 
 struct ZVStruct
 {
-	 short int ZVX1;
-	 short int ZVX2;
-	 short int ZVY1;
-	 short int ZVY2;
-	 short int ZVZ1;
-	 short int ZVZ2;
+	 s32 ZVX1;
+	 s32 ZVX2;
+	 s32 ZVY1;
+	 s32 ZVY2;
+	 s32 ZVZ1;
+	 s32 ZVZ2;
 };
 
 typedef struct ZVStruct ZVStruct;
@@ -248,6 +248,9 @@ struct actorStruct // used to read data from file too
 	short int hitForce;
 	short int field_98;
   point3dStruct hotPoint;
+
+  // aitd2
+  short int hardMat;
 };
 
 typedef struct actorStruct actorStruct;
@@ -284,6 +287,9 @@ struct objectStruct
 	short int trackMode;
 	short int trackNumber;
 	short int positionInTrack;
+
+  // AITD2
+  short int mark;
 };
 
 typedef struct objectStruct objectStruct;
@@ -389,7 +395,7 @@ extern hqrEntryStruct* listTrack;
 
 extern short int maxObjects;
 
-extern objectStruct objectTable[300]; // may be less
+extern objectStruct* objectTable; // may be less
 
 extern short int* vars;
 
@@ -428,6 +434,7 @@ extern short int currentEtage;
 extern int needChangeRoom;
 
 extern char* cameraPtr;
+extern roomDefStruct* pCurrentRoomData;
 extern short int currentDisplayedRoom;
 extern int mainVar1;
 extern int numCameraInRoom;
@@ -436,7 +443,6 @@ extern char* cameraZoneData;
 extern int numRoomZone;
 extern char* roomZoneData;
 extern char* roomVar5[15];
-extern short int roomVar6[15];
 extern int startGameVar1;
 
 extern int transformX;
@@ -462,7 +468,7 @@ extern int cameraX;
 extern int cameraY;
 extern int cameraZ;
 
-extern char cameraDataTab[30];
+extern char currentCameraVisibilityList[30];
 
 extern int actorTurnedToObj;
 
@@ -538,12 +544,7 @@ extern hardColStruct* hardColTable[10];
 extern short int hardColVar1;
 extern short int hardColVar2;
 
-extern short int hardClipX1;
-extern short int hardClipX2;
-extern short int hardClipY1;
-extern short int hardClipY2;
-extern short int hardClipZ1;
-extern short int hardClipZ2;
+extern ZVStruct hardClip;
 
 extern saveEntry saveTable[];
 

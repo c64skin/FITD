@@ -24,7 +24,7 @@ void throwObj(int animThrow, int frameThrow, int arg_4, int objToThrowIdx, int t
   }
 }
 
-int put(int x,int y,int z,int room,int stage,int alpha,int beta,int gamma,int idx)
+void put(int x,int y,int z,int room,int stage,int alpha,int beta,int gamma,int idx)
 {
   objectStruct* objPtr = &objectTable[idx];
 
@@ -101,11 +101,9 @@ int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, i
 
   if(currentDisplayedRoom != room)
   {
-    char* etagePtr = (char*)getRoomData(room);
-
-    currentActorPtr->worldX -= ((short int*)(cameraPtr+4) - (short int*)(etagePtr+4))*10;
-    currentActorPtr->worldY += ((short int*)(cameraPtr+6) - (short int*)(etagePtr+6))*10;
-    currentActorPtr->worldZ += ((short int*)(cameraPtr+8) - (short int*)(etagePtr+8))*10;
+    currentActorPtr->worldX -= (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[room].worldX)*10;
+    currentActorPtr->worldY += (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[room].worldY)*10;
+    currentActorPtr->worldZ += (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[room].worldZ)*10;
   }
 
   currentActorPtr->alpha = alpha;
@@ -202,16 +200,23 @@ void getHardClip()
 
   for(i=0;i<numEntry;i++)
   {
-    if(checkZvCollision(zvPtr, (ZVStruct*)etageData))
-    {
-      ZVStruct* zvTemp = (ZVStruct*)etageData;
+    ZVStruct zvCol;
 
-      hardClipX1 = zvTemp->ZVX1;
-      hardClipX2 = zvTemp->ZVX2;
-      hardClipY1 = zvTemp->ZVY1;
-      hardClipY2 = zvTemp->ZVY2;
-      hardClipZ1 = zvTemp->ZVZ1;
-      hardClipZ2 = zvTemp->ZVZ2;
+    zvCol.ZVX1 = READ_LE_S16(etageData+0x00);
+    zvCol.ZVX2 = READ_LE_S16(etageData+0x02);
+    zvCol.ZVY1 = READ_LE_S16(etageData+0x04);
+    zvCol.ZVY2 = READ_LE_S16(etageData+0x06);
+    zvCol.ZVZ1 = READ_LE_S16(etageData+0x08);
+    zvCol.ZVZ2 = READ_LE_S16(etageData+0x0A);
+
+    if(checkZvCollision(zvPtr, &zvCol))
+    {
+      hardClip.ZVX1 = zvCol.ZVX1;
+      hardClip.ZVX2 = zvCol.ZVX2;
+      hardClip.ZVY1 = zvCol.ZVY1;
+      hardClip.ZVY2 = zvCol.ZVY2;
+      hardClip.ZVZ1 = zvCol.ZVZ1;
+      hardClip.ZVZ2 = zvCol.ZVZ2;
 
       return;
     }
@@ -219,12 +224,12 @@ void getHardClip()
     etageData += 16;
   }
 
-  hardClipX1 = 32000;
-  hardClipX2 = -32000;
-  hardClipY1 = 32000;
-  hardClipY2 = -32000;
-  hardClipZ1 = 32000;
-  hardClipZ2 = -32000;
+  hardClip.ZVX1 = 32000;
+  hardClip.ZVX2 = -32000;
+  hardClip.ZVY1 = 32000;
+  hardClip.ZVY2 = -32000;
+  hardClip.ZVZ1 = 32000;
+  hardClip.ZVZ2 = -32000;
 }
 
 void animMove(int a,int b,int c,int d,int e,int f,int g)
@@ -318,9 +323,9 @@ void setStage(int newStage, int newRoomLocal, int X, int Y, int Z)
     {
       char* etagePtr = (char*)getRoomData(currentProcessedActorPtr->room);
 
-      currentProcessedActorPtr->worldX -= ((short int*)(cameraPtr+4) - (short int*)(etagePtr+4))*10;
-      currentProcessedActorPtr->worldY += ((short int*)(cameraPtr+6) - (short int*)(etagePtr+6))*10;
-      currentProcessedActorPtr->worldZ += ((short int*)(cameraPtr+8) - (short int*)(etagePtr+8))*10;
+      currentProcessedActorPtr->worldX -= (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[currentProcessedActorPtr->room].worldX)*10;
+      currentProcessedActorPtr->worldY += (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[currentProcessedActorPtr->room].worldY)*10;
+      currentProcessedActorPtr->worldZ += (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[currentProcessedActorPtr->room].worldZ)*10;
 
     }
 

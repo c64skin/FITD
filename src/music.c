@@ -6,7 +6,7 @@ unsigned int musicChrono;
 
 typedef int(*musicDrvFunctionType)(void * ptr);
 
-FM_OPL* virtualOpl;
+struct FM_OPL* virtualOpl;
 
 char OPLinitialized = 0;
 
@@ -487,7 +487,8 @@ u8 generalVolume = 0;
 
 void sendAdlib(int regIdx, int value)
 {
-  OPLWriteReg(virtualOpl,regIdx,value);
+  YM3812Write(0,0,regIdx);
+  YM3812Write(0,1,value);
 }
 
 #define musicSync 1500
@@ -511,7 +512,7 @@ int musicUpdate(void *udata, uint8 *stream, int len)
 
       if(timeBeforNextUpdate) // generate
       {
-        YM3812UpdateOne(virtualOpl,(int16*)(stream+fillStatus),(timeBeforNextUpdate)/2,0);
+        YM3812UpdateOne(0,(int16*)(stream+fillStatus),(timeBeforNextUpdate)/2);
         fillStatus+=timeBeforNextUpdate;
         musicTimer+=timeBeforNextUpdate;
       }
@@ -674,12 +675,13 @@ int initialialize(void* dummy)
 {
   int i;
 
-  OPLBuildTables(FMOPL_ENV_BITS_HQ, FMOPL_EG_ENT_HQ);
+  //OPLBuildTables(FMOPL_ENV_BITS_HQ, FMOPL_EG_ENT_HQ);
 
-  virtualOpl = OPLCreate(OPL_TYPE_YM3812, OPL_INTERNAL_FREQ, 44100);
+  YM3812Init(1,OPL_INTERNAL_FREQ,44100);
+/*  virtualOpl = OPLCreate(OPL_TYPE_YM3812, OPL_INTERNAL_FREQ, 44100);
 
   if(!virtualOpl)
-    return 0;
+    return 0; */
 
   for(i=0;i<11;i++)
   {
@@ -1281,5 +1283,5 @@ void callMusicUpdate(void)
 
 void destroyMusicDriver(void)
 {
-  OPLDestroy(virtualOpl);
+  YM3812Shutdown();
 }

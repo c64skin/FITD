@@ -169,19 +169,23 @@ s32 q=0;                     /* Dummy */
       {
         if(currentProcessedActorPtr->field_0 >= 0)
         {
-          if(currentProcessedActorPtr->life != -1 && currentProcessedActorPtr->lifeMode != -1)
+          if(currentProcessedActorPtr->life != -1)
           {
             switch(gameId)
             {
             case JACK:
             case AITD2:
               {
-                processLife2(currentProcessedActorPtr->life);
+                if(currentProcessedActorPtr->lifeMode&3)
+                  if(!(currentProcessedActorPtr->lifeMode&4))
+                    processLife2(currentProcessedActorPtr->life);
                 break;
               }
             case AITD1:
               {
-                processLife(currentProcessedActorPtr->life);
+                if(currentProcessedActorPtr->life != -1)
+                  if(currentProcessedActorPtr->lifeMode != -1)
+                    processLife(currentProcessedActorPtr->life);
                 break;
               }
             }
@@ -211,6 +215,41 @@ s32 q=0;                     /* Dummy */
     else
     {
       checkIfCameraChangeIsRequired();
+      if(gameId == AITD2 || gameId == JACK)
+      {
+        int tempCurrentCamera;
+
+        tempCurrentCamera = currentCamera;
+
+        currentCamera = startGameVar1;
+
+        for(currentProcessedActorIdx = 0; currentProcessedActorIdx < NUM_MAX_ACTOR; currentProcessedActorIdx++)
+        {
+          if(currentProcessedActorPtr->field_0 >= 0)
+          {
+            if(currentProcessedActorPtr->life != -1)
+            {
+              if(currentProcessedActorPtr->flags & 0x200)
+              {
+                if(currentProcessedActorPtr->lifeMode&3)
+                  if(!(currentProcessedActorPtr->lifeMode&4))
+                  {
+                    processLife2(currentProcessedActorPtr->life);
+                    actorTurnedToObj = 1;
+                  }
+              }
+            }
+          }
+
+          if(changeFloor)
+            break;
+        }
+
+        if(giveUp)
+          break;
+
+        currentCamera = tempCurrentCamera;
+      }
       if(mainVar1)
       {
         setupCamera();

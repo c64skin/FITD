@@ -407,7 +407,6 @@ void processTrack(void)
       {
       case 0: // warp
         {
-          char* ptr;
           int roomNumber = *(short int*)(trackPtr);
           trackPtr += 2;
 
@@ -436,11 +435,9 @@ void processTrack(void)
           currentProcessedActorPtr->worldZ = currentProcessedActorPtr->roomZ = *(short int*)(trackPtr);
           trackPtr += 2;
 
-          ptr = (char*)getRoomData(currentProcessedActorPtr->room);
-
-          currentProcessedActorPtr->worldX -= (*(short int*)(cameraPtr+4) - *(short int*)(ptr+4)) * 10;
-          currentProcessedActorPtr->worldY += (*(short int*)(cameraPtr+6) - *(short int*)(ptr+6)) * 10;
-          currentProcessedActorPtr->worldZ += (*(short int*)(cameraPtr+8) - *(short int*)(ptr+8)) * 10;
+          currentProcessedActorPtr->worldX -= (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[currentProcessedActorPtr->room].worldX) * 10;
+          currentProcessedActorPtr->worldY += (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[currentProcessedActorPtr->room].worldY) * 10;
+          currentProcessedActorPtr->worldZ += (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[currentProcessedActorPtr->room].worldZ) * 10;
 
           currentProcessedActorPtr->zv.ZVX1 += currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
           currentProcessedActorPtr->zv.ZVX2 += currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
@@ -474,6 +471,7 @@ void processTrack(void)
     
           if(roomNumber != currentProcessedActorPtr->room)
           {
+            // TODO: fix bug here...
             x -= (roomDataTable[currentProcessedActorPtr->room].worldX - roomDataTable[roomNumber].worldX) * 10;
             z -= (roomDataTable[currentProcessedActorPtr->room].worldZ - roomDataTable[roomNumber].worldZ) * 10;
           }

@@ -13,6 +13,9 @@ void drawPartOfAITDBox(int left, int top, int index, char* gfxData)
   int i;
   int j;
 
+  if(gameId != AITD1)
+    return;
+
   outPtr = screen + top*320 + left;
   inPtr = gfxData + *(short int*)(index * 2 + gfxData); // alignement unsafe
 

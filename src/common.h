@@ -1,7 +1,11 @@
 #ifndef _COMMON_
 #define _COMMON_
 
+#define HAS_YM3812 1
+
+#ifndef USE_GL
 #define USE_GL
+#endif
 
 typedef unsigned char u8;
 typedef unsigned short int u16;
@@ -46,7 +50,7 @@ typedef signed long int s32;
 
 //////////////// GAME SPECIFIC DEFINES
 
-#define NUM_MAX_OBJ         300
+//#define NUM_MAX_OBJ         300
 #define NUM_MAX_ACTOR       50
 #define NUM_MAX_TEXT        40
 #define NUM_MAX_MESSAGE     5
@@ -105,6 +109,7 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 #include "mainLoop.h"
 #include "inventory.h"
 #include "startupMenu.h"
+#include "systemMenu.h"
 #include "floor.h"
 #include "object.h"
 #include "zv.h"
@@ -119,6 +124,7 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 // scripting
 #include "track.h"
 #include "life.h"
+#include "life2.h"
 #include "evalVar.h"
 
 #include "osystem.h"
@@ -145,7 +151,7 @@ FORCEINLINE u16 READ_LE_U16(void *ptr)
 
 FORCEINLINE s16 READ_LE_S16(void *ptr)
 {
-  return (((u8*)ptr)[1]<<8)|((u8*)ptr)[0];
+  return (s16)READ_LE_U16(ptr);
 }
 
 FORCEINLINE u32 READ_LE_U32(void *ptr)

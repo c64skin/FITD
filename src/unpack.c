@@ -1,497 +1,553 @@
+/*
+   Explode (or unimplode) unpacking algorithm
+   Original code from Mark Adler, (30 Mars 1992)
+   Rewritten by Cyril VOILA (cvoila@free.fr) to handle genuine AITD PAK file format
+
+   vers    date          who           what
+   ----  ---------  --------------  ------------------------------------
+    1.0  02 Oct 04  C. Voila        First release
+*/
+
 #include "common.h"
 
-unsigned char* inputPtr;
-unsigned char* outputPtr;
 
-short int unV4 = 0;
-unsigned char numBitInMask = 6;
-unsigned char mask = 0;
-short int compressParam = 0;
-char* unV3 = 0;
-short int unv13 = 0;
-short int unV7 = 0;
-char* unV1;
-char* unV2;
-unsigned short int unV14;
-unsigned short int unV17;
-unsigned short int unV8;
-char* si;
-unsigned short int sizeOfCurrentUnpackedChunk;
-unsigned short int unV5;
+// --------------------------------------------------------------
+// VARS
+// --------------------------------------------------------------
 
-long int decompPos;
+#define PAK_BMAX 16
+#define PAK_N_MAX 288
+#define PAK_WSIZE 0x8000
 
-char* unpackSub0(int param, char** outputInputPtr)
-{
-  short int bx;
-  unsigned char cl;
-  unsigned char ax;
-  unsigned short int di;
-  unsigned short int dx;
-  char* backupSource;
+// --------------------------------------------------------------
+// TYPES
+// --------------------------------------------------------------
 
-  unv13 = param;
+typedef struct PAK_huft {
+  unsigned short e;     // number of PAK_extra bits or operation
+  unsigned short b;     // number of bits in this code or subcode
+  union {
+    unsigned short n;   // literal, length base, or distance base
+    struct PAK_huft *t;     // pointer to next level of table
+  } v;
+} PAK_huft;
 
-  bx = *((unsigned char*)si);
-  si++;
+typedef struct {
+  unsigned short flags;
+  unsigned long csize;
+  unsigned long ucsize;
+  unsigned char * buf_src;
+  unsigned char * buf_dst;
+  unsigned long off_src;
+  unsigned long off_dst;
+} PAK_vars;
 
-  di = 0;
-  dx = 0;
 
-  do
+// --------------------------------------------------------------
+// GLOBALS
+// --------------------------------------------------------------
+
+static unsigned char PAK_slide[PAK_WSIZE];
+static unsigned PAK_mask_bits[17] = { 0x0000, 0x0001, 0x0003, 0x0007, 0x000f, 0x001f, 0x003f, 0x007f, 0x00ff, 0x01ff, 0x03ff, 0x07ff, 0x0fff, 0x1fff, 0x3fff, 0x7fff, 0xffff };
+
+/* Tables for length and distance */
+static unsigned short cplen2[] = {
+        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+        18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,
+        35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51,
+        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65
+};
+
+static unsigned short cplen3[] = {
+        3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+        19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+        36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
+        53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66
+};
+
+static unsigned char extra[] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        8
+};
+
+static unsigned short cpdist4[] = {
+        1, 65, 129, 193, 257, 321, 385, 449, 513, 577, 641, 705,
+        769, 833, 897, 961, 1025, 1089, 1153, 1217, 1281, 1345, 1409, 1473,
+        1537, 1601, 1665, 1729, 1793, 1857, 1921, 1985, 2049, 2113, 2177,
+        2241, 2305, 2369, 2433, 2497, 2561, 2625, 2689, 2753, 2817, 2881,
+        2945, 3009, 3073, 3137, 3201, 3265, 3329, 3393, 3457, 3521, 3585,
+        3649, 3713, 3777, 3841, 3905, 3969, 4033
+};
+
+static unsigned short cpdist8[] = {
+        1, 129, 257, 385, 513, 641, 769, 897, 1025, 1153, 1281,
+        1409, 1537, 1665, 1793, 1921, 2049, 2177, 2305, 2433, 2561, 2689,
+        2817, 2945, 3073, 3201, 3329, 3457, 3585, 3713, 3841, 3969, 4097,
+        4225, 4353, 4481, 4609, 4737, 4865, 4993, 5121, 5249, 5377, 5505,
+        5633, 5761, 5889, 6017, 6145, 6273, 6401, 6529, 6657, 6785, 6913,
+        7041, 7169, 7297, 7425, 7553, 7681, 7809, 7937, 8065
+};
+
+// --------------------------------------------------------------
+// INLINE FUNCTIONS
+// --------------------------------------------------------------
+
+#define PAK_NEXTBYTE ((pG->off_src<pG->csize)?(pG->buf_src[pG->off_src++]):0)
+#define PAK_FLUSH(size) { memcpy(pG->buf_dst + pG->off_dst, PAK_slide, size); pG->off_dst += size; }
+
+#define PAK_NEEDBITS(n) {while(k<(n)){b|=((unsigned long)PAK_NEXTBYTE)<<k;k+=8;}}
+#define PAK_DUMPBITS(n) {b>>=(n);k-=(n);}
+#define PAK_DECODEHUFT(htab, bits, mask) {\
+  PAK_NEEDBITS((unsigned)(bits))\
+  t = (htab) + ((~(unsigned)b)&(mask));\
+  while(1) {\
+    PAK_DUMPBITS(t->b)\
+    if((e=t->e) <= 32) break;\
+    if(e==99) return 1;\
+    e &= 31;\
+    PAK_NEEDBITS(e)\
+    t = t->v.t + ((~(unsigned)b)&PAK_mask_bits[e]);\
+  }\
+}
+
+// --------------------------------------------------------------
+// FUNCTIONS
+// --------------------------------------------------------------
+
+void PAK_Error(char * txt) {
+  printf("%s", txt);
+  getchar();
+  exit(0);
+}
+
+void PAK_huft_free(PAK_vars * pG, PAK_huft * t) {
+  register PAK_huft *p, *q;
+  p = t;
+  while(p != (PAK_huft *)NULL) {
+    q = (--p)->v.t;
+    free((void *)p);
+    p = q;
+  }
+}
+
+int PAK_huft_build(PAK_vars * pG, unsigned * b, unsigned n, unsigned s, unsigned short * d, unsigned char * e, PAK_huft * t[], unsigned * m) {
+  unsigned a;                   /* counter for codes of length k */
+  unsigned c[PAK_BMAX+1];       /* bit length count table */
+  unsigned el;                  /* length of EOB code (value 256) */
+  unsigned f;                   /* i repeats in table every f entries */
+  int g;                        /* maximum code length */
+  int h;                        /* table level */
+  register unsigned i;          /* counter, current code */
+  register unsigned j;          /* counter */
+  register int k;               /* number of bits in current code */
+  int lx[PAK_BMAX+1];           /* memory for l[-1..PAK_BMAX-1] */
+  int *l = lx+1;                /* stack of bits per table */
+  register unsigned *p;         /* pointer into c[], b[], or v[] */
+  register PAK_huft *q;         /* points to current table */
+  PAK_huft r;                   /* table entry for structure assignment */
+  PAK_huft *u[PAK_BMAX];        /* table stack */
+  unsigned v[PAK_N_MAX];        /* values in order of bit length */
+  register int w;               /* bits before this table == (l * h) */
+  unsigned x[PAK_BMAX+1];       /* bit offsets, then code stack */
+  unsigned *xp;                 /* pointer into x */
+  int y;                        /* number of dummy codes added */
+  unsigned z;                   /* number of entries in current table */
+
+  /* Generate counts for each bit length */
+  el = n > 256 ? b[256] : PAK_BMAX; /* set length of EOB code, if any */
+  memset((char *)c, 0, sizeof(c));
+  p = (unsigned *)b;  i = n;
+  do {
+    c[*p]++; p++;               /* assume all entries <= PAK_BMAX */
+  } while(--i);
+  if(c[0] == n)                /* null input--all zero length codes */
   {
-    cl = ax = *((unsigned char*)si);
-    si++;
+    *t = (PAK_huft *)NULL;
+    *m = 0;
+    return(0);
+  }
 
-    cl&=0x0F;
-    cl++;
+  /* Find minimum and maximum length, bound *m by those */
+  for(j = 1; j <= PAK_BMAX; j++)
+    if(c[j])
+      break;
+  k = j;                        /* minimum code length */
+  if(*m < j) *m = j;
+  for(i = PAK_BMAX; i; i--) {
+    if(c[i]) break;
+  }
+  g = i;                        /* maximum code length */
+  if(*m > i) *m = i;
 
-    ax >>=4;
-    ax++;
+  /* Adjust last length count to fill out codes, if needed */
+  for(y = 1 << j; j < i; j++, y <<= 1) {
+    if((y -= c[j]) < 0) return(2);  /* bad input: more codes than bits */
+  }
+  if((y -= c[i]) < 0) return(2);
+  c[i] += y;
 
-    do
-    {
-      outputPtr[di+3] = cl;
-      outputPtr[di+2] = dx&0xFF;
-      dx++;
-      di+=4;
-    }while(--ax);
-  }while((--bx)>=0);
+  /* Generate starting offsets into the value table for each length */
+  x[1] = j = 0;
+  p = c + 1;  xp = x + 2;
+  while(--i) {                 /* note that i == g from above */
+    *xp++ = (j += *p++);
+  }
 
-  backupSource = si;
+  /* Make a table of values in order of bit lengths */
+  memset((char *)v, 0, sizeof(v));
+  p = (unsigned *)b;  i = 0;
+  do {
+    if((j = *p++) != 0) v[x[j]++] = i;
+  } while(++i < n);
+  n = x[g];                     /* set n to length of v */
 
-  {
-    unsigned short int cx = param;
-    unsigned short int si;
-    bool sortFinished;
+  /* Generate the Huffman codes and for each, make the table entries */
+  x[0] = i = 0;                 /* first Huffman code is zero */
+  p = v;                        /* grab values in bit order */
+  h = -1;                       /* no tables yet--level -1 */
+  w = l[-1] = 0;                /* no bits decoded yet */
+  u[0] = (PAK_huft *)NULL;      /* just to keep compilers happy */
+  q = (PAK_huft *)NULL;         /* ditto */
+  z = 0;                        /* ditto */
 
-    cx--;
-    si = cx/2;
+  /* go through the bit lengths (k already is bits in shortest code) */
+  for(; k <= g; k++) {
+    a = c[k];
+    while(a--) {
+      /* here i is the Huffman code of length k bits for value *p */
+      /* make tables up to required level */
+      while(k > w + l[h]) {
+        w += l[h++];            /* add bits already decoded */
 
-    do // sort loop
-    {
-      do 
-      {
-        unsigned char dh = 0;
-        unsigned short int ax = 0;
-
-        sortFinished = true;
-
-        ax = cx&0xFF;
-        ax -= si;
-
-        unV7 = ax & 0xFF;
-
-        while(dh<=unV7)
-        {
-          unsigned short int backupSi;
-
-          ax = dh & 0xFF;
-
-          di = ax * 4;
-
-          backupSi = si;
-
-          si += dh;
-
-          si *= 4;
-
-          if( ( outputPtr[di + 3] >  outputPtr[si + 3] ) || (( outputPtr[di + 3] ==  outputPtr[si + 3] ) && ( outputPtr[di + 2] >  outputPtr[si + 2] ))) // TODO: recheck
-          {
-            unsigned short int temp;
-
-            temp = *((unsigned short int*)&(outputPtr[di]));
-            *((unsigned short int*)&(outputPtr[di])) = *((unsigned short int*)&(outputPtr[si]));
-            *((unsigned short int*)&(outputPtr[si])) = temp;
-
-            temp = *((unsigned short int*)&(outputPtr[di+2]));
-            *((unsigned short int*)&(outputPtr[di+2])) = *((unsigned short int*)&(outputPtr[si+2]));
-            *((unsigned short int*)&(outputPtr[si+2])) = temp;
-
-            sortFinished = false;
-          }
-
-          si = backupSi;
-
-          dh++;
-        }
-      }while(!sortFinished);
-      si/=2;
-    }while(si);
-
-    {
-      short int di = param;
-      unsigned short int cx = 0;
-      unsigned short int dx = 0;
-      unsigned short int bx = 0;
-      unsigned short int ax = 0;
-
-      di--;
-      di<<=2;
-
-      do
-      {
-        cx += dx;
-
-        if(bx != outputPtr[di+3]) // does dx need an update ?
-        {
-          bx = outputPtr[di+3];
-
-          dx = 1 << (16 - bx);
-        }
-
-        {
-          int i;
-          unsigned short int si = cx;
-
-          for(i=0;i<16;i++) // invert all bits
-          {
-            ax = (ax<<1) | (si&1);
-            si>>=1;
+        /* compute minimum size table less than or equal to *m bits */
+        z = (z = g - w) > *m ? *m : z;                  /* upper limit */
+        if((f = 1 << (j = k - w)) > a + 1) {    /* try a k-w bit table */
+                                /* too few codes for k-w bit table */
+          f -= a + 1;           /* deduct codes from patterns left */
+          xp = c + k;
+          while(++j < z) {      /* try smaller tables up to z bits */
+            if((f <<= 1) <= *++xp) break; /* enough codes to use up j bits */
+            f -= *xp;           /* else deduct codes from patterns */
           }
         }
+        if((unsigned)w + j > el && (unsigned)w < el) j = el - w; /* make EOB code end at table */
+        z = 1 << j;             /* table entries for j-bit table */
+        l[h] = j;               /* set table size in stack */
 
-        *(unsigned short int*)(&outputPtr[di]) = ax;
+        /* allocate and link in new table */
+        if((q = (PAK_huft *)malloc((z + 1)*sizeof(PAK_huft))) == (PAK_huft *)NULL) {
+          if(h) PAK_huft_free(pG, u[0]);
+          return(3);            /* not enough memory */
+        }
 
-        di -= 4;
-      }while(di>=0);
+        *t = q + 1;             /* link to list for PAK_huft_free() */
+        *(t = &(q->v.t)) = (PAK_huft *)NULL;
+        u[h] = ++q;             /* table starts after link */
 
-      inputPtr[2] = 0;
-      inputPtr[1] = 0;
-      inputPtr[0] = 0;
+        /* connect to last table, if there is one */
+        if(h) {
+          x[h] = i;             /* save pattern for backing up */
+          r.b = (unsigned char)l[h-1];    /* bits to dump before this table */
+          r.e = (unsigned char)(32 + j);  /* bits in this table */
+          r.v.t = q;            /* pointer to this table */
+          j = (i & ((1 << w) - 1)) >> (w - l[h-1]);
+          u[h-1][j] = r;        /* connect to last table */
+        }
+      }
 
-      unV17 = 1;
-      {
-        unsigned short int di =0;
-        short int dx = unv13;
-        unsigned short cl;
-        unsigned short int ax;
-        unsigned short int si;
+      /* set up table entry in r */
+      r.b = (unsigned char)(k - w);
+      if(p >= v + n) {
+        r.e = 99;     /* out of values--invalid code */
+      } else if(*p < s) {
+        r.e = (unsigned char)(*p < 256 ? 32 : 31);  /* 256 is end-of-block code */
+        r.v.n = (unsigned short)*p++;               /* simple code is just the value */
+      } else {
+        r.e = e[*p - s];        /* non-simple--look up in lists */
+        r.v.n = d[*p++ - s];
+      }
 
-        do
-        {
-          cl = outputPtr[di+3];
-          unV7 = 0;
-          unV8 = 0;
+      /* fill code-like entries with r */
+      f = 1 << (k - w);
+      for(j = i >> w; j < z; j += f) {
+        q[j] = r;
+      }
 
-          ax = *(unsigned short int*)(&outputPtr[di]);
+      /* backwards increment the k-bit code i */
+      for(j = 1 << (k - 1); i & j; j >>= 1) {
+        i ^= j;
+      }
+      i ^= j;
 
-          do
-          {
-            int mod;
-            si = unV7 * 3;
-            unV14 = ax & 0xFF;
-
-            mod = ax%2;
-            ax /= 2;
-
-            if(mod)
-            {
-              if(inputPtr[si] == 0)
-              {
-                inputPtr[si] = unV17 - unV7;
-
-                unV8 = unV7;
-                unV7 = unV17;
-                unV17++;
-
-                si = (unV7*3);
-                inputPtr[si + 2] = 0;
-                inputPtr[si + 1] = 0;
-                inputPtr[si + 0] = 0;
-              }
-              else
-              {
-                unV8 = unV7;
-                unV7 += inputPtr[si];
-              }
-            }
-            else
-            {
-              if(inputPtr[si+1] == 0)
-              {
-                inputPtr[si+1] = unV17 - unV7;
-
-                unV8 = unV7;
-                unV7 = unV17;
-                unV17++;
-
-                si = (unV7*3);
-                inputPtr[si + 2] = 0;
-                inputPtr[si + 1] = 0;
-                inputPtr[si + 0] = 0;
-              }
-              else
-              {
-                unV8 = unV7;
-                unV7 += inputPtr[si+1];
-              }
-            }
-          }while(--cl);
-
-          si = unV8 * 3;
-
-          if(unV14 & 1)
-          {
-            inputPtr[si+2] |= 1;
-            inputPtr[si] = outputPtr[di+2];
-          }
-          else
-          {
-            inputPtr[si+2] |= 2;
-            inputPtr[si+1] = outputPtr[di+2];
-          }
-
-          di += 4;
-        }while((--dx)>0);
-
-        *(outputInputPtr) = inputPtr + (unV17*3);
+      /* backup over finished tables */
+      while((i & ((1 << w) - 1)) != x[h]) {
+        w -= l[--h];            /* don't need to update q */
       }
     }
   }
 
-  si = backupSource;
-  return inputPtr;
+  /* return actual size of base table */
+  *m = l[0];
+
+  /* Return true (1) if we were given an incomplete table */
+  return((y!=0) && (g!=1));
 }
 
-unsigned short int dx;
-char ch;
-unsigned char *di;
+/* Get the bit lengths for a code representation from the compressed stream. */
+int PAK_get_tree(PAK_vars * pG, unsigned * l, unsigned n) {
+  unsigned i;           /* unsigned chars remaining in list */
+  unsigned k;           /* lengths entered */
+  unsigned j;           /* number of codes */
+  unsigned b;           /* bit length for those codes */
 
-// param = bx;
-int unpackSub1(char* param)
-{
-  unsigned short int di = 0;
+  /* get bit lengths */
+  i = PAK_NEXTBYTE + 1;                 /* length/count pairs to read */
+  k = 0;                                /* next code */
+  do {
+    b = ((j = PAK_NEXTBYTE) & 0xf) + 1; /* bits in code (1..16) */
+    j = ((j & 0xf0) >> 4) + 1;          /* codes with those bits (1..16) */
+    if(k + j > n) return(4);            /* don't overflow l[] */
+    do {
+      l[k++] = b;
+    } while(--j);
+  } while(--i);
+  return((k!=n)?4:0);                   /* should have read n of them */
+}
 
-  do
-  {
-    if(dx&1)
-    {
-      unsigned char tempAl;
-      dx >>= 1;
-      ch --;
+/* Decompress the imploded data using coded literals and a sliding window (of size 2^(6+bdl) bytes). */
+int PAK_explode_lit(PAK_vars * pG, PAK_huft * tb, PAK_huft * tl, PAK_huft * td, unsigned bb, unsigned bl, unsigned bd, unsigned bdl) {
+  unsigned long s;      /* bytes to decompress */
+  register unsigned e;  /* table entry flag/number of extra bits */
+  unsigned n, d;        /* length and index for copy */
+  unsigned w;           /* current window position */
+  PAK_huft *t;          /* pointer to table entry */
+  unsigned mb, ml, md;  /* masks for bb, bl, and bd bits */
+  unsigned mdl;         /* mask for bdl (distance lower) bits */
+  register unsigned long b; /* bit buffer */
+  register unsigned k;  /* number of bits in bit buffer */
+  unsigned u;           /* true if unPAK_FLUSHed */
 
-      if(ch<0) // reload mask
-      {
-        ch += 8;
-        dx |= ((unsigned short int)(*(unsigned char*)si))<<ch;
-        si++;
+  /* explode the coded data */
+  b = k = w = 0;                /* initialize bit buffer, window */
+  u = 1;                        /* buffer unPAK_FLUSHed */
+  mb = PAK_mask_bits[bb];       /* precompute masks for speed */
+  ml = PAK_mask_bits[bl];
+  md = PAK_mask_bits[bd];
+  mdl = PAK_mask_bits[bdl];
+  s = pG->ucsize;
+  while(s>0) {                 /* do until ucsize bytes uncompressed */
+    PAK_NEEDBITS(1)
+    if(b & 1) {                /* then literal--decode it */
+      PAK_DUMPBITS(1)
+      s--;
+      PAK_DECODEHUFT(tb, bb, mb)    /* get coded literal */
+      PAK_slide[w++] = (unsigned char)t->v.n;
+      if(w == PAK_WSIZE) {
+        PAK_FLUSH(w)
+        w = u = 0;
       }
-
-      tempAl = param[di];
-
-      if(param[di+2] & 1)
-      {
-        return tempAl;
+    } else {                    /* else distance/length */
+      PAK_DUMPBITS(1)
+      PAK_NEEDBITS(bdl)             /* get distance low bits */
+      d = (unsigned)b & mdl;
+      PAK_DUMPBITS(bdl)
+      PAK_DECODEHUFT(td, bd, md)    /* get coded distance high bits */
+      d = w - d - t->v.n;       /* construct offset */
+      PAK_DECODEHUFT(tl, bl, ml)    /* get coded length */
+      n = t->v.n;
+      if(e) {                    /* get length extra bits */
+        PAK_NEEDBITS(8)
+        n += (unsigned)b & 0xff;
+        PAK_DUMPBITS(8)
       }
-
-      di+=tempAl*3;
+      s = (s > (unsigned long)n ? s - (unsigned long)n : 0);
+      do {
+        e = PAK_WSIZE - ((d &= PAK_WSIZE-1) > w ? d : w);
+        if(e>n) e = n;
+        n -= e;
+        if(u && (w<=d)) {
+          memset(PAK_slide + w, 0, e);
+          w += e;
+          d += e;
+        } else {
+          if(w-d >= e) {    // Fast memcopy for large block
+            memcpy(PAK_slide + w, PAK_slide + d, e);
+            w += e;
+            d += e;
+          } else {          // Slow memcopy for small block
+            do {
+              PAK_slide[w++] = PAK_slide[d++];
+            } while(--e);
+          }
+        }
+        if(w == PAK_WSIZE) {
+          PAK_FLUSH(w)
+          w = u = 0;
+        }
+      } while(n);
     }
-    else
-    {
-      unsigned char tempAl;
-      dx >>= 1;
-      ch --;
+  }
+  PAK_FLUSH(w)
+  return(0);
+}
 
-      if(ch<0) // reload mask
-      {
-        ch += 8;
-        dx |= ((unsigned short int)(*(unsigned char*)si))<<ch;
-        si++;
+/* Decompress the imploded data using uncoded literals and a sliding window (of size 2^(6+bdl) bytes). */
+int PAK_explode_nolit(PAK_vars * pG, PAK_huft * tl, PAK_huft * td, unsigned bl, unsigned bd, unsigned bdl) {
+  unsigned long s;      /* unsigned chars to decompress */
+  register unsigned e;  /* table entry flag/number of PAK_extra bits */
+  unsigned n, d;        /* length and index for copy */
+  unsigned w;           /* current window position */
+  PAK_huft *t;          /* pointer to table entry */
+  unsigned ml, md;      /* masks for bl and bd bits */
+  unsigned mdl;         /* mask for bdl (distance lower) bits */
+  register unsigned long b; /* bit buffer */
+  register unsigned k;  /* number of bits in bit buffer */
+  unsigned u;           /* true if unPAK_FLUSHed */
+
+  /* explode the coded data */
+  b = k = w = 0;                /* initialize bit buffer, window */
+  u = 1;                        /* buffer unPAK_FLUSHed */
+  ml = PAK_mask_bits[bl];           /* precompute masks for speed */
+  md = PAK_mask_bits[bd];
+  mdl = PAK_mask_bits[bdl];
+  s = pG->ucsize;
+  while(s>0) {
+    PAK_NEEDBITS(1)
+    if(b & 1) {                 /* then literal--get eight bits */
+      PAK_DUMPBITS(1)
+      s--;
+      PAK_NEEDBITS(8)
+      PAK_slide[w++] = (unsigned char)b;
+      if(w==PAK_WSIZE) {
+        PAK_FLUSH(w)
+        w = u = 0;
       }
-
-      tempAl = param[di+1];
-
-      if(param[di+2] & 2)
-      {
-        return tempAl;
+      PAK_DUMPBITS(8)
+    } else {
+      PAK_DUMPBITS(1)
+      PAK_NEEDBITS(bdl)             /* get distance low bits */
+      d = (unsigned)b & mdl;
+      PAK_DUMPBITS(bdl)
+      PAK_DECODEHUFT(td, bd, md)    /* get coded distance high bits */
+      d = w - d - t->v.n;       /* conPAK_huftoffset */
+      PAK_DECODEHUFT(tl, bl, ml)    /* get coded length */
+      n = t->v.n;
+      if(e) {                   /* get length PAK_extra bits */
+        PAK_NEEDBITS(8)
+        n += (unsigned)b & 0xff;
+        PAK_DUMPBITS(8)
       }
-
-      di+=tempAl*3;
+      s = (s > (unsigned long)n ? s - (unsigned long)n : 0);
+      do {
+        e = PAK_WSIZE - ((d &= PAK_WSIZE-1) > w ? d : w);
+        if(e > n) e = n;
+        n -= e;
+        if(u && w <= d) {
+          memset(PAK_slide + w, 0, e);
+          w += e;
+          d += e;
+        } else {
+          if(w-d >= e) {    // Fast memcopy for large block
+            memcpy(PAK_slide + w, PAK_slide + d, e);
+            w += e;
+            d += e;
+          } else {          // Slow memcopy for small block
+            do {
+              PAK_slide[w++] = PAK_slide[d++];
+            } while(--e);
+          }
+        }
+        if(w==PAK_WSIZE) {
+          PAK_FLUSH(w)
+          w = u = 0;
+        }
+      } while(n);
     }
-  }while(1);
-
-  return 0;
+  }
+  PAK_FLUSH(w)
+  return(0);
 }
 
-void unpack(short int param, char* source, char* dest, int uncompressedSize, char* ptr)
-{
-  unsigned char direction = 1;
-  char* inputPtrTemp;
+/* Main function : Explode an imploded compressed stream. */
+// TODO : Ajouter une gestion d'erreur propre !!!
+int PAK_explode(PAK_vars * pG) {
 
-  si = source;
+  int ret = 0;
 
-  inputPtr = ptr + 0x10;
-  outputPtr = dest + 0x10;
+  PAK_huft * tb;        /* literal code table */
+  PAK_huft * tl;        /* length code table */
+  PAK_huft * td;        /* distance code table */
+  unsigned bb;          /* bits for tb */
+  unsigned bl;          /* bits for tl */
+  unsigned bd;          /* bits for td */
+  unsigned bdl;         /* number of uncoded lower distance bits */
+  unsigned l[256];      /* bit lengths for codes */
 
-  unV4 = 2;
-  numBitInMask = 6;
-  mask = 0x3F;
+  bl = 7;
+  bd = (pG->csize > 200000L) ? 8 : 7; // TODO : Totalement FOIREUX, à vérifier
 
-  compressParam = param;
-
-  if(param&2)
-  {
-    numBitInMask++;
-    mask = 0x7F;
+  if(pG->flags & 4) {    // With literal tree--minimum match length is 3
+    bb = 9;
+    ret = PAK_get_tree(pG, l, 256);
+if(ret!=0) PAK_Error("ERROR 1\n");
+    ret = PAK_huft_build(pG, l, 256, 256, NULL, NULL, &tb, &bb);
+if(ret!=0) PAK_Error("ERROR 2\n");
+    ret = PAK_get_tree(pG, l, 64);
+if(ret!=0) PAK_Error("ERROR 3\n");
+    ret = PAK_huft_build(pG, l, 64, 0, cplen3, extra, &tl, &bl);
+  } else {                // No literal tree--minimum match length is 2
+    tb = (PAK_huft *) NULL;
+    ret = PAK_get_tree(pG, l, 64);
+if(ret!=0) PAK_Error("ERROR 4\n");
+    ret = PAK_huft_build(pG, l, 64, 0, cplen2, extra, &tl, &bl);
+if(ret!=0) PAK_Error("ERROR 5\n");
   }
 
-  if(param&4)
-  {
-    unV4++;
-    unV3 = unpackSub0(0x100,&inputPtrTemp);
-    inputPtr = inputPtrTemp;
+  ret = PAK_get_tree(pG, l, 64);
+if(ret!=0) PAK_Error("ERROR 6\n");
+
+  if(pG->flags & 2) {     /* true if 8K */
+    bdl = 7;
+    ret = PAK_huft_build(pG, l, 64, 0, cpdist8, extra, &td, &bd);
+if(ret!=0) PAK_Error("ERROR 7\n");
+  } else {                 /* else 4K */
+    bdl = 6;
+    ret = PAK_huft_build(pG, l, 64, 0, cpdist4, extra, &td, &bd);
+if(ret!=0) PAK_Error("ERROR 8\n");
   }
 
-  unV2 = unpackSub0(0x40,&inputPtrTemp);
-  inputPtr = inputPtrTemp;
-
-  unV1 = unpackSub0(0x40,&inputPtrTemp);
-  inputPtr = inputPtrTemp;
-
-  decompPos = 0;
-
-  {
-    dx = *(unsigned short int*)si;
-    ch = 8;
-    di = dest;
-
-    si+=2;
-
-    do
-    {
-      // here segment update code
-
-      if(dx&1)
-      {
-        dx >>= 1;
-        ch --;
-
-        if(ch<0) // reload mask
-        {
-          ch += 8;
-          dx |= (*(unsigned char*)si)<<ch;
-          si++;
-        }
-
-        if(compressParam&4)
-        {
-          *(di++) = unpackSub1(unV3);
-
-          decompPos++;
-        }
-        else
-        {
-          decompPos++;
-
-          *(di++) = dx&0xFF;
-
-          dx >>= 8;
-          ch -= 8;
-
-          if(ch<0)
-          {
-            ch += 8;
-            dx |= (*(unsigned char*)si)<<ch;
-            si++;
-          }
-          else
-          {
-            dx |= (*(unsigned char*)si)<<8;
-            si++;
-          }
-        }
-      }
-      else
-      {
-        unsigned short int bx;
-        unsigned short int ax;
-        dx >>= 1;
-        ch --;
-
-        if(ch<0) // reload mask
-        {
-          ch += 8;
-          dx |= (*(unsigned char*)si)<<ch;
-          si++;
-        }
-
-        bx = (dx&0xFF)&mask;
-
-        dx >>= numBitInMask;
-        ch -= numBitInMask;
-
-        if(ch<0) // reload mask
-        {
-          ch += 8;
-          dx |= (*(unsigned char*)si)<<ch;
-          si++;
-        }
-
-        bx |= unpackSub1(unV1)<<numBitInMask;
-        bx++;
-
-        unV5 = bx;
-
-        ax = unpackSub1(unV2) + unV4;
-
-        if(ax == unV4+0x3F)
-        {
-          ax+=(dx&0xFF);
-          dx >>= 8;
-          ch -= 8;
-
-          if(ch<0)
-          {
-            ch += 8;
-            dx |= (*(unsigned char*)si)<<ch;
-            si++;
-          }
-        }
-
-        sizeOfCurrentUnpackedChunk = ax;
-
-        if(decompPos < unV5)
-        {
-          int cx = unV5 - decompPos ;
-
-          if((uncompressedSize - decompPos) < (cx))
-          {
-            sizeOfCurrentUnpackedChunk = 0;
-          }
-          else
-          {
-            sizeOfCurrentUnpackedChunk -= cx;
-          }
-
-          decompPos += cx;
-
-          {
-            int i;
-
-            for(i=0;i<cx;i++)
-            {
-              *(di++) = 0;
-            }
-          }
-        }
-
-        {
-          unsigned char* si;
-          int i;
-
-          si = (di) - (unV5);
-
-          for(i=0;i<sizeOfCurrentUnpackedChunk;i++)
-          {
-            *(di++) = (*si++);
-          }
-        }
-
-        decompPos += sizeOfCurrentUnpackedChunk;
-        // TODO: finish
-
-      }
-    }while((uncompressedSize - decompPos)>0);
+  if(tb!=NULL) {
+    ret = PAK_explode_lit(pG, tb, tl, td, bb, bl, bd, bdl);
+if(ret!=0) PAK_Error("ERROR 9\n");
+    PAK_huft_free(pG, tb);
+  } else {
+    ret = PAK_explode_nolit(pG, tl, td, bl, bd, bdl);
+if(ret!=0) PAK_Error("ERROR 10\n");
   }
+
+  PAK_huft_free(pG, td);
+  PAK_huft_free(pG, tl);
+
+  return(0);
 }
+
+
+// --------------------------------------------------------------
+// UNPACKER WRAPPER
+// --------------------------------------------------------------
+int unpack_CV(short param, char * src, char * dst, int compressedSize, int uncompressedSize) {
+
+  PAK_vars G;
+  G.flags = param;
+  G.buf_src = (unsigned char *)src;
+  G.buf_dst = (unsigned char *)dst;
+  G.off_src = 0;
+  G.off_dst = 0;
+  G.csize = compressedSize;
+  G.ucsize = uncompressedSize;
+
+  return(PAK_explode(&G));
+}
+

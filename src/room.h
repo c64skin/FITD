@@ -22,6 +22,60 @@ struct sceZoneStruct
 
 typedef struct sceZoneStruct sceZoneStruct;
 
+typedef struct cameraZonePointStruct
+{
+  s16 x;
+  s16 y;
+};
+
+typedef struct cameraZonePointStruct cameraZonePointStruct;
+
+typedef struct cameraZoneEntryStruct
+{
+  u16 numPoints;
+
+  cameraZonePointStruct* pointTable;
+};
+
+typedef struct cameraZoneEntryStruct cameraZoneEntryStruct;
+
+typedef struct cameraZoneDefStruct
+{
+  s16 dummy1;
+  s16 dummy2;
+  s16 dummy3;
+  s16 dummy4;
+  s16 dummy5;
+  s16 dummy6;
+  s16 dummy7;
+  s16 dummy8;
+
+  u16 numZones;
+  cameraZoneEntryStruct* cameraZoneEntryTable;
+};
+
+typedef struct cameraZoneDefStruct cameraZoneDefStruct;
+
+typedef struct cameraDataStruct
+{
+  s16 alpha;
+  s16 beta;
+  s16 gamma;
+
+  s16 x;
+  s16 y;
+  s16 z;
+
+  s16 focal1;
+  s16 focal2;
+  s16 focal3;
+
+  u16 numCameraZoneDef;
+
+  cameraZoneDefStruct* cameraZoneDefTable;
+};
+typedef struct cameraDataStruct cameraDataStruct;
+
 struct roomDataStruct
 {
   u32 numCameraInRoom;
@@ -35,13 +89,17 @@ struct roomDataStruct
   s32 worldX;
   s32 worldY;
   s32 worldZ;
-};
 
+  u16* cameraIdxTable;
+};
 typedef struct roomDataStruct roomDataStruct;
 
+extern cameraDataStruct* cameraDataTable[15];
+extern cameraZoneDefStruct* currentCameraZoneList[15];
 extern roomDataStruct* roomDataTable;
 
 roomDefStruct* getRoomData(int roomNumber);
 void loadRoom(int roomNumber);
+int getNumberOfRoom();
 
 #endif

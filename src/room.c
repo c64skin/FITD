@@ -9,13 +9,13 @@ s16 roomPositionX
 s16 roomPositionY
 s16 roomPositionZ
 
-roomVar5 -> camera data table
-
 etageVar1 -> table for camera data
 
 */
 
 roomDataStruct* roomDataTable = NULL;
+cameraDataStruct* cameraDataTable[15];
+cameraZoneDefStruct* currentCameraZoneList[15];
 
 roomDefStruct* getRoomData(int roomNumber)
 {
@@ -52,34 +52,38 @@ void loadRoom(int roomNumber)
   int cameraVar0;
   int cameraVar1;
   int cameraVar2;
-  int currentCameraIdx;
+  int oldCameraIdx;
   roomDefStruct* roomDataPtr;
   char* var_20;
   int var_1A = 0;
   int var_10 = -1;
-  int var_1C;
 
   freezeTime();
 
+  assert(roomNumber >=0);
+
   if(currentCamera == -1)
   {
-    currentCameraIdx = -1;
+    oldCameraIdx = -1;
   }
   else
   {
-    cameraVar0 = *(short int*)(cameraPtr+4);
-    cameraVar1 = *(short int*)(cameraPtr+6);
-    cameraVar2 = *(short int*)(cameraPtr+8);
+    cameraVar0 = roomDataTable[currentDisplayedRoom].worldX;
+    cameraVar1 = roomDataTable[currentDisplayedRoom].worldY;
+    cameraVar2 = roomDataTable[currentDisplayedRoom].worldZ;
 
-    currentCameraIdx = *(short int*)(cameraPtr + (currentCamera+6)*2);
+    oldCameraIdx = roomDataTable[currentDisplayedRoom].cameraIdxTable[currentCamera];
   }
 
-  cameraPtr = (char*)getRoomData(roomNumber);
+  cameraPtr = (char*)getRoomData(roomNumber); // TODO: obsolete
   roomDataPtr = getRoomData(roomNumber);
+  pCurrentRoomData = getRoomData(roomNumber);
 
   currentDisplayedRoom = roomNumber;
 
   numCameraInRoom = roomDataPtr->numCameraInRoom;
+
+  assert(numCameraInRoom < 15);
 
   var_20 = cameraPtr + roomDataPtr->offsetToPosDef;
   numCameraZone = *(short int*)var_20;
@@ -90,65 +94,47 @@ void loadRoom(int roomNumber)
   numRoomZone = *(short int*)var_20;
   var_20 += 2;
   roomZoneData = var_20;
-  
+ 
+  assert(numCameraInRoom < 15);
+
   for(i=0;i<numCameraInRoom;i++) // build all the camera list
   {
-    int cameraIdx;
-    int j;
-    char* var_8;
+    unsigned int currentCameraIdx;
+    unsigned int j;
 
-    cameraIdx = *(short int*)(cameraPtr + (i+6)*2); // indexes are between the roomDefStruct and the first zone data
+    currentCameraIdx = roomDataTable[currentDisplayedRoom].cameraIdxTable[i]; // indexes are between the roomDefStruct and the first zone data
 
-    if(currentCameraIdx == cameraIdx)
+    assert(currentCameraIdx<=numGlobalCamera);
+
+    if(oldCameraIdx == currentCameraIdx)
     {
       var_1A = i;
-      var_10 = cameraIdx;
+      var_10 = currentCameraIdx;
     }
 
-    roomVar5[i] = etageVar1 + *(unsigned int*)(etageVar1 + cameraIdx * 4);
-    var_20 = roomVar5[i] + 0x12;
-    cameraIdx = *(short int*)var_20;
-    var_20 +=2;
+    roomVar5[i] = etageVar1 + *(unsigned int*)(etageVar1 + currentCameraIdx * 4);
 
-  /*  for(j=0;*(short int*)(var_20+=2)!=currentDisplayedRoom;(j++) && (var_20+=0xA))
+    cameraDataTable[i] = &(globalCameraDataTable[currentCameraIdx]);
+
+    currentCameraIdx = cameraDataTable[i]->numCameraZoneDef;
+
+    // scan for the zone data related to the current room
+    for(j=0;j<currentCameraIdx;j++)
     {
-      if(j>= cameraIdx)
-      {
+      if(cameraDataTable[i]->cameraZoneDefTable[j].dummy1 == currentDisplayedRoom)
         break;
-      }
-    } */
-
-    for(j=0;j<cameraIdx;j++)
-    {
-      if(*(short int*)var_20 == currentDisplayedRoom)
-        break;
-
-      var_20+=2;
-      if(gameId == AITD1)
-        var_20+=0xA;
-      else
-        var_20+=0xE;
     }
 
-    var_1C = j;
+    assert(cameraDataTable[i]->cameraZoneDefTable[j].dummy1 == currentDisplayedRoom);
 
-    if(gameId == AITD1)
-    {
-      var_8 = roomVar5[i] + (var_1C*12) + 0x18;
-    }
-    else
-    {
-      var_8 = roomVar5[i] + (var_1C*16) + 0x18;
-    }
-
-    roomVar6[i] = (*(short int*)var_8)/2;
+    currentCameraZoneList[i] = &cameraDataTable[i]->cameraZoneDefTable[j];
   }
 
-  if(currentCameraIdx != -1) // if a camera was selected before loading room
+  if(oldCameraIdx != -1) // if a camera was selected before loading room
   {
-    int var_E = (*(short int*)(cameraPtr + 4) - cameraVar0) * 10;
-    int var_C = (*(short int*)(cameraPtr + 6) - cameraVar1) * 10;
-    int var_A = (*(short int*)(cameraPtr + 8) - cameraVar2) * 10;
+    int var_E = (roomDataTable[roomNumber].worldX - cameraVar0) * 10;
+    int var_C = (roomDataTable[roomNumber].worldY - cameraVar1) * 10;
+    int var_A = (roomDataTable[roomNumber].worldZ - cameraVar2) * 10;
 
     for(i=0;i<NUM_MAX_ACTOR;i++)
     {

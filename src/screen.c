@@ -4,9 +4,9 @@
 
 void setupScreen(void)
 {
-  screen = (char*)malloc(64320);
+  screen = (char*)malloc(64800);
 
-  screenBufferSize = 64320;
+  screenBufferSize = 64800;
 
   unkScreenVar2 = 3;
 

@@ -1,11 +1,15 @@
 #include "common.h"
 
 unsigned long int etageVar0Size = 0;
+unsigned long int numGlobalCamera = 0;
+cameraDataStruct* globalCameraDataTable = NULL;
 
 void loadFloor(int floorNumber)
 {
   int i;
   int expectedNumberOfRoom;
+  int expectedNumberOfCamera;
+  unsigned int cameraDataSize;
   char buffer[256];
 
   if(etageVar1)
@@ -24,6 +28,7 @@ void loadFloor(int floorNumber)
   sprintf(buffer,"ETAGE%02d",floorNumber);
 
   etageVar0Size = getPakSize(buffer,0);
+  cameraDataSize = getPakSize(buffer,1);
 
   etageVar0 = loadPakSafe(buffer,0);
   etageVar1 = loadPakSafe(buffer,1);
@@ -68,6 +73,13 @@ void loadFloor(int floorNumber)
 
     currentRoomDataPtr->numCameraInRoom = READ_LE_U16(roomData+0xA);
 
+    currentRoomDataPtr->cameraIdxTable = (u16*)malloc(currentRoomDataPtr->numCameraInRoom*sizeof(s16));
+
+    for(j=0;j<currentRoomDataPtr->numCameraInRoom;j++)
+    {
+      currentRoomDataPtr->cameraIdxTable[j] = READ_LE_U16(roomData+0xC+2*j);
+    }
+
     // hard col read
 
     hardColData = roomData + READ_LE_U16(roomData);
@@ -84,12 +96,12 @@ void loadFloor(int floorNumber)
 
         zvData = &currentRoomDataPtr->hardColTable[j].zv;
 
-        zvData->ZVX1 = READ_LE_U16(hardColData+0x00);
-        zvData->ZVX2 = READ_LE_U16(hardColData+0x02);
-        zvData->ZVY1 = READ_LE_U16(hardColData+0x04);
-        zvData->ZVY2 = READ_LE_U16(hardColData+0x06);
-        zvData->ZVZ1 = READ_LE_U16(hardColData+0x08);
-        zvData->ZVZ2 = READ_LE_U16(hardColData+0x0A);
+        zvData->ZVX1 = READ_LE_S16(hardColData+0x00);
+        zvData->ZVX2 = READ_LE_S16(hardColData+0x02);
+        zvData->ZVY1 = READ_LE_S16(hardColData+0x04);
+        zvData->ZVY2 = READ_LE_S16(hardColData+0x06);
+        zvData->ZVZ1 = READ_LE_S16(hardColData+0x08);
+        zvData->ZVZ2 = READ_LE_S16(hardColData+0x0A);
 
         currentRoomDataPtr->hardColTable[j].parameter = READ_LE_U16(hardColData+0x0C);
         currentRoomDataPtr->hardColTable[j].type = READ_LE_U16(hardColData+0x0E);
@@ -118,12 +130,12 @@ void loadFloor(int floorNumber)
 
         zvData = &currentRoomDataPtr->sceZoneTable[j].zv;
 
-        zvData->ZVX1 = READ_LE_U16(sceZoneData+0x00);
-        zvData->ZVX2 = READ_LE_U16(sceZoneData+0x02);
-        zvData->ZVY1 = READ_LE_U16(sceZoneData+0x04);
-        zvData->ZVY2 = READ_LE_U16(sceZoneData+0x06);
-        zvData->ZVZ1 = READ_LE_U16(sceZoneData+0x08);
-        zvData->ZVZ2 = READ_LE_U16(sceZoneData+0x0A);
+        zvData->ZVX1 = READ_LE_S16(sceZoneData+0x00);
+        zvData->ZVX2 = READ_LE_S16(sceZoneData+0x02);
+        zvData->ZVY1 = READ_LE_S16(sceZoneData+0x04);
+        zvData->ZVY2 = READ_LE_S16(sceZoneData+0x06);
+        zvData->ZVZ1 = READ_LE_S16(sceZoneData+0x08);
+        zvData->ZVZ2 = READ_LE_S16(sceZoneData+0x0A);
 
         currentRoomDataPtr->sceZoneTable[j].parameter = READ_LE_U16(sceZoneData+0x0C);
         currentRoomDataPtr->sceZoneTable[j].type = READ_LE_U16(sceZoneData+0x0E);
@@ -137,4 +149,126 @@ void loadFloor(int floorNumber)
     }
   }
   ///////////////////////////////////
+
+  /////////////////////////////////////////////////
+  // camera stuff
+
+  expectedNumberOfCamera = ((*(unsigned int*)(etageVar1))/4);
+
+  globalCameraDataTable = (cameraDataStruct*)malloc(sizeof(cameraDataStruct)*expectedNumberOfCamera);
+
+  for(i=0;i<expectedNumberOfCamera;i++)
+  {
+    int k;
+    unsigned int offset;
+    unsigned char* currentCameraData;
+
+    offset = *(unsigned int*)(etageVar1 + i * 4);
+
+    // load cameras
+    if(offset<cameraDataSize)
+    {
+      unsigned char* backupDataPtr;
+
+      currentCameraData = (etageVar1 + *(unsigned int*)(etageVar1 + i * 4));
+
+      backupDataPtr = currentCameraData;
+
+      globalCameraDataTable[i].alpha = READ_LE_U16(currentCameraData+0x00);
+      globalCameraDataTable[i].beta  = READ_LE_U16(currentCameraData+0x02);
+      globalCameraDataTable[i].gamma = READ_LE_U16(currentCameraData+0x04);
+
+      globalCameraDataTable[i].x = READ_LE_U16(currentCameraData+0x06);
+      globalCameraDataTable[i].y = READ_LE_U16(currentCameraData+0x08);
+      globalCameraDataTable[i].z = READ_LE_U16(currentCameraData+0x0A);
+
+      globalCameraDataTable[i].focal1 = READ_LE_U16(currentCameraData+0x0C);
+      globalCameraDataTable[i].focal2 = READ_LE_U16(currentCameraData+0x0E);
+      globalCameraDataTable[i].focal3 = READ_LE_U16(currentCameraData+0x10);
+
+      globalCameraDataTable[i].numCameraZoneDef = READ_LE_U16(currentCameraData+0x12);
+
+      currentCameraData+=0x14;
+
+      globalCameraDataTable[i].cameraZoneDefTable = (cameraZoneDefStruct*)malloc(sizeof(cameraZoneDefStruct)*globalCameraDataTable[i].numCameraZoneDef);
+
+      ASSERT(globalCameraDataTable[i].cameraZoneDefTable);
+
+      for(k=0;k<globalCameraDataTable[i].numCameraZoneDef;k++)
+      {
+        cameraZoneDefStruct* pCurrentCameraZoneDefEntry;
+
+        pCurrentCameraZoneDefEntry = &globalCameraDataTable[i].cameraZoneDefTable[k];
+
+        pCurrentCameraZoneDefEntry->dummy1 = READ_LE_U16(currentCameraData+0x00);
+        pCurrentCameraZoneDefEntry->dummy2 = READ_LE_U16(currentCameraData+0x02);
+        pCurrentCameraZoneDefEntry->dummy3 = READ_LE_U16(currentCameraData+0x04);
+        pCurrentCameraZoneDefEntry->dummy4 = READ_LE_U16(currentCameraData+0x06);
+        pCurrentCameraZoneDefEntry->dummy5 = READ_LE_U16(currentCameraData+0x08);
+        pCurrentCameraZoneDefEntry->dummy6 = READ_LE_U16(currentCameraData+0x0A);
+
+        if(gameId != AITD1)
+        {
+          pCurrentCameraZoneDefEntry->dummy7 = READ_LE_U16(currentCameraData+0x0C);
+          pCurrentCameraZoneDefEntry->dummy8 = READ_LE_U16(currentCameraData+0x0E);
+       }
+
+        // load camera zone
+        {
+          unsigned char* pZoneData;
+          int numZones;
+          int j;
+
+          pZoneData = backupDataPtr + globalCameraDataTable[i].cameraZoneDefTable[k].dummy3;
+          //pZoneData = currentCameraData;
+
+          pCurrentCameraZoneDefEntry->numZones = numZones =READ_LE_U16(pZoneData);
+          pZoneData+=2;
+
+          pCurrentCameraZoneDefEntry->cameraZoneEntryTable = (cameraZoneEntryStruct*)malloc(sizeof(cameraZoneEntryStruct)*numZones);
+
+          assert(pCurrentCameraZoneDefEntry->cameraZoneEntryTable);
+
+          for(j=0;j<pCurrentCameraZoneDefEntry->numZones;j++)
+          {
+            int pointIdx;
+            int numPoints;
+
+            pCurrentCameraZoneDefEntry->cameraZoneEntryTable[j].numPoints = numPoints = READ_LE_U16(pZoneData);
+            pZoneData+=2;
+
+            pCurrentCameraZoneDefEntry->cameraZoneEntryTable[j].pointTable = (cameraZonePointStruct*)malloc(sizeof(cameraZonePointStruct)*(numPoints+1));
+
+            for(pointIdx = 0; pointIdx < pCurrentCameraZoneDefEntry->cameraZoneEntryTable[j].numPoints; pointIdx++)
+            {
+              pCurrentCameraZoneDefEntry->cameraZoneEntryTable[j].pointTable[pointIdx].x = READ_LE_U16(pZoneData);
+              pZoneData+=2;
+              pCurrentCameraZoneDefEntry->cameraZoneEntryTable[j].pointTable[pointIdx].y = READ_LE_U16(pZoneData);
+              pZoneData+=2;
+            }
+
+            pCurrentCameraZoneDefEntry->cameraZoneEntryTable[j].pointTable[numPoints].x = pCurrentCameraZoneDefEntry->cameraZoneEntryTable[j].pointTable[0].x; // copy first point to last position
+            pCurrentCameraZoneDefEntry->cameraZoneEntryTable[j].pointTable[numPoints].y = pCurrentCameraZoneDefEntry->cameraZoneEntryTable[j].pointTable[0].y;
+          }
+        }
+
+        if(gameId == AITD1)
+          currentCameraData+=0x0C;
+        else
+          currentCameraData+=0x10;
+      }
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  numGlobalCamera = i-1;
+
+ // globalCameraDataTable = (cameraDataStruct*)realloc(globalCameraDataTable,sizeof(cameraDataStruct)*numGlobalCamera);
+
+/*    roomCameraData+=0x14;
+
+  }*/
 }

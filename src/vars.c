@@ -1,6 +1,6 @@
 #include "common.h"
 
-enum gameTypeEnum gameId=AITD2;
+enum gameTypeEnum gameId;
 
 char* currentFoundBody;
 int currentFoundBodyIdx;
@@ -83,7 +83,7 @@ hqrEntryStruct* listTrack;
 
 short int maxObjects;
 
-objectStruct objectTable[NUM_MAX_OBJ];
+objectStruct* objectTable;
 
 short int* vars;
 
@@ -122,6 +122,8 @@ short int currentEtage;
 int needChangeRoom;
 
 char* cameraPtr;
+roomDefStruct* pCurrentRoomData;
+
 short int currentDisplayedRoom;
 int mainVar1;
 int numCameraInRoom;
@@ -130,7 +132,6 @@ char* cameraZoneData;
 int numRoomZone;
 char* roomZoneData;
 char* roomVar5[15];
-short int roomVar6[15];
 int startGameVar1;
 
 int transformX;
@@ -156,7 +157,7 @@ int cameraX;
 int cameraY;
 int cameraZ;
 
-char cameraDataTab[30];
+char currentCameraVisibilityList[30];
 
 int actorTurnedToObj = 0;
 
@@ -229,12 +230,7 @@ hardColStruct* hardColTable[10];
 short int hardColVar1;
 short int hardColVar2;
 
-short int hardClipX1;
-short int hardClipX2;
-short int hardClipY1;
-short int hardClipY2;
-short int hardClipZ1;
-short int hardClipZ2;
+ZVStruct hardClip;
 
 char* listBodySelect[] = {
   "LISTBODY",
@@ -253,7 +249,7 @@ saveEntry saveTable[] = {
   { &currentCameraTarget, 2 },
   { &genVar9, 2 },
   { &maxObjects, 2 },
-  { objectTable, 15600 },
+//  { objectTable, 15600 },
   { &defines, 90 },
   { &inHand, 2 },
   { &numObjInInventory, 2 },

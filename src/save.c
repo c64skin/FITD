@@ -212,6 +212,8 @@ int makeSaveFile(int entry)
 
   fwrite(actorTable,8000,1,fHandle);
   fclose(fHandle);
+
+  return 1;
 }
 
 int makeSave(int arg0)

@@ -397,7 +397,7 @@ void osystem_flip(unsigned char *videoBuffer)
   int i;
   int j;
   int bestIdx;
-  double matProj[16];
+//  double matProj[16];
 
 /*  glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -496,7 +496,7 @@ void osystem_flip(unsigned char *videoBuffer)
   for(j=0;j<positionInQuadTable;j++)
   {
     float bestDepth = -10000;
-    int color;
+//    int color;
     bestIdx = 0;
 
     for(i=0;i<positionInQuadTable;i++)
@@ -920,10 +920,10 @@ void osystem_fillPoly(float* buffer, int numPoint, unsigned char color,u8 polyTy
 			///	gluProject  ( X , Y , Z , modelMatrix , projMatrix , viewMatrix , &textureX , &textureY , &textureZ ); 
 
 				if(textureY > maxY)
-					maxY = textureY;
+					maxY = (int)textureY;
 
 				if(textureY < minY)
-					minY = textureY;
+					minY = (int)textureY;
 			}
 
 			numColorToGo = 0xF - (color &0xF);
@@ -951,8 +951,10 @@ void osystem_fillPoly(float* buffer, int numPoint, unsigned char color,u8 polyTy
         textureY = Y;
         textureZ = Z;
 
-				colorf = color + (colorStep * (textureY - minY));
+				colorf = (float)(color + (colorStep * (textureY - minY)));
 
+        if(colorf>color+numColorToGo)
+          colorf = (float)(color+numColorToGo);
 
 				glTexCoord1f(colorf/256);
 //				glColor3ub(palette[colorf*3],palette[colorf*3+1],palette[colorf*3+2]);
@@ -1044,16 +1046,16 @@ void osystem_draw3dQuad(float x1, float y1, float z1, float x2, float y2, float 
 
     quadTable[positionInQuadTable].sorted = false;
 
-    quadTable[positionInQuadTable].depth = (int)z1;
+    quadTable[positionInQuadTable].depth = z1;
 
     if(z2 < quadTable[positionInQuadTable].depth)
-      quadTable[positionInQuadTable].depth = (int)z2;
+      quadTable[positionInQuadTable].depth = z2;
 
     if(z3 < quadTable[positionInQuadTable].depth)
-      quadTable[positionInQuadTable].depth = (int)z3;
+      quadTable[positionInQuadTable].depth = z3;
 
     if(z4 < quadTable[positionInQuadTable].depth)
-      quadTable[positionInQuadTable].depth = (int)z4;
+      quadTable[positionInQuadTable].depth = z4;
 
     positionInQuadTable++;
   }

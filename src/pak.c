@@ -93,13 +93,6 @@ int getPakSize(char* name, int index)
 
     fread(&additionalDescriptorSize,4,1,fileHandle);
 
-    if(additionalDescriptorSize)
-    {
-      printf("Unimplemented additionalDescriptorSize in loadPak\n");
-/*      return(0);
-      exit(1); */
-    }
-
     fread(&pakInfo,sizeof(pakInfoStruct),1,fileHandle);
 
     fseek(fileHandle,pakInfo.offset,SEEK_CUR);
@@ -169,13 +162,6 @@ char* loadPak(char* name, int index)
 
     fread(&additionalDescriptorSize,4,1,fileHandle);
 
-    if(additionalDescriptorSize)
-    {
-      printf("Unimplemented additionalDescriptorSize in loadPak\n");
-/*      return(0);
-      exit(1); */
-    }
-
     fread(&pakInfo,sizeof(pakInfoStruct),1,fileHandle);
 
     fseek(fileHandle,pakInfo.offset,SEEK_CUR);
@@ -188,18 +174,18 @@ char* loadPak(char* name, int index)
     }
     else if(pakInfo.compressionFlag == 1) // compressed
     {
-      char* compressedDataPtr;
+      char * compressedDataPtr = (char *) malloc(pakInfo.discSize);
 
-      ptr = (char*)malloc(0xFFFFF);
-      memset(ptr,0,0xFFFFF);
+#ifdef DEBUG
+      printf("Loading RES %d in %s... FLAGS : %02X\n", index, bufferName, pakInfo.info5);
+#endif
+      fread(compressedDataPtr, pakInfo.discSize, 1, fileHandle);
 
-      compressedDataPtr = ptr + pakInfo.uncompressedSize + 300 - pakInfo.discSize;
+      ptr = (char *) malloc(pakInfo.uncompressedSize);
 
-      fread(compressedDataPtr,pakInfo.discSize,1,fileHandle);
+      unpack_CV(pakInfo.info5, compressedDataPtr, ptr, pakInfo.discSize, pakInfo.uncompressedSize);
 
-      unpack(pakInfo.info5, compressedDataPtr, ptr, pakInfo.uncompressedSize, ptr+pakInfo.uncompressedSize + 300);
-
-      ptr = (char*)realloc(ptr,pakInfo.uncompressedSize);
+      free(compressedDataPtr);
     }
 
     fclose(fileHandle);

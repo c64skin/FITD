@@ -34,9 +34,9 @@ int copyObjectToActor(int flag2, int var1, int foundName, short int flag, int x,
   {
     char* roomPtr = (char*)getRoomData(actorPtr->room);
 
-    actorPtr->worldX -= ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
-    actorPtr->worldY += ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;
-    actorPtr->worldZ += ((*(short int*)(cameraPtr+8)) - (*(short int*)(roomPtr+8))) * 10;
+    actorPtr->worldX -= (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[actorPtr->room].worldX) * 10;
+    actorPtr->worldY += (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[actorPtr->room].worldY) * 10;
+    actorPtr->worldZ += (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[actorPtr->room].worldZ) * 10;
   }
 
   actorPtr->alpha = alpha;
@@ -69,6 +69,11 @@ int copyObjectToActor(int flag2, int var1, int foundName, short int flag, int x,
   actorPtr->COL_BY = -1;
   actorPtr->HARD_DEC = -1;
   actorPtr->HARD_COL = -1;
+
+  if(gameId != AITD1)
+  {
+    actorPtr->hardMat = -1;
+  }
 
   actorPtr->rotate.oldAngle = 0;
   actorPtr->rotate.newAngle = 0;
@@ -209,7 +214,12 @@ int copyObjectToActor(int flag2, int var1, int foundName, short int flag, int x,
             int tempY;
             int tempZ;
 
-            copyZv((ZVStruct*)roomDataPtr,zvPtr);
+            zvPtr->ZVX1 = READ_LE_S16(roomDataPtr+0x00);
+            zvPtr->ZVX2 = READ_LE_S16(roomDataPtr+0x02);
+            zvPtr->ZVY1 = READ_LE_S16(roomDataPtr+0x04);
+            zvPtr->ZVY2 = READ_LE_S16(roomDataPtr+0x06);
+            zvPtr->ZVZ1 = READ_LE_S16(roomDataPtr+0x08);
+            zvPtr->ZVZ2 = READ_LE_S16(roomDataPtr+0x0A);
 
             x = 0;
             y = 0;
@@ -229,11 +239,9 @@ int copyObjectToActor(int flag2, int var1, int foundName, short int flag, int x,
 
             if(room != currentDisplayedRoom)
             {
-              char* roomPtr = (char*)getRoomData(room);
-
-              actorPtr->worldX = ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
-              actorPtr->worldY = ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;
-              actorPtr->worldZ = ((*(short int*)(cameraPtr+8)) - (*(short int*)(roomPtr+8))) * 10;
+              actorPtr->worldX = (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[room].worldX) * 10;
+              actorPtr->worldY = (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[room].worldY) * 10;
+              actorPtr->worldZ = (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[room].worldZ) * 10;
             }
 
             break;

@@ -12,6 +12,59 @@ char scaledScreen[640*400];
 
 int input5;
 
+unsigned char defaultPalette[0x30] =
+{
+  0x00,
+  0x00,
+  0x00,
+  0x3F,
+  0x3F,
+  0x3F,
+  0x0C,
+  0x0C,
+  0x0E,
+  0x30,
+  0x2F,
+  0x3F,
+  0x23,
+  0x2C,
+  0x23,
+  0x2A,
+  0x1D,
+  0x2A,
+  0x2A,
+  0x21,
+  0x18,
+  0x3F,
+  0x05,
+  0x2A,
+  0x12,
+  0x14,
+  0x18,
+  0x31,
+  0x15,
+  0x17,
+  0x15,
+  0x25,
+  0x15,
+  0x15,
+  0x2F,
+  0x3F,
+  0x3F,
+  0x22,
+  0x15,
+  0x2B,
+  0x15,
+  0x3F,
+  0x3F,
+  0x3F,
+  0x21,
+  0x3F,
+  0x3F,
+  0x3F
+};
+
+
 //short int inventory[30];
 
 void updateInHand(int objIdx)
@@ -25,8 +78,6 @@ void updateInHand(int objIdx)
   int foundLife;
   actorStruct* currentActorPtr;
   actorStruct* currentActorLifePtr;
-
-  ASSERT((objIdx < NUM_MAX_OBJ) && ((objIdx == -1) || (objIdx>=0)));
 
   if(objIdx == -1)
     return;
@@ -138,6 +189,7 @@ void allocTextes(void)
   int textCounter;
   int stringIndex;
   char* stringPtr;
+  int textLength;
 
   tabTextes = (textEntryStruct*)malloc(NUM_MAX_TEXT_ENTRY * sizeof(textEntryStruct)); // 2000 = 250 * 8
 
@@ -149,6 +201,7 @@ void allocTextes(void)
   }
 
   systemTextes = loadPakSafe(languageNameString, 0); // todo: use real language name
+  textLength = getPakSize(languageNameString, 0);
 
   for(currentIndex=0;currentIndex<NUM_MAX_TEXT_ENTRY;currentIndex++)
   {
@@ -161,8 +214,13 @@ void allocTextes(void)
 
   textCounter = 0;
 
-  while((currentIndex = *(currentPosInTextes++)) != 26)
+  while(currentPosInTextes<systemTextes+textLength)
   {
+    currentIndex = *(currentPosInTextes++);
+
+    if(currentIndex == 26)
+      break;
+
     if(currentIndex == '@') // start of string marker
     {
       stringIndex = 0;
@@ -996,6 +1054,9 @@ int makeIntroScreens(void)
 
 void initEngine(void)
 {
+  u8* pObjectData;
+  u8* pObjectDataBackup;
+  unsigned long int objectDataSize;
   FILE* fHandle;
   int i;
 
@@ -1003,24 +1064,113 @@ void initEngine(void)
   if(!fHandle)
     theEnd(0,"OBJETS.ITD");
 
-  fread(&maxObjects,2,1,fHandle);
+  fseek(fHandle,0,SEEK_END);
+  objectDataSize= ftell(fHandle);
+  fseek(fHandle,0,SEEK_SET);
+
+  pObjectDataBackup = pObjectData = (u8*)malloc(objectDataSize);
+  assert(pObjectData);
+
+  fread(pObjectData,objectDataSize,1,fHandle);
+  fclose(fHandle);
+
+  maxObjects = READ_LE_U16(pObjectData);
+  pObjectData+=2;
+
+  objectTable = (objectStruct*)malloc(maxObjects*sizeof(objectStruct));
 
   for(i=0;i<maxObjects;i++)
   {
-    fread(&objectTable[i],0x34,1,fHandle);
+    objectTable[i].ownerIdx = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].field_2 = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].flags = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].field_6 = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+    
+    objectTable[i].foundBody = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].foundName = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].flags2 = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+    
+    objectTable[i].foundLife = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].x = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].y = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].z = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].alpha = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].beta = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].gamma = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].stage = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].room = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].lifeMode = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].life = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].field_24 = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].field_26 = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].field_28 = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].field_2A = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].field_2C = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].trackMode = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].trackNumber = READ_LE_U16(pObjectData);
+    pObjectData+=2;
+
+    objectTable[i].positionInTrack = READ_LE_U16(pObjectData);
+    pObjectData+=2;
 
     if(gameId == JACK || gameId == AITD2)
     {
-      short int dummy;
-      fread(&dummy,2,1,fHandle);
+      objectTable[i].mark = READ_LE_U16(pObjectData);
+      pObjectData+=2;
     }
     objectTable[i].flags |= 0x20;
   }
 
-  fclose(fHandle);
+  free(pObjectDataBackup);
 
-/*
-  fHandle = fopen("objDump.txt","w+");
+
+ /* fHandle = fopen("objDump.txt","w+");
   for(i=0;i<maxObjects;i++)
   {
     fprintf(fHandle,"Object %d:", i);
@@ -1029,15 +1179,15 @@ void initEngine(void)
     fprintf(fHandle,"\t anim:%03d",objectTable[i].field_26);
     fprintf(fHandle,"\t stage:%01d",objectTable[i].stage);
     fprintf(fHandle,"\t room:%02d",objectTable[i].room);
-    fprintf(fHandle,"\t trackMode: %01d",objectTable[i].trackMode);
+    fprintf(fHandle,"\t lifeMode: %01d",objectTable[i].lifeMode);
     fprintf(fHandle,"\t life: %02d",objectTable[i].life);
     fprintf(fHandle,"\t beta: %03X",objectTable[i].beta);
 
     fprintf(fHandle,"\n");
   }
-  fclose(fHandle);*/
+  fclose(fHandle);
 
-/*  fHandle = fopen("objNames.txt","w+");
+  fHandle = fopen("objNames.txt","w+");
   for(i=0;i<maxObjects;i++)
   {
     fprintf(fHandle,"obj%03d ",i);
@@ -1054,7 +1204,7 @@ void initEngine(void)
         fprintf(fHandle,"?\n");
     }
   }
-  fclose(fHandle);*/
+  fclose(fHandle); */
 //
 
   vars = (short int*)loadFromItd("VARS.ITD");
@@ -1202,6 +1352,7 @@ void loadCamera(int cameraIdx)
   if(gameId == AITD2 || gameId == JACK)
   {
     copyPalette(aux+64000,palette);
+    memcpy(palette,defaultPalette,0x30);
     
     convertPaletteIfRequired(palette);
 
@@ -1267,7 +1418,7 @@ void setupSMCode(int centerX, int centerY, int x, int y, int z)
 
 int setupCameraSub1Sub1(int value)
 {
-  char* ptr = cameraDataTab;
+  char* ptr = currentCameraVisibilityList;
   int var;
 
   while((var=*(ptr++))!=-1)
@@ -1281,18 +1432,18 @@ int setupCameraSub1Sub1(int value)
   return(0);
 }
 
+// setup visibility list
 void setupCameraSub1()
 {
-  int i;
+  u32 i;
   int j;
   int var_10;
-  short int* ptr2;
-  int var_12;
 
-  char* dataTabPos = cameraDataTab;
+  char* dataTabPos = currentCameraVisibilityList;
 
   *dataTabPos = -1;
 
+  // visibility list: add linked rooms
   for(i=0;i<roomDataTable[currentDisplayedRoom].numSceZone;i++)
   {
     if(roomDataTable[currentDisplayedRoom].sceZoneTable[i].type == 0)
@@ -1306,21 +1457,14 @@ void setupCameraSub1()
     }
   }
 
-  ptr2 = (short int*)(roomVar5[currentCamera] + 18);
-
-  var_12 = *(ptr2++);
-
-  for(j=0;j<var_12;j++)
+  // visibility list: add room seen by the current camera
+  for(j=0;j<cameraDataTable[currentCamera]->numCameraZoneDef;j++)
   {
-    var_10 = *(ptr2);
-
-    if(!setupCameraSub1Sub1(var_10))
+    if(!setupCameraSub1Sub1(cameraDataTable[currentCamera]->cameraZoneDefTable[j].dummy1))
     {
-      *(dataTabPos++) = var_10;
+      *(dataTabPos++) = (char)cameraDataTable[currentCamera]->cameraZoneDefTable[j].dummy1;
       *(dataTabPos) = -1;
     }
-
-    ptr2 += 6;
   }
 }
 
@@ -1363,6 +1507,10 @@ void updateAllActorAndObjectsSub1(int index) // remove actor
       {
         objectPtr->trackNumber = actorPtr->trackNumber;
         objectPtr->positionInTrack = actorPtr->positionInTrack;
+        if(gameId != AITD1)
+        {
+          objectPtr->mark = actorPtr->MARK;
+        }
       }
 
       objectPtr->x = actorPtr->roomX + actorPtr->modX;
@@ -1580,11 +1728,286 @@ void setMoveMode(int trackMode, int trackNumber)
   }
 }
 
+s16 cameraVisibilityVar = 0;
+
+int checkRoomAitd2Only(int roomNumber)
+{
+  int i;
+  int found = 0;
+  int numZone = cameraDataTable[currentCamera]->numCameraZoneDef;
+
+  for(i=0;i<numZone;i++)
+  {
+    if(cameraDataTable[currentCamera]->cameraZoneDefTable[i].dummy1 == roomNumber)
+    {
+      cameraVisibilityVar = i;
+      return(1);
+    }
+  }
+
+  cameraVisibilityVar = -1;
+
+  return 0;
+}
+
+int checkZoneAitd2Only(int X, int Z) // TODO: not 100% exact
+{
+ // if(changeCameraSub1(X,X,Z,Z,&cameraDataTable[currentCamera]->cameraZoneDefTable[cameraVisibilityVar]))
+    return 1;
+
+  return 0;
+}
+
+int updateActorAitd2Only(int actorIdx)
+{
+  actorStruct *currentActor = &actorTable[actorIdx];
+
+  if(gameId == AITD1)
+  {
+    return 0;
+  }
+
+  if(currentActor->bodyNum != -1)
+  {
+    if(checkRoomAitd2Only(currentActor->room))
+    {
+      if(checkZoneAitd2Only(currentActor->roomX + currentActor->modX, currentActor->roomZ + currentActor->modZ))
+      {
+        currentActor->lifeMode |= 4;
+        return 1;
+      }
+    }
+  }
+
+  return 0;
+}
+
+void updateAllActorAndObjectsAITD2()
+{
+  int i;
+  actorStruct *currentActor = actorTable;
+  objectStruct* currentObject;
+
+  for(i=0;i<NUM_MAX_ACTOR;i++)
+  {
+    if(currentActor->field_0 != -1)
+    {
+      currentActor->lifeMode &= 0xFFFB;
+
+      if(currentActor->stage == currentEtage)
+      {
+        if(currentActor->life != -1)
+        {
+          switch(currentActor->lifeMode)
+          {
+          case 1:
+            {
+              break;
+            }
+          case 2:
+            {
+              if(currentActor->room != currentDisplayedRoom)
+              {
+                if(!updateActorAitd2Only(i))
+                {
+                  updateAllActorAndObjectsSub1(i);
+                }
+              }
+              break;
+            }
+          case 3:
+            {
+              if(!setupCameraSub1Sub1(currentActor->room))
+              {
+                if(!updateActorAitd2Only(i))
+                {
+                  updateAllActorAndObjectsSub1(i);
+                }
+              }
+              break;
+            }
+          default:
+            {
+              if(!updateActorAitd2Only(i))
+              {
+                updateAllActorAndObjectsSub1(i);
+              }
+              break;
+            }
+          }
+        }
+        else
+        {
+          if(!setupCameraSub1Sub1(currentActor->room))
+          {
+            updateAllActorAndObjectsSub1(i);
+          }
+        }
+      }
+      else
+      {
+        updateAllActorAndObjectsSub1(i);
+      }
+    }
+
+    currentActor++;
+  }
+
+  for(i=0;i<maxObjects;i++)
+  {
+    currentObject = &objectTable[i];
+
+    if(currentObject->ownerIdx != -1)
+    {
+      if(currentCameraTarget == i)
+      {
+        genVar9 = currentObject->ownerIdx;
+      }
+    }
+    else
+    {
+      if(currentObject->stage == currentEtage)
+      {
+        if(currentObject->life != -1)
+        {
+          if(currentObject->lifeMode != -1)
+          {
+            int actorIdx;
+            int di;
+
+            switch(currentObject->lifeMode&3)
+            {
+            case 0:
+              {
+                di = 0;
+                break;
+              }
+            case 1:
+              {
+                di = 1;
+                break;
+              }
+            case 2:
+              {
+                if(currentObject->room != currentDisplayedRoom)
+                {
+                  di = 0;
+                }
+                else
+                {
+                  di = 1;
+                }
+                break;
+              }
+            case 3:
+              {
+                if(!setupCameraSub1Sub1(currentObject->room))
+                {
+                  di = 0;
+                }
+                else
+                {
+                  di = 1;
+                }
+                break;
+              }
+            }
+
+            if(!di)
+            {
+              if(currentObject->field_2 != -1)
+              {
+                if(checkRoomAitd2Only(currentObject->room))
+                {
+                  if(checkZoneAitd2Only(currentObject->x,currentObject->z))
+                  {
+                    currentObject->lifeMode |= 4;
+                  }
+                  else
+                  {
+                    continue;
+                  }
+                }
+                else
+                {
+                  continue;
+                }
+              }
+              else
+              {
+                continue;
+              }
+            }
+
+            //int var_C = currentObject->flags & 0xFFDF;
+            //int var_E = currentObject->field_2;
+            //int var_A = currentObject->field_26;
+
+addObject:        actorIdx = copyObjectToActor( currentObject->field_2, currentObject->field_6, currentObject->foundName,
+                              currentObject->flags & 0xFFDF,
+                              currentObject->x, currentObject->y, currentObject->z,
+                              currentObject->stage, currentObject->room,
+                              currentObject->alpha, currentObject->beta, currentObject->gamma,
+                              currentObject->field_26,
+                              currentObject->field_28, currentObject->field_2A, currentObject->field_2C);
+
+            currentObject->ownerIdx = actorIdx;
+
+            if(actorIdx != -1)
+            {
+              currentProcessedActorPtr = &actorTable[actorIdx];
+              currentProcessedActorIdx = actorIdx;
+
+              if(currentCameraTarget == i)
+              {
+                genVar9 = currentProcessedActorIdx;
+              }
+
+              currentProcessedActorPtr->dynFlags = (currentObject->flags & 0x20) / 0x20; // recheck
+              currentProcessedActorPtr->life = currentObject->life;
+              currentProcessedActorPtr->lifeMode = currentObject->lifeMode;
+
+              currentProcessedActorPtr->field_0 = i;
+
+              setMoveMode(currentObject->trackMode, currentObject->trackNumber);
+
+              currentProcessedActorPtr->positionInTrack = currentObject->positionInTrack;
+
+              if(gameId != AITD1)
+              {
+                currentProcessedActorPtr->MARK = currentObject->mark;
+              }
+
+              actorTurnedToObj = 1;
+            }
+          }
+        }
+        else
+        {
+          if(setupCameraSub1Sub1(currentObject->room))
+            goto addObject;
+        }
+      }
+    }
+  }
+
+//  objModifFlag1 = 0;
+
+  //TODO: object update
+}
+
+
 void updateAllActorAndObjects()
 {
   int i;
   actorStruct *currentActor = actorTable;
   objectStruct* currentObject;
+
+  if(gameId == AITD2 || gameId == JACK)
+  {
+    updateAllActorAndObjectsAITD2();
+    return;
+  }
 
   for(i=0;i<NUM_MAX_ACTOR;i++)
   {
@@ -1660,7 +2083,7 @@ void updateAllActorAndObjects()
           if(currentObject->lifeMode != -1)
           {
             int actorIdx;
-            
+
             switch(currentObject->lifeMode)
             {
             case 1:
@@ -1741,23 +2164,15 @@ int checkActorInRoom(int room)
 {
   int i;
 
-  char* ptr = roomVar5[currentCamera] + 18;
-
-  int var2 = *(short int*)ptr;
-  ptr+=2;
-
-  for(i=0;i<var2;i++)
+  for(i=0;i<cameraDataTable[currentCamera]->numCameraZoneDef;i++)
   {
-    if(*(short int*)ptr == room)
+    if(cameraDataTable[currentCamera]->cameraZoneDefTable[i].dummy1 == room)
     {
       return(1);
     }
-
-    ptr+=0xC;
   }
 
   return(0);
-
 }
 
 void createActorList()
@@ -1791,36 +2206,40 @@ void createActorList()
 
 void setupCamera()
 {
-  char* ptr;
   int x;
   int y;
   int z;
+  cameraDataStruct* pCamera;
   
   freezeTime();
 
   currentCamera = startGameVar1;
 
-  loadCamera(*(cameraPtr+(startGameVar1+6)*2));
+  loadCamera(*(short int*)(cameraPtr+(startGameVar1+6)*2));
 
-  ptr = roomVar5[currentCamera];
+  pCamera = cameraDataTable[currentCamera];
 
-  setupPointTransformSM(*(short int*)(ptr),*(short int*)(ptr+2),*(short int*)(ptr+4));
-  ptr+= 6;
+#if 1
+  setupPointTransformSM(pCamera->alpha,pCamera->beta,pCamera->gamma);
+#else
+  setupPointTransformSM(0x100,0,0);
+#endif
 
-  //TODO: recheck
-  x = (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+4))) << 3) + (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+4))) << 1);
-  ptr+=2;
-  y = (((*(short int*)(cameraPtr+6)) - (*(short int*)(ptr))) << 3) + (((*(short int*)(cameraPtr+6)) - (*(short int*)(ptr))) << 1);
-  ptr+=2;
-  z = (((*(short int*)(cameraPtr+8)) - (*(short int*)(ptr))) << 3) + (((*(short int*)(cameraPtr+8)) - (*(short int*)(ptr))) << 1);
-  ptr+=2;
-//
-  //setupSelfModifyingCode(x-5000,y,z-5000); // debug intro
-//
-  setupSelfModifyingCode(x,y,z);
+  x = (pCamera->x - pCurrentRoomData->worldX)*10;
+  y = (pCurrentRoomData->worldY - pCamera->y)*10;
+  z = (pCurrentRoomData->worldZ - pCamera->z)*10;
+#if 0
+  x = 0;
+  y=-40000;
+  z = 0;
+#endif
+  setupSelfModifyingCode(x,y,z); // setup camera position
 
-  setupSMCode(160,100,*(short int*)(ptr),*(short int*)(ptr+2),*(short int*)(ptr+4));
-  ptr+=6;
+#if 1
+  setupSMCode(160,100,pCamera->focal1,pCamera->focal2,pCamera->focal3); // setup focale
+#else
+  setupSMCode(160,100,100,100,100); // setup focale
+#endif
 
   setupCameraSub1();
   updateAllActorAndObjects();
@@ -2000,12 +2419,19 @@ void deleteObject(int objIdx)
 void line(int x1, int y1, int x2, int y2, char c);
 
 #ifdef USE_GL
-void drawProjectedLine(float x1, float y1, float z1, float x2, float y2, float z2,int c)
+void drawProjectedLine(s32 x1s, s32 y1s, s32 z1s, s32 x2s, s32 y2s, s32 z2s,int c)
 #else
 void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
 #endif
 {
 #ifdef USE_GL
+  float x1 = (float)x1s;
+  float x2 = (float)x2s;
+  float y1 = (float)y1s;
+  float y2 = (float)y2s;
+  float z1 = (float)z1s;
+  float z2 = (float)z2s;
+
   float transformedX1;
   float transformedX2;
 
@@ -2074,12 +2500,12 @@ void drawZv(actorStruct* actorPtr)
 
   // bottom
   drawProjectedLine(  localZv.ZVX1,
-            localZv.ZVY2,
-            localZv.ZVZ1,
-            localZv.ZVX1,
-            localZv.ZVY2,
-            localZv.ZVZ2,
-            10);
+                      localZv.ZVY2,
+                      localZv.ZVZ1,
+                      localZv.ZVX1,
+                      localZv.ZVY2,
+                      localZv.ZVZ2,
+                      10);
 
   drawProjectedLine(localZv.ZVX1,localZv.ZVY2,localZv.ZVZ2,localZv.ZVX2,localZv.ZVY2,localZv.ZVZ2,10);
   drawProjectedLine(localZv.ZVX2,localZv.ZVY2,localZv.ZVZ2,localZv.ZVX2,localZv.ZVY2,localZv.ZVZ1,10);
@@ -2099,47 +2525,19 @@ void drawZv(actorStruct* actorPtr)
 
 }
 
-void drawConverZone(char* src, int param)
+void drawConverZone(cameraZoneEntryStruct* zonePtr)
 {
   int i;
 
-  for(i=0;i<param;i++)
+  for(i=0;i<zonePtr->numPoints-1;i++)
   {
-    int j;
-    char* dest = cameraBuffer;
-
-    int var1 = *(short int*)src;
-    src+=2;
-
-    memcpy(dest,src,var1<<2);
-    dest+= var1<<2;
-
-    *(short int*)dest = *(short int*)src;
-    dest+=2;
-    *(short int*)dest = *(short int*)(src+2);
-    dest+=2;
-
-    src += (var1)<<2;
-
-    dest = cameraBuffer;
-
-    for(j=0;j<var1;j++)
-    {
-      int zoneX1;
-      int zoneZ1;
-      int zoneX2;
-      int zoneZ2;
-      
-      zoneX1= *(short int*)dest;
-      dest+=2;
-      zoneZ1= *(short int*)dest;
-      dest+=2;
-      zoneX2= *(short int*)dest;
-      zoneZ2= *(short int*)(dest+2);
-
-      drawProjectedLine((float)zoneX1*10,0,(float)zoneZ1*10,(float)zoneX2*10,0,(float)zoneZ2*10,20);
-    }
+    drawProjectedLine(zonePtr->pointTable[i].x*10,0,zonePtr->pointTable[i].y*10,zonePtr->pointTable[i+1].x*10,0,zonePtr->pointTable[i+1].y*10,20);
   }
+
+  // loop first and last
+
+  i = zonePtr->numPoints-1;
+  drawProjectedLine(zonePtr->pointTable[0].x*10,0,zonePtr->pointTable[0].y*10,zonePtr->pointTable[i].x*10,0,zonePtr->pointTable[i].y*10,20);
 }
 
 void drawConverZones()
@@ -2147,9 +2545,19 @@ void drawConverZones()
   int i;
   for(i=0;i<numCameraInRoom;i++)
   {
-    char* cameraDataPtr = roomVar5[i] + 2*roomVar6[i];
+    int j;
+    for(j=0;j<cameraDataTable[i]->numCameraZoneDef;j++)
+    {
+      int k;
 
-    drawConverZone(cameraDataPtr+2,*(short int*)cameraDataPtr);
+      if(cameraDataTable[i]->cameraZoneDefTable[j].dummy1 == currentDisplayedRoom)
+      {
+        for(k=0;k<cameraDataTable[i]->cameraZoneDefTable[j].numZones;k++)
+        {
+          drawConverZone(&cameraDataTable[i]->cameraZoneDefTable[j].cameraZoneEntryTable[k]);
+        }
+      }
+    }
   }
 }
 
@@ -2314,6 +2722,8 @@ void drawZone(char* zoneData,int color)
 
   int type;
 
+  ZVStruct tempZv;
+
   ZVStruct cameraZv = {-100,100,-100,100,-100,100};
 
   type = *(short int*)(zoneData+0xE);
@@ -2334,7 +2744,14 @@ void drawZone(char* zoneData,int color)
   cameraZv.ZVZ1 += translateZ;
   cameraZv.ZVZ2 += translateZ;
 
-  if(checkZvCollision(&cameraZv,(ZVStruct*)zoneData))
+  tempZv.ZVX1 = READ_LE_S16(zoneData+0x00);
+  tempZv.ZVX2 = READ_LE_S16(zoneData+0x02);
+  tempZv.ZVY1 = READ_LE_S16(zoneData+0x04);
+  tempZv.ZVY2 = READ_LE_S16(zoneData+0x06);
+  tempZv.ZVZ1 = READ_LE_S16(zoneData+0x08);
+  tempZv.ZVZ2 = READ_LE_S16(zoneData+0x0A);
+
+  if(checkZvCollision(&cameraZv,&tempZv))
   {
     return;
   }
@@ -2400,7 +2817,7 @@ void drawOverlayZone(char* zoneData,int color)
 
 void drawSceZone(int roomNumber)
 {
-  int i;
+  u32 i;
   ZVStruct dataLocal;
 
   for(i=0;i<roomDataTable[roomNumber].numSceZone;i++)
@@ -2420,12 +2837,13 @@ void drawSceZone(int roomNumber)
 
 void drawHardCol(int roomNumber)
 {
-  int i;
+  u32 i;
   ZVStruct dataLocal;
 
   for(i=0;i<roomDataTable[roomNumber].numHardCol;i++)
   {
-    memcpy(&dataLocal,&roomDataTable[roomNumber].hardColTable[i].zv,sizeof(ZVStruct));
+    copyZv(&roomDataTable[roomNumber].hardColTable[i].zv,&dataLocal);
+
     if(roomNumber!=currentDisplayedRoom)
     {
       getZvRelativePosition(&dataLocal,roomNumber,currentDisplayedRoom);
@@ -2835,10 +3253,10 @@ void mainDraw(int mode)
       drawHardCol(i);
       drawSceZone(i);
     }
+
+    drawConverZones();
   }
 #endif
-
-//  drawConverZones();
   
   
 
@@ -2913,7 +3331,8 @@ void mainDraw(int mode)
         if(backgroundMode == backgroundModeEnum_2D)
 #endif
         {
-//          drawBgOverlay(actorPtr);
+          if(gameId == AITD1)
+            drawBgOverlay(actorPtr);
         }
         //addToRedrawBox();
       }
@@ -2931,9 +3350,12 @@ void mainDraw(int mode)
   osystem_stopModelRender();
 #endif
 
-  if(drawTextOverlay())
+  if(gameId == AITD1) // TODO: fix for AITD2
   {
-    //addToRedrawBox();
+    if(drawTextOverlay())
+    {
+      //addToRedrawBox();
+    }
   }
 
   if(!lightVar1)
@@ -3010,9 +3432,9 @@ int checkZvCollision(ZVStruct* zvPtr1,ZVStruct* zvPtr2)
 
 void getZvRelativePosition(ZVStruct* zvPtr, int startRoom, int destRoom)
 {
-  int Xdif = 10*(roomDataTable[destRoom].worldX - roomDataTable[startRoom].worldX);
-  int Ydif = 10*(roomDataTable[destRoom].worldY - roomDataTable[startRoom].worldY);
-  int Zdif = 10*(roomDataTable[destRoom].worldZ - roomDataTable[startRoom].worldZ);
+  unsigned int Xdif = 10*(roomDataTable[destRoom].worldX - roomDataTable[startRoom].worldX);
+  unsigned int Ydif = 10*(roomDataTable[destRoom].worldY - roomDataTable[startRoom].worldY);
+  unsigned int Zdif = 10*(roomDataTable[destRoom].worldZ - roomDataTable[startRoom].worldZ);
 
   zvPtr->ZVX1 -= Xdif;
   zvPtr->ZVX2 -= Xdif;
@@ -3326,12 +3748,12 @@ void hardColSuB1Sub1(int flag)
 
 void hardColSuB1(ZVStruct* startZv, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
 {
-  int flag = 0;
-  int var_8;
-  int halfX;
-  int halfZ;
-  int var_A;
-  int var_6;
+  s32 flag = 0;
+  s32 var_8;
+  s32 halfX;
+  s32 halfZ;
+  s32 var_A;
+  s32 var_6;
   
   if(startZv->ZVX2 > zvPtr3->ZVX1)
   {
@@ -3540,7 +3962,7 @@ int processActor1Sub2(rotateStruct* data)
   if(!data->param)
     return data->newAngle;
 
-  if(timer - data->timeOfRotate> data->param)
+  if(timer - data->timeOfRotate> (unsigned int)data->param)
   {
     data->param = 0;
     return data->newAngle;
@@ -3720,7 +4142,7 @@ void processActor1(void)
 
         if(var_3E->type == 9)
         {
-          currentProcessedActorPtr->HARD_COL = var_3E->parameter;
+          currentProcessedActorPtr->HARD_COL = (short)var_3E->parameter;
         }
 
         if(var_3E->type == 3)
@@ -3730,10 +4152,12 @@ void processActor1(void)
 
         if(var_52 || var_50) // move on the X or Y axis ? update to avoid entering the hard col
         {
+          ZVStruct tempZv;
+
           hardColVar1 = var_52;
           hardColVar2 = var_50;
 
-          hardColSuB1(zvPtr, &zvLocal, (ZVStruct*)var_3E);
+          hardColSuB1(zvPtr, &zvLocal, &var_3E->zv);
 
           zvLocal.ZVX1 +=  hardColVar1 - var_52;
           zvLocal.ZVX2 +=  hardColVar1 - var_52;
@@ -4074,47 +4498,29 @@ int changeCameraSub1Sub1(int x1, int z1, int x2, int z2, int x3, int z3, int x4,
   return(returnFlag);
 }
 
-int changeCameraSub1(int x1, int x2, int z1, int z2, char* ptr, short int param)
+int changeCameraSub1(int x1, int x2, int z1, int z2, cameraZoneDefStruct* pCameraZoneDef)
 {
   int xMid = (x1+x2)/2;
   int zMid = (z1+z2)/2;
 
-  char* src = ptr;
   int i;
 
-  for(i=0;i<param;i++)
+  for(i=0;i<pCameraZoneDef->numZones;i++)
   {
-    char* dest = cameraBuffer;
     int j;
     int flag = 0;
-    int var1 = *(short int*)src;
-    src+=2;
 
-    memcpy(dest,src,var1<<2);
-    dest+= var1<<2;
-
-    *(short int*)dest = *(short int*)src;
-    dest+=2;
-    *(short int*)dest = *(short int*)(src+2);
-    dest+=2;
-
-    src += (var1)<<2;
-
-    dest = cameraBuffer;
-
-    for(j=0;j<var1;j++)
+    for(j=0;j<pCameraZoneDef->cameraZoneEntryTable[i].numPoints;j++)
     {
       int zoneX1;
       int zoneZ1;
       int zoneX2;
       int zoneZ2;
       
-      zoneX1= *(short int*)dest;
-      dest+=2;
-      zoneZ1= *(short int*)dest;
-      dest+=2;
-      zoneX2= *(short int*)dest;
-      zoneZ2= *(short int*)(dest+2);
+      zoneX1= pCameraZoneDef->cameraZoneEntryTable[i].pointTable[j].x;
+      zoneZ1= pCameraZoneDef->cameraZoneEntryTable[i].pointTable[j].y;
+      zoneX2= pCameraZoneDef->cameraZoneEntryTable[i].pointTable[j+1].x;
+      zoneZ2= pCameraZoneDef->cameraZoneEntryTable[i].pointTable[j+1].y;
 
       if(changeCameraSub1Sub1(xMid,zMid,xMid-10000,zMid,zoneX1,zoneZ1,zoneX2,zoneZ2))
       {
@@ -4152,11 +4558,10 @@ int changeCameraSub2(void)
 
   for(i=0;i<numCameraInRoom;i++)
   {
-    char* cameraDataPtr = roomVar5[i] + 2*roomVar6[i];
-
-    if(changeCameraSub1(x1,x2,z1,z2,cameraDataPtr+2,*(short int*)cameraDataPtr)) // if in camera i zone ?
+    assert(i<15);
+    if(changeCameraSub1(x1,x2,z1,z2,currentCameraZoneList[i])) // if in camera zone ?
     {
-      int newAngle = actorPtr->beta + (((*(short int*)(roomVar5[i] + 2))+0x200)&0x3FF);
+      int newAngle = actorPtr->beta + (((cameraDataTable[i]->beta)+0x200)&0x3FF);
 
       if(newAngle)
       {
@@ -4181,7 +4586,6 @@ void checkIfCameraChangeIsRequired(void)
 
   if(currentCamera!=-1)
   {
-    char* cameraDataPtr = roomVar5[currentCamera] + 2*roomVar6[currentCamera];
     actorStruct* actorPtr;
     int zvx1;
     int zvx2;
@@ -4196,11 +4600,15 @@ void checkIfCameraChangeIsRequired(void)
     zvz1 = actorPtr->zv.ZVZ1/10;
     zvz2 = actorPtr->zv.ZVZ2/10;
 
-    if(changeCameraSub1(zvx1,zvx2,zvz1,zvz2,cameraDataPtr+2,*(short int*)cameraDataPtr)) // is still in current camera zone ?
+    if(changeCameraSub1(zvx1,zvx2,zvz1,zvz2,currentCameraZoneList[currentCamera])) // is still in current camera zone ?
     {
       return;
     }
   }
+
+#ifdef INTERNAL_DEBUGGER
+  //printf("Exited current camera cover zone...\n");
+#endif
 
   newCamera = changeCameraSub2(); // find new camera
 
@@ -4215,12 +4623,17 @@ void checkIfCameraChangeIsRequired(void)
     mainVar1 = 1;
   }
 
+#ifdef INTERNAL_DEBUGGER
+ /* if(newCamera == -1)
+  {
+    printf("No new camera found...\n");
+  }*/
+#endif
 }
 
 sceZoneStruct* processActor2Sub(int x, int y, int z, roomDataStruct* pRoomData)
 {
-  int i;
-  int numOfZones;
+  u32 i;
   sceZoneStruct* pCurrentZone;  
 
   pCurrentZone = pRoomData->sceZoneTable;
@@ -4248,7 +4661,6 @@ sceZoneStruct* processActor2Sub(int x, int y, int z, roomDataStruct* pRoomData)
 void processActor2()
 {
   sceZoneStruct * ptr;
-  int type;
 
   ptr = processActor2Sub( currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
               currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY,
@@ -4271,7 +4683,7 @@ void processActor2()
 
       int oldRoom = currentProcessedActorPtr->room;
 
-      currentProcessedActorPtr->room = ptr->parameter;
+      currentProcessedActorPtr->room = (short)ptr->parameter;
 
       x = (roomDataTable[currentProcessedActorPtr->room].worldX - roomDataTable[oldRoom].worldX) * 10;
       y = (roomDataTable[currentProcessedActorPtr->room].worldY - roomDataTable[oldRoom].worldY) * 10;
@@ -4293,7 +4705,7 @@ void processActor2()
       if(currentProcessedActorIdx == genVar9)
       {
         needChangeRoom = 1;
-        newRoom = ptr->parameter;
+        newRoom = (short)ptr->parameter;
       }
       else
       {
@@ -4305,9 +4717,17 @@ void processActor2()
 
       break;
     }
+  case 8:
+    {
+      if(gameId != AITD1)
+      {
+        currentProcessedActorPtr->hardMat = (short)ptr->parameter;
+      }
+      break;
+    }
   case 9:
     {
-      currentProcessedActorPtr->HARD_DEC = ptr->parameter;
+      currentProcessedActorPtr->HARD_DEC = (short)ptr->parameter;
       break;
     }
   case 10:
@@ -4321,7 +4741,7 @@ void processActor2()
 
       currentProcessedActorPtr->life = life;
 
-      currentProcessedActorPtr->HARD_DEC = ptr->parameter;
+      currentProcessedActorPtr->HARD_DEC = (short)ptr->parameter;
       break;
     }
   }
@@ -4639,6 +5059,49 @@ void configureHqrHero(hqrEntryStruct* hqrPtr, char* name)
   strncpy(hqrPtr->string,name,8);
 }
 
+int fileExists(char* name)
+{
+  FILE* fHandle;
+
+  fHandle = fopen(name,"rb");
+
+  if(fHandle)
+  {
+    fclose(fHandle);
+    return 1;
+  }
+  return 0;
+}
+
+void detectGame(void)
+{
+  if(fileExists("LISTBOD2.PAK"))
+  {
+    gameId = AITD1;
+
+    printf("Detected Alone in the Dark 1\n");
+    return;
+  }
+  if(fileExists("PERE.PAK"))
+  {
+    gameId = JACK;
+
+    printf("Detected Jack in the Dark\n");
+    return;
+  }
+  if(fileExists("MER.PAK"))
+  {
+    gameId = AITD2;
+
+    printf("Detected Alone in the Dark 2\n");
+    return;
+  }
+
+  printf("FATAL: Game detection failed...\n");
+  exit(1);
+}
+
+
 int main(int argc, char** argv)
 {
   int startupMenuResult;
@@ -4652,6 +5115,8 @@ int main(int argc, char** argv)
   osystem_init();
   osystem_initBuffer(scaledScreen,640,400);
   startThreadTimer();
+
+  detectGame();
 
   sysInit();
 
@@ -4941,12 +5406,12 @@ void cleanupAndExit(void)
   HQR_Free(listBody);
   HQR_Free(listAnim);
 
-  free(tabTextes);
+ /* free(tabTextes);
   free(aux);
   free(aux2);
   free(bufferAnim);
 
-  free(screen);
+  free(screen); */
 
   destroyMusicDriver();
 
