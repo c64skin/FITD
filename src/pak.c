@@ -2,16 +2,16 @@
 
 #include "common.h"
 
-struct pakInfoStruct // warning: allignement unsafe
+typedef struct  // warning: allignement unsafe
 {
 	long int discSize;
 	long int uncompressedSize;
 	char compressionFlag;
 	char info5;
 	short int offset;
-};
+}pakInfoStruct;
 
-#define USE_UNPACKED_DATA
+//#define USE_UNPACKED_DATA
 
 int loadPakToPtr(char* name, int index, char* ptr)
 {
