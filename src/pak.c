@@ -11,7 +11,7 @@ typedef struct  // warning: allignement unsafe
   short int offset;
 }pakInfoStruct;
 
-#define USE_UNPACKED_DATA
+//#define USE_UNPACKED_DATA
 
 int loadPakToPtr(char* name, int index, char* ptr)
 {
@@ -191,6 +191,7 @@ char* loadPak(char* name, int index)
       char* compressedDataPtr;
 
       ptr = (char*)malloc(0xFFFFF);
+      memset(ptr,0,0xFFFFF);
 
       compressedDataPtr = ptr + pakInfo.uncompressedSize + 300 - pakInfo.discSize;
 

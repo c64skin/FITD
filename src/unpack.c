@@ -1,7 +1,7 @@
 #include "common.h"
 
-char* inputPtr;
-char* outputPtr;
+unsigned char* inputPtr;
+unsigned char* outputPtr;
 
 short int unV4 = 0;
 unsigned char numBitInMask = 6;
@@ -26,7 +26,7 @@ char* unpackSub0(int param, char** outputInputPtr)
   short int bx;
   unsigned char cl;
   unsigned char ax;
-  unsigned char di;
+  unsigned short int di;
   unsigned short int dx;
   char* backupSource;
 
@@ -164,7 +164,7 @@ char* unpackSub0(int param, char** outputInputPtr)
       {
         unsigned short int di =0;
         short int dx = unv13;
-        unsigned char cl;
+        unsigned short cl;
         unsigned short int ax;
         unsigned short int si;
 
@@ -195,9 +195,10 @@ char* unpackSub0(int param, char** outputInputPtr)
                 unV7 = unV17;
                 unV17++;
 
-                inputPtr[(unV7*3) + 2] = 0;
-                inputPtr[(unV7*3) + 1] = 0;
-                inputPtr[(unV7*3) + 0] = 0;
+                si = (unV7*3);
+                inputPtr[si + 2] = 0;
+                inputPtr[si + 1] = 0;
+                inputPtr[si + 0] = 0;
               }
               else
               {
@@ -215,9 +216,10 @@ char* unpackSub0(int param, char** outputInputPtr)
                 unV7 = unV17;
                 unV17++;
 
-                inputPtr[(unV7*3) + 2] = 0;
-                inputPtr[(unV7*3) + 1] = 0;
-                inputPtr[(unV7*3) + 0] = 0;
+                si = (unV7*3);
+                inputPtr[si + 2] = 0;
+                inputPtr[si + 1] = 0;
+                inputPtr[si + 0] = 0;
               }
               else
               {
