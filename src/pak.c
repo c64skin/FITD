@@ -13,6 +13,27 @@ struct pakInfoStruct // warning: allignement unsafe
 
 #define USE_UNPACKED_DATA
 
+void loadPakToPtr(char* name, int index, char* ptr)
+{
+	char buffer[256];
+	FILE* fHandle;
+	int size;
+
+	sprintf(buffer,"%s/%04X.out",name,index);
+
+	fHandle = fopen(buffer,"rb");
+
+	if(!fHandle)
+		return;
+
+	fseek(fHandle,0L,SEEK_END);
+	size = ftell(fHandle);
+	fseek(fHandle,0L,SEEK_SET);
+
+	fread(ptr,size,1,fHandle);
+	fclose(fHandle);
+}
+
 char* loadPak(char* name, int index)
 {
 #ifdef USE_UNPACKED_DATA

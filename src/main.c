@@ -649,6 +649,12 @@ int processStartupMenu(void)
 	return(selectedEntry);
 }
 
+void preloadResource(void)
+{
+	loadPakToPtr("itd_ress",3,aux);
+	copyPalette(aux,palette);
+}
+
 int main(int argc, char** argv)
 {
 	int startupMenuResult;
@@ -662,9 +668,9 @@ int main(int argc, char** argv)
 	paletteFill(palette,0,0,0);
 	fadeIn(palette);
 
-	//preloadResource();
+	preloadResource();
 
-	if(!make3dTatou())
+//	if(!make3dTatou())
 	{
 	//	makeIntroScreens();
 	}
