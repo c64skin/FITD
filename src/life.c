@@ -305,6 +305,62 @@ void setStage(int newStage, int newRoomLocal, int X, int Y, int Z)
 	}
 }
 
+void setupRealZv(ZVStruct* zvPtr)
+{
+  int i;
+  short int* ptr = pointBuffer;
+
+  zvPtr->ZVX1 = 32000;
+  zvPtr->ZVY1 = 32000;
+  zvPtr->ZVZ1 = 32000;
+  zvPtr->ZVX2 = -32000;
+  zvPtr->ZVY2 = -32000;
+  zvPtr->ZVZ2 = -32000;
+
+  for(i=0;i<numOfPoints;i++)
+  {
+    if(zvPtr->ZVX1 > (*ptr))
+    {
+      zvPtr->ZVX1 = *(ptr);
+    }
+    else
+    {
+      if(zvPtr->ZVX2 < (*ptr))
+      {
+        zvPtr->ZVX2 = *(ptr);
+      }
+    }
+    ptr++;
+
+    if(zvPtr->ZVY1 > (*ptr))
+    {
+      zvPtr->ZVY1 = *(ptr);
+    }
+    else
+    {
+      if(zvPtr->ZVY2 < (*ptr))
+      {
+        zvPtr->ZVY2 = *(ptr);
+      }
+    }
+    ptr++;
+
+    if(zvPtr->ZVZ1 > (*ptr))
+    {
+      zvPtr->ZVZ1 = *(ptr);
+    }
+    else
+    {
+      if(zvPtr->ZVZ2 < (*ptr))
+      {
+        zvPtr->ZVZ2 = *(ptr);
+      }
+    }
+    ptr++;
+
+  }
+}
+
 void doRealZv(actorStruct* actorPtr)
 {
 	ZVStruct* zvPtr;
@@ -313,8 +369,7 @@ void doRealZv(actorStruct* actorPtr)
 
 	zvPtr = &actorPtr->zv;
 
-	printf("implement setupRealZv\n");
-//	setupRealZv(zvPtr);
+  setupRealZv(zvPtr);
 
 	zvPtr->ZVX1 += actorPtr->roomX;
 	zvPtr->ZVX2 += actorPtr->roomX;

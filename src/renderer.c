@@ -36,6 +36,7 @@ int numOfPoints;
 int numOfBones;
 
 short int pointBuffer[400*3];
+short int cameraSpaceBuffer[400*3];
 short int bonesBuffer[59];
 
 bool boneRotateX;
@@ -435,7 +436,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 
 	{
 		char* ptr = (char*)pointBuffer;
-		short int* outPtr = pointBuffer;
+		short int* outPtr = cameraSpaceBuffer;
 		
 
 #ifdef USE_GL
@@ -481,7 +482,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 			}
 		}
 
-		ptr = (char*)pointBuffer;
+		ptr = (char*)cameraSpaceBuffer;
 		outPtr2 = renderPointList;
 		
 		do

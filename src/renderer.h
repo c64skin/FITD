@@ -6,6 +6,7 @@ extern int BBox3D2;
 extern int BBox3D3;
 extern int BBox3D4;
 extern short int pointBuffer[400*3];
+extern int numOfPoints;
 
 #ifdef USE_GL
 void transformPoint(float* ax, float* bx, float* cx);

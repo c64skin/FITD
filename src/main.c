@@ -2710,7 +2710,7 @@ void mainDraw(int mode)
 
 ///////////////////////////////////// DEBUG
 #ifdef INTERNAL_DEBUGGER
-				if(debuggerVar_drawModelZv)
+			//	if(debuggerVar_drawModelZv)
 				{
 					drawZv(actorPtr);
 				}

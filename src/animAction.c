@@ -53,6 +53,8 @@ void processAnimAction(void)
 			rangeZv.ZVZ1 = z - range;
 			rangeZv.ZVZ2 = z + range;
 
+      drawProjectedBox(rangeZv.ZVX1,rangeZv.ZVX2,rangeZv.ZVY1,rangeZv.ZVY2,rangeZv.ZVZ1,rangeZv.ZVZ2,60);
+
 			collision = processActor1Sub1(currentProcessedActorIdx,&rangeZv);
 
 			for(i=0;i<collision;i++)
@@ -168,7 +170,7 @@ void processAnimAction(void)
 						int y;
 						int z;
 						
-						currentProcessedActorPtr->animActionType = 7;
+ 						currentProcessedActorPtr->animActionType = 7;
 
 						x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->hotPoint.x + currentProcessedActorPtr->modX;
 						y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->hotPoint.y + currentProcessedActorPtr->modY;
@@ -183,7 +185,7 @@ void processAnimAction(void)
 						objPtr->room = currentProcessedActorPtr->room;
 						objPtr->stage = currentProcessedActorPtr->stage;
 						objPtr->alpha = currentProcessedActorPtr->alpha;
-						objPtr->beta = currentProcessedActorPtr->beta;
+						objPtr->beta = currentProcessedActorPtr->beta; 
 
 						objPtr->flags2 &= 0xBFFF;
 						objPtr->flags |= 0x85;
