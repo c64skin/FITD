@@ -1,5 +1,6 @@
 typedef char ColorP;
 void hline(int x1, int x2, int y, ColorP c);
+void line(int x1, int y1, int x2, int y2, ColorP c);
 
 
 #include <stdio.h>
@@ -51,6 +52,9 @@ void fillpoly(short int * datas, int n, ColorP c) {
 	y1 = y2;
 	x2 = datas[i * 2];
 	y2 = datas[i * 2 + 1];
+	
+	line(x1, y1, x2, y2, c);
+	continue;
 	
 	if (y1 == y2) {
 	    // Not sure if this is right.

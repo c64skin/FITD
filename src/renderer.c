@@ -720,7 +720,7 @@ void primType1(int primType, char** ptr, char** out) // poly
 		{
 			*out = primVar1; // do not add the prim
 		}
-		else*/
+		else */
 		{
 			numOfPolyToRender++;
 
@@ -1070,8 +1070,8 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 	}
 
 
-//	char* source = sortedBuffer;
-	char* source = renderBuffer;
+	char* source = sortedBuffer;
+//	char* source = renderBuffer;
 
 	if(!numOfPolyToRender)
 	{
@@ -1082,8 +1082,8 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 		return(1); // model ok, but out of screen
 	}
 
-	source += 10 * 1;
-//	for(i=0;i<numOfPolyToRender;i++)
+//	source += 10 * 1;
+	for(i=0;i<numOfPolyToRender;i++)
 	{
 		source+=4;
 
