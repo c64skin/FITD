@@ -8,7 +8,7 @@ hqrEntryStruct* hqrUnk;
 
 int videoMode;
 int musicConfigured;
-int initAllVar2;
+int musicEnabled;
 
 char* aux;
 char* aux2;
@@ -275,4 +275,7 @@ int clipLeft = 0;
 int clipTop = 0;
 int clipRight = 319;
 int clipBottom = 119;
+
+hqrEntryStruct* listMus;
+hqrEntryStruct* listSamp;
 

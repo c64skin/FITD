@@ -1,8 +1,6 @@
 #ifndef _COMMON_
 #define _COMMON_
 
-#include "config.h"
-
 typedef unsigned char u8;
 typedef unsigned short int u16;
 typedef unsigned long int u32;
@@ -84,6 +82,7 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 #include "floor.h"
 #include "object.h"
 #include "zv.h"
+#include "music.h"
 
 // debugger
 #ifdef INTERNAL_DEBUGGER

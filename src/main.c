@@ -205,10 +205,10 @@ void sysInit(void)
 
 	srand(ltime);
 
-//	if(!initAllSub1()) // recheck test
+	if(!initMusicDriver())
 	{
 		musicConfigured = 0;
-		initAllVar2 = 0;
+		musicEnabled = 0;
 	}
 
 	// TODO: reverse sound init code
@@ -269,12 +269,12 @@ void sysInit(void)
 
 	allocTextes();
 
-/*	if(musicConfigured)
+	if(musicConfigured)
 	{
 		listMus = HQR_InitRessource("ListMus",11000,2);
 	}
 
-	listSamp = HQR_InitRessource("ListSamp",64000,30); */
+	listSamp = HQR_InitRessource("ListSamp",64000,30);
 
 	hqrUnk = HQR_Init(10000,50);
 }
@@ -2588,6 +2588,64 @@ void mainDrawSub2(int actorIdx) // draw flow
 	// TODO: finish
 }
 
+void getHotPoint(int hotPointIdx, char* bodyPtr, short int* hotPoint)
+{
+  short int flag;
+
+  flag = *(short int*)bodyPtr;
+  bodyPtr += 2;
+
+  if(flag&2)
+  {
+    short int offset;
+    bodyPtr += 12;
+
+    offset = *(short int*)bodyPtr;
+    bodyPtr+=2;
+    bodyPtr+=offset;
+
+    offset = *(short int*)bodyPtr; // num points
+    bodyPtr+=2;
+    bodyPtr+=offset*6; // skip point buffer
+
+    offset = *(short int*)bodyPtr; // num bones
+    bodyPtr+=2;
+    bodyPtr+=offset*2; // skip bone buffer
+
+    ASSERT(hotPointIdx < offset);
+
+    if(hotPointIdx < offset)
+    {
+      int pointIdx;
+      short int* source;
+
+      bodyPtr+=hotPointIdx*16;
+
+      pointIdx = *(short int*)(bodyPtr+4); // first point
+
+      ASSERT(pointIdx > 0 && pointIdx < 1200);
+
+      source = (short int*)(((char*)pointBuffer) + pointIdx);
+
+      hotPoint[0] = source[0];
+      hotPoint[1] = source[1];
+      hotPoint[2] = source[2];
+    }
+    else
+    {
+      hotPoint[0] = 0;
+      hotPoint[1] = 0;
+      hotPoint[2] = 0;
+    }
+  }
+  else
+  {
+    hotPoint[0] = 0;
+    hotPoint[1] = 0;
+    hotPoint[2] = 0;
+  }
+}
+
 void mainDraw(int mode)
 {
 	int i;
@@ -2657,8 +2715,7 @@ void mainDraw(int mode)
 
 				if(actorPtr->animActionType && actorPtr->field_98 != -1)
 				{
-					//TODO: implement special
-//					mainDrawSub3(actorPtr->field_98, bodyPtr, &actorPtr->field_9A);
+          getHotPoint(actorPtr->field_98, bodyPtr, &actorPtr->field_9A);
 				}
 
 ///////////////////////////////////// DEBUG
@@ -4096,9 +4153,6 @@ void processActor2()
 	case 10:
 		{
 			int life;
-// FIXME: fix the stairs zone in green room
-//			if(*(short int*) (ptr + 0xC) == 1/* && currentProcessedActorPtr->zv.ZVZ1 >= -1600*/)
-//				break;
 
 			life = objectTable[currentProcessedActorPtr->field_0].field_24;
 

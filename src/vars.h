@@ -263,9 +263,12 @@ typedef struct roomDefStruct roomDefStruct;
 
 extern hqrEntryStruct* hqrUnk;
 
+extern hqrEntryStruct* listMus;
+extern hqrEntryStruct* listSamp;
+
 extern int videoMode;
 extern int musicConfigured;
-extern int initAllVar2;
+extern int musicEnabled;
 
 extern char* aux;
 extern char* aux2;
