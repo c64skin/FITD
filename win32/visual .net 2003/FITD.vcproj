@@ -249,19 +249,19 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				EnableFiberSafeOptimizations="TRUE"
-				OptimizeForProcessor="3"
+				OptimizeForProcessor="0"
 				OptimizeForWindowsApplication="TRUE"
 				PreprocessorDefinitions="USE_GL,INTERNAL_DEBUGGER"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="common.h"
-				DebugInformationFormat="3"/>
+				DebugInformationFormat="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain.lib sdl.lib winmm.lib dxguid.lib opengl32.lib glaux.lib glu32.lib  SDL_mixer.lib"
-				GenerateDebugInformation="TRUE"
+				GenerateDebugInformation="FALSE"
 				SubSystem="1"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -461,7 +461,7 @@
 						RelativePath="..\..\src\life.c">
 					</File>
 					<File
-						RelativePath="..\..\src\life2.c">
+						RelativePath="..\..\src\life_2.c">
 					</File>
 					<File
 						RelativePath="..\..\src\track.c">
@@ -493,6 +493,79 @@
 						RelativePath="..\..\src\music.c">
 					</File>
 				</Filter>
+			</Filter>
+			<Filter
+				Name="zlib"
+				Filter="">
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\adler32.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\compress.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\crc32.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\crc32.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\deflate.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\deflate.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\gzio.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\infback.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\inffast.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\inffast.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\inffixed.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\inflate.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\inflate.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\inftrees.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\inftrees.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\trees.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\trees.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\uncompr.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\zconf.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\zconf.in.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\zlib.h">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\zutil.c">
+				</File>
+				<File
+					RelativePath="..\..\..\..\lib - ext\zlib\zutil.h">
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -605,7 +678,7 @@
 						RelativePath="..\..\src\life.h">
 					</File>
 					<File
-						RelativePath="..\..\src\life2.h">
+						RelativePath="..\..\src\life_2.h">
 					</File>
 					<File
 						RelativePath="..\..\src\track.h">
