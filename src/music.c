@@ -497,6 +497,9 @@ int nextUpdateTimer = musicSync;
 
 int musicUpdate(void *udata, uint8 *stream, int len)
 {
+#ifdef UNIX
+  return 0;
+#endif
   if(OPLinitialized)
   {
     int fillStatus = 0;
