@@ -293,9 +293,9 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 
 	/////////////////////////
 	// DEBUG
-/*		transX = 0;
+		transX = 0;
 		transY = 0;
-		transZ = 0; */
+		transZ = 0;
 
 	/////////////////////////
 
@@ -642,7 +642,7 @@ void primType0(int primType, char** ptr, char** out) // line tested
 	}
 }
 
-void primType1(int primType, char** ptr, char** out)
+void primType1(int primType, char** ptr, char** out) // dummy for the momment
 {
 	primVar1 = *out;
 
@@ -656,8 +656,8 @@ void primType1(int primType, char** ptr, char** out)
 	*out+=3;
 	*ptr+=2;
 
-	int min = -0x8300;
-	int max = 0x8300;
+	int min = 32000;
+	int max = -32000;
 
 	int i;
 
@@ -677,16 +677,16 @@ void primType1(int primType, char** ptr, char** out)
 		int depth = *(short int*)(((char*)renderPointList) + pointNumber); // Z
 		ax+=2;
 
-		if(depth>min)
+		if(depth<min)
 			min = depth;
-		if(depth<max)
+		if(depth>max)
 			max = depth;
 	}
 
 	primVar2 = *out;
 
 	*out = saveDi;
-
+	
 	if(min<=0) // behind camera
 	{
 		*out = primVar1; // do not add the prim
@@ -993,6 +993,9 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 	for(i=0;i<numPrim;i++)
 	{
 		char primType = *(ptr++);
+
+		if(primType>3)
+			break;
 
 		primFunctionTable[primType](primType,&ptr,&out);
 	}

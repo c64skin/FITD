@@ -356,6 +356,7 @@ int make3dTatou(void)
 
 	tatou2d = loadPakSafe("ITD_RESS",2);
 	tatou3d = loadPakSafe("ITD_RESS",0);
+	tatou3d = loadPakSafe("LISTBODY",0);
 	tatouPal = loadPakSafe("ITD_RESS",1);
 
 	time = 8920;
