@@ -17,20 +17,35 @@ int evalVar(void)
 	else
 	if(var1 == 0)
 	{
-		printf("Unimplemented code int evalVar: var1 == 0\n");
+		printf("Unimplemented code in evalVar: var1 == 0\n");
 		exit(1);
 	}
 	else
 	{
+		actorStruct* actorPtr = currentLifeActorPtr;
+		int actorIdx = currentLifeActorIdx;
+
 		if(var1 & 0x8000)
 		{
-			printf("Unimplemented code int evalVar: var1 & 0x8000\n");
-			exit(1);
+			int objectNumber;
+
+			objectNumber = *(short int*)currentLifePtr;
+
+			actorIdx = objectTable[objectNumber].ownerIdx;
+
+			currentLifePtr+=2;
+			actorPtr = &actorTable[actorIdx];
+
+			if(actorIdx==-1)
+			{
+				printf("actorIdx == -1 dans evalVar\n");
+				return(0);
+			//	exit(1);
+			}
 		}
-		else
 		{
-			//int actorIdx = currentLifeActorIdx;
-			actorStruct* actorPtr = currentLifeActorPtr;
+			
+			
 
 			var1--;
 

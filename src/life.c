@@ -12,6 +12,8 @@ void processLife(int lifeNum)
 
 	currentLifePtr = HQR_Get(listLife,lifeNum);
 
+	int switchVal = 0;
+
 	while(!exitLife)
 	{
 		int lifeTempVar1;
@@ -19,8 +21,6 @@ void processLife(int lifeNum)
 		int lifeTempVar3;
 		int lifeTempVar4;
 		int lifeTempVar5;
-
-		int switchVal = 0;
 
 		var_6 = -1;
 
@@ -178,6 +178,11 @@ processOpcode:
 
 					break;
 				}
+			case 0x27:
+				{
+					playSound(evalVar());
+					break;
+				}
 			case 0x28: // TYPE
 				{
 					lifeTempVar1 = *(short int*)(currentLifePtr) + 0x1D1;
@@ -257,6 +262,12 @@ processOpcode:
 
 					break;
 				}
+			case 0x3F: //todo
+				{
+					evalVar();
+					evalVar();
+					break;
+				}
 			case 0x40: // LIGHT
 				{
 					lifeTempVar1 = 2-((*(short int*)(currentLifePtr))<<1);
@@ -283,6 +294,11 @@ processOpcode:
 						stopShaking();
 					} */
 
+					break;
+				}
+			case 0x4B: // sample
+				{
+					currentLifePtr+=2;
 					break;
 				}
 			case 0x4D: // ? shaking related

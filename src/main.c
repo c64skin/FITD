@@ -3576,7 +3576,6 @@ void checkIfCameraChangeIsRequired(void)
 	int localCurrentCam = currentCamera;
 	int newCamera;
 
-	currentCamera = -1;
 	if(currentCamera!=-1)
 	{
 		char* cameraDataPtr = roomVar5[currentCamera] + 2*roomVar6[currentCamera];
