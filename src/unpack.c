@@ -19,7 +19,7 @@ char* si;
 unsigned short int sizeOfCurrentUnpackedChunk;
 unsigned short int unV5;
 
-unsigned long int decompPos;
+long int decompPos;
 
 char* unpackSub0(int param, char** outputInputPtr)
 {
@@ -29,9 +29,6 @@ char* unpackSub0(int param, char** outputInputPtr)
   unsigned char di;
   unsigned short int dx;
   char* backupSource;
-
-  int i;
-  int j;
 
   unv13 = param;
 
@@ -88,8 +85,6 @@ char* unpackSub0(int param, char** outputInputPtr)
         while(dh<=unV7)
         {
           unsigned short int backupSi;
-          unsigned char bl;
-          unsigned char bh;
 
           ax = dh & 0xFF;
 
@@ -341,8 +336,6 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
 
   if(param&4)
   {
-    char* tempPtr;
-
     unV4++;
     unV3 = unpackSub0(0x100,&inputPtrTemp);
     inputPtr = inputPtrTemp;

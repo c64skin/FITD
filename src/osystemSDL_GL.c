@@ -1,6 +1,6 @@
-#ifdef USE_GL
-
 #include "common.h"
+
+#ifdef USE_GL
 
 /***************************************************************************
                           mainSDL.cpp  -  description

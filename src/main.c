@@ -2240,7 +2240,7 @@ void drawOverlayZone(char* zoneData,int color)
 
 void drawHardCol()
 {
-	char* data = getRoomData(actorTable[genVar9].room);
+	char* data = (char*)getRoomData(actorTable[genVar9].room);
 	short int numHardCol;
 	int i;
 	
@@ -2251,7 +2251,7 @@ void drawHardCol()
 
 	for(i=0;i<numHardCol;i++)
 	{
-	//	drawZone(data,100);
+		drawZone(data,100);
 		data+=0x10;
 	}
 }
@@ -2261,7 +2261,7 @@ void drawZones()
 	int i;
 	int numZones;
 	
-	char* zoneData = getRoomData(actorTable[genVar9].room);
+	char* zoneData = (char*)getRoomData(actorTable[genVar9].room);
 	zoneData += *(short int*)(zoneData+2);
 
 	numZones = *(short int*)zoneData;
@@ -2276,7 +2276,7 @@ void drawZones()
 
 void drawOverlayZones()
 {
-	char* etageData = getRoomData(actorTable[genVar9].room);
+	char* etageData = (char*)getRoomData(actorTable[genVar9].room);
 	short int numEntry;
 	int i;
 	
@@ -2578,7 +2578,7 @@ void mainDrawSub2(int actorIdx) // draw flow
 	// TODO: finish
 }
 
-void getHotPoint(int hotPointIdx, char* bodyPtr, short int* hotPoint)
+void getHotPoint(int hotPointIdx, char* bodyPtr, point3dStruct* hotPoint)
 {
   short int flag;
 
@@ -2617,22 +2617,22 @@ void getHotPoint(int hotPointIdx, char* bodyPtr, short int* hotPoint)
 
       source = (short int*)(((char*)pointBuffer) + pointIdx);
 
-      hotPoint[0] = source[0];
-      hotPoint[1] = source[1];
-      hotPoint[2] = source[2];
+      hotPoint->x = source[0];
+      hotPoint->y = source[1];
+      hotPoint->z = source[2];
     }
     else
     {
-      hotPoint[0] = 0;
-      hotPoint[1] = 0;
-      hotPoint[2] = 0;
+      hotPoint->x = 0;
+      hotPoint->y = 0;
+      hotPoint->z = 0;
     }
   }
   else
   {
-    hotPoint[0] = 0;
-    hotPoint[1] = 0;
-    hotPoint[2] = 0;
+    hotPoint->x = 0;
+    hotPoint->y = 0;
+    hotPoint->z = 0;
   }
 }
 
@@ -2662,11 +2662,11 @@ void mainDraw(int mode)
 	setClipSize(0,0,319,199);
 	genVar6 = 0;
 
-	//drawHardCol();
 #ifdef USE_GL
 	osystem_cleanScreenKeepZBuffer();
 #endif
 
+  drawHardCol();
 	drawConverZones();
 	drawZones();
 	drawOverlayZones();
@@ -2705,7 +2705,7 @@ void mainDraw(int mode)
 
 				if(actorPtr->animActionType && actorPtr->field_98 != -1)
 				{
-          getHotPoint(actorPtr->field_98, bodyPtr, &actorPtr->field_9A);
+          getHotPoint(actorPtr->field_98, bodyPtr, &actorPtr->hotPoint);
 				}
 
 ///////////////////////////////////// DEBUG
@@ -2831,8 +2831,8 @@ int checkZvCollision(ZVStruct* zvPtr1,ZVStruct* zvPtr2)
 
 void getZvRelativePosition(ZVStruct* zvPtr, int startRoom, int destRoom)
 {
-	char* startRoomData = getRoomData(startRoom);
-	char* destRoomData = getRoomData(destRoom);
+	char* startRoomData = (char*)getRoomData(startRoom);
+	char* destRoomData = (char*)getRoomData(destRoom);
 
 	int Xdif = 10*(*(short int*)(destRoomData+4) - *(short int*)(startRoomData+4));
 	int Ydif = 10*(*(short int*)(destRoomData+6) - *(short int*)(startRoomData+6));
@@ -3540,7 +3540,7 @@ void processActor1(void)
 		{
 			int i;
 
-			var_42 = checkForHardCol(&zvLocal, getRoomData(currentProcessedActorPtr->room));
+			var_42 = checkForHardCol(&zvLocal, (char*)getRoomData(currentProcessedActorPtr->room));
 
 			for(i=0;i<var_42;i++)
 			{
@@ -3575,7 +3575,7 @@ void processActor1(void)
 		}
 		else // no hard collision -> just update the flag without performing the position update
 		{
-			if(checkForHardCol(&zvLocal,getRoomData(currentProcessedActorPtr->room)))
+			if(checkForHardCol(&zvLocal,(char*)getRoomData(currentProcessedActorPtr->room)))
 			{
 				currentProcessedActorPtr->HARD_COL = 1;
 			}
@@ -3623,7 +3623,7 @@ void processActor1(void)
 					localZv2.ZVZ1 += var_50;
 					localZv2.ZVZ2 += var_50;
 
-					if(!checkForHardCol(&localZv2, getRoomData(actorTouchedPtr->room)))
+					if(!checkForHardCol(&localZv2, (char*)getRoomData(actorTouchedPtr->room)))
 					{
 						if(processActor1Sub1(var_56, &localZv2))
 						{
@@ -3753,7 +3753,7 @@ void processActor1(void)
 
 			zvLocal.ZVY2 += 100;
 
-			if(currentProcessedActorPtr->roomY < -10 && !checkForHardCol(&zvLocal,getRoomData(currentProcessedActorPtr->room)) && !manageFall(currentProcessedActorIdx,&zvLocal))
+			if(currentProcessedActorPtr->roomY < -10 && !checkForHardCol(&zvLocal,(char*)getRoomData(currentProcessedActorPtr->room)) && !manageFall(currentProcessedActorIdx,&zvLocal))
 			{
 				startActorRotation(0, 2000, 40, &currentProcessedActorPtr->field_60);
 			}
@@ -4082,7 +4082,7 @@ void processActor2()
 	ptr = processActor2Sub(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 							currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY,
 							currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
-							getRoomData(currentProcessedActorPtr->room) );
+							(char*)getRoomData(currentProcessedActorPtr->room) );
 
 
 	if(!ptr)
@@ -4096,7 +4096,7 @@ void processActor2()
 	{
 	case 0:
 		{
-			char* ptr2 = getRoomData(currentProcessedActorPtr->room);
+			char* ptr2 = (char*)getRoomData(currentProcessedActorPtr->room);
 			char* ptr3;
 			int x;
 			int y;
@@ -4104,7 +4104,7 @@ void processActor2()
 
 			currentProcessedActorPtr->room = *(short int*) (ptr + 0xC);
 
-			ptr3 = getRoomData(currentProcessedActorPtr->room);
+			ptr3 = (char*)getRoomData(currentProcessedActorPtr->room);
 
 			x = (*(short int*)(ptr3+4) - *(short int*)(ptr2+4)) * 10;
 			y = (*(short int*)(ptr3+6) - *(short int*)(ptr2+6)) * 10;
@@ -4196,7 +4196,7 @@ int checkLineProjectionWithActors( int actorIdx, int X, int Y, int Z, int beta, 
 			break;
 		}
 
-		if(checkForHardCol(&localZv, getRoomData(room)) <= 0)
+		if(checkForHardCol(&localZv, (char*)getRoomData(room)) <= 0)
 		{
 			foundFlag = -1;
 		}

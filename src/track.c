@@ -256,7 +256,7 @@ char* getRoomLink(unsigned int room1, unsigned int room2)
 {
   int i;
   short int numOfZones;
-  char* zoneData = getRoomData(room1);  
+  char* zoneData = (char*)getRoomData(room1);  
   char* bestZone;
 
 	zoneData += *(short int*)(zoneData);
@@ -425,7 +425,7 @@ void processTrack(void)
 					currentProcessedActorPtr->worldZ = currentProcessedActorPtr->roomZ = *(short int*)(trackPtr);
 					trackPtr += 2;
 
-					ptr = getRoomData(currentProcessedActorPtr->room);
+					ptr = (char*)getRoomData(currentProcessedActorPtr->room);
 
 					currentProcessedActorPtr->worldX -= (*(short int*)(cameraPtr+4) - *(short int*)(ptr+4)) * 10;
 					currentProcessedActorPtr->worldY += (*(short int*)(cameraPtr+6) - *(short int*)(ptr+6)) * 10;
@@ -463,8 +463,8 @@ void processTrack(void)
 		
 					if(roomNumber != currentProcessedActorPtr->room)
 					{
-						char* roomDestDataPtr = getRoomData(roomNumber);
-						char* roomSourceDataPtr = getRoomData(currentProcessedActorPtr->room);
+						char* roomDestDataPtr = (char*)getRoomData(roomNumber);
+						char* roomSourceDataPtr = (char*)getRoomData(currentProcessedActorPtr->room);
 
 						x -= ((*(short int*)(roomSourceDataPtr+4)) - (*(short int*)(roomDestDataPtr+4))) * 10;
 						z -= ((*(short int*)(roomSourceDataPtr+8)) - (*(short int*)(roomDestDataPtr+8))) * 10;

@@ -9,6 +9,15 @@ extern char* currentFoundBody;
 extern int currentFoundBodyIdx;
 extern int statusVar1;
 
+struct point3dStruct
+{
+  short int x;
+  short int y;
+  short int z;
+};
+
+typedef struct point3dStruct point3dStruct;
+
 struct textEntryStruct
 {
 	short int index;
@@ -200,9 +209,7 @@ struct actorStruct // used to read data from file too
 	short int animActionParam;
 	short int hitForce;
 	short int field_98;
-	short int field_9A;
-	short int field_9C;
-	short int field_9E;
+  point3dStruct hotPoint;
 };
 
 typedef struct actorStruct actorStruct;

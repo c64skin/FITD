@@ -38,7 +38,8 @@ void mainLoop(int allowSystemMenu)
 #define SLEEP_GRAN 10         /* Granularity of sleep */
 
 int frames=0;                   /* Number of frames displayed */
-s32 t_start,t_end,t_left;
+s32 t_start,t_left;
+u32 t_end;
 s32 q=0;                     /* Dummy */
 
   //atexit(cleanupAndExit);

@@ -1,6 +1,6 @@
-#ifdef INTERNAL_DEBUGGER
-
 #include "common.h"
+
+#ifdef INTERNAL_DEBUGGER
 
 typedef struct
 {

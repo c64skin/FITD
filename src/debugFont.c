@@ -1,3 +1,5 @@
+#include "common.h"
+
 // warning, end is truncated because of compiler limits
 unsigned long int foutOutLong[65536] = {
 	0x0,

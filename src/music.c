@@ -511,7 +511,7 @@ int musicUpdate(void *udata, uint8 *stream, int len)
 
       if(timeBeforNextUpdate) // generate
       {
-        YM3812UpdateOne(virtualOpl,stream+fillStatus,(timeBeforNextUpdate)/2,0);
+        YM3812UpdateOne(virtualOpl,(int16*)(stream+fillStatus),(timeBeforNextUpdate)/2,0);
         fillStatus+=timeBeforNextUpdate;
         musicTimer+=timeBeforNextUpdate;
       }
@@ -524,6 +524,8 @@ int musicUpdate(void *udata, uint8 *stream, int len)
       }
     }
   }
+
+  return 0;
 }
 
 void createDefaultChannel(int index)
@@ -664,6 +666,8 @@ int musicLoad(void* ptr)
   }
 
   currentMusicPtr = musicPtr + *((u16*)(musicPtr + 0x34));
+
+  return 0;
 }
 
 int initialialize(void* dummy)
@@ -926,9 +930,6 @@ void changeOuputLevel(u8 value, u8* data,int bp)
   int keyScaleLevel;
   int outputLevel;
 
-  int ax;
-  int dx;
-
   if(value == 0xFF)
     return;
 
@@ -1147,7 +1148,7 @@ int musicFade(void * param)
 
         if(dx & 0x8000)
         {
-          channelTable2[i].var1A = param;
+          channelTable2[i].var1A = cx;
         }
 
         if(dx & 0x1000)
@@ -1167,7 +1168,7 @@ int musicFade(void * param)
           }
           else
           {
-            if(channelTable2[i].var1D != param)
+            if(channelTable2[i].var1D != cx)
             {
               si = 0;
             }

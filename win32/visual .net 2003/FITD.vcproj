@@ -142,7 +142,7 @@
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="common.h"
-				PrecompiledHeaderFile=".\Debug/common.pch"
+				PrecompiledHeaderFile=".\DebugGL/common.pch"
 				AssemblerListingLocation=".\DebugGL/"
 				ObjectFile=".\DebugGL/"
 				ProgramDataBaseFileName=".\DebugGL/"
@@ -158,6 +158,7 @@
 				OutputFile=".\Debug/FITD.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="MSVCRT"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/FITD.pdb"
 				SubSystem="1"/>

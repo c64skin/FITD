@@ -32,7 +32,7 @@ hqrEntryStruct* HQR_InitRessource(char* name, int size, int numEntries)
 	dest->maxFreeData = size;
 	dest->numMaxEntry = numEntries;
 	dest->numUsedEntry = 0;
-  dest->entries = (hqrEntryStruct*)malloc(numEntries*sizeof(hqrSubEntryStruct));
+  dest->entries = (hqrSubEntryStruct*)malloc(numEntries*sizeof(hqrSubEntryStruct));
 
   for(i=0;i<numEntries;i++)
   {
@@ -118,7 +118,6 @@ void moveHqrEntry(hqrEntryStruct* hqrPtr, int index)
 
 char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 {
-	hqrSubEntryStruct* hqrSubPtr;
 	hqrSubEntryStruct* foundEntry;
 	
 	if(index<0)

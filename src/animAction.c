@@ -40,9 +40,9 @@ void processAnimAction(void)
 				currentProcessedActorPtr->animActionType = 0;
 			}
 
-			x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
-			y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
-			z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
+			x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->hotPoint.x + currentProcessedActorPtr->modX;
+			y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->hotPoint.y + currentProcessedActorPtr->modY;
+			z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->hotPoint.z + currentProcessedActorPtr->modZ;
 
 			range = currentProcessedActorPtr->animActionParam;
 
@@ -90,9 +90,9 @@ void processAnimAction(void)
 			int touchedActor;
 			
 			createFlow(	3,
-						currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A,
-						currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C,
-						currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E,
+            currentProcessedActorPtr->roomX + currentProcessedActorPtr->hotPoint.x,
+						currentProcessedActorPtr->roomY + currentProcessedActorPtr->hotPoint.y,
+						currentProcessedActorPtr->roomZ + currentProcessedActorPtr->hotPoint.z,
 						currentProcessedActorPtr->stage,
 						currentProcessedActorPtr->room,
 						0,
@@ -102,28 +102,26 @@ void processAnimAction(void)
 
 			touchedActor = checkLineProjectionWithActors(
 												currentProcessedActorIdx,
-												currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A,
-												currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C,
-												currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E,
+												currentProcessedActorPtr->roomX + currentProcessedActorPtr->hotPoint.x,
+												currentProcessedActorPtr->roomY + currentProcessedActorPtr->hotPoint.y,
+												currentProcessedActorPtr->roomZ + currentProcessedActorPtr->hotPoint.z,
 												currentProcessedActorPtr->beta - 0x100,
 												currentProcessedActorPtr->room,
 												currentProcessedActorPtr->animActionParam );
 
 			if(touchedActor == -1) // no one has been touched
 			{
-				createFlow(	2, animMoveX, animMoveY, animMoveZ, currentProcessedActorPtr->stage, currentProcessedActorPtr->room,
-							0, -currentProcessedActorPtr->beta, 0, NULL );
+				createFlow(	2, animMoveX, animMoveY, animMoveZ, currentProcessedActorPtr->stage, currentProcessedActorPtr->room, 0, -currentProcessedActorPtr->beta, 0, NULL );
 
 				currentProcessedActorPtr->animActionType = 0;
 			}
 			else
 			{
-				createFlow(	2, animMoveX, animMoveY, animMoveZ, currentProcessedActorPtr->stage, currentProcessedActorPtr->room,
-							0, -currentProcessedActorPtr->beta, 0, NULL );
+				createFlow(	2, animMoveX, animMoveY, animMoveZ, currentProcessedActorPtr->stage, currentProcessedActorPtr->room, 0, -currentProcessedActorPtr->beta, 0, NULL );
 
-				currentProcessedActorPtr->field_9A = animMoveX - currentProcessedActorPtr->roomX;
-				currentProcessedActorPtr->field_9C = animMoveY - currentProcessedActorPtr->roomY;
-				currentProcessedActorPtr->field_9E = animMoveZ - currentProcessedActorPtr->roomZ;
+				currentProcessedActorPtr->hotPoint.x = animMoveX - currentProcessedActorPtr->roomX;
+				currentProcessedActorPtr->hotPoint.y = animMoveY - currentProcessedActorPtr->roomY;
+				currentProcessedActorPtr->hotPoint.z = animMoveZ - currentProcessedActorPtr->roomZ;
 
 				currentProcessedActorPtr->HIT = touchedActor;
 
@@ -142,9 +140,9 @@ void processAnimAction(void)
 
 				objectStruct* objPtr = &objectTable[objIdx];
 
-				int x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
-				int y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
-				int z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
+				int x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->hotPoint.x + currentProcessedActorPtr->modX;
+				int y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->hotPoint.y + currentProcessedActorPtr->modY;
+				int z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->hotPoint.z + currentProcessedActorPtr->modZ;
 
 				ZVStruct rangeZv;
 
@@ -157,7 +155,7 @@ void processAnimAction(void)
 				rangeZv.ZVZ1 += z;
 				rangeZv.ZVZ2 += z;
 
-				if(checkForHardCol(&rangeZv, getRoomData(currentProcessedActorPtr->room)))
+				if(checkForHardCol(&rangeZv, (char*)getRoomData(currentProcessedActorPtr->room)))
 				{
 					currentProcessedActorPtr->animActionType = 0;
 					putAt(objIdx, currentProcessedActorPtr->field_0);
@@ -172,9 +170,9 @@ void processAnimAction(void)
 						
 						currentProcessedActorPtr->animActionType = 7;
 
-						x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
-						y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
-						z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
+						x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->hotPoint.x + currentProcessedActorPtr->modX;
+						y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->hotPoint.y + currentProcessedActorPtr->modY;
+						z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->hotPoint.z + currentProcessedActorPtr->modZ;
 
 						removeObjFromInventory(objIdx);
 
@@ -208,9 +206,9 @@ void processAnimAction(void)
 			
 			currentProcessedActorPtr->animActionType = 0;
 
-			x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
-			y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
-			z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
+			x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->hotPoint.x + currentProcessedActorPtr->modX;
+			y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->hotPoint.y + currentProcessedActorPtr->modY;
+			z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->hotPoint.z + currentProcessedActorPtr->modZ;
 
 			objIdx = currentProcessedActorPtr->animActionParam;
 
@@ -334,9 +332,9 @@ void processAnimAction(void)
 					 int collision2 = collision;
 					 int i;
 
-					currentProcessedActorPtr->field_9A = 0;
-					currentProcessedActorPtr->field_9C = 0;
-					currentProcessedActorPtr->field_9E = 0;
+					currentProcessedActorPtr->hotPoint.x = 0;
+					currentProcessedActorPtr->hotPoint.y = 0;
+					currentProcessedActorPtr->hotPoint.z = 0;
 
 					 for(i=0;i<collision;i++)
 					 {
@@ -403,7 +401,7 @@ void processAnimAction(void)
 					 }
 				}
 
-				ptr = processActor2Sub(x2,y2,z2, getRoomData(currentProcessedActorPtr->room));
+				ptr = processActor2Sub(x2,y2,z2, (char*)getRoomData(currentProcessedActorPtr->room));
 
 				if(ptr)
 				{
@@ -415,11 +413,11 @@ void processAnimAction(void)
 					}
 				}
 
-				if(checkForHardCol(&rangeZv, getRoomData(currentProcessedActorPtr->room)))
+				if(checkForHardCol(&rangeZv, (char*)getRoomData(currentProcessedActorPtr->room)))
 				{
-					currentProcessedActorPtr->field_9A = 0;
-					currentProcessedActorPtr->field_9C = 0;
-					currentProcessedActorPtr->field_9E = 0;
+					currentProcessedActorPtr->hotPoint.x = 0;
+					currentProcessedActorPtr->hotPoint.y = 0;
+					currentProcessedActorPtr->hotPoint.z = 0;
 
 					playSound(defines.field_12);
 					objectHitActor(x3,z3);

@@ -32,7 +32,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 
 	if(room != currentDisplayedRoom)
 	{
-		char* roomPtr = getRoomData(actorPtr->room);
+		char* roomPtr = (char*)getRoomData(actorPtr->room);
 
 		actorPtr->worldX -= ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
 		actorPtr->worldY += ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;
@@ -190,7 +190,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 		}
 	case 4:
 		{
-			char* roomDataPtr = getRoomData(room);
+			char* roomDataPtr = (char*)getRoomData(room);
 			int numElements;
 			int j;
 
@@ -229,7 +229,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 
 						if(room != currentDisplayedRoom)
 						{
-							char* roomPtr = getRoomData(room);
+							char* roomPtr = (char*)getRoomData(room);
 
 							actorPtr->worldX = ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
 							actorPtr->worldY = ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;

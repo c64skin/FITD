@@ -40,6 +40,8 @@ typedef signed long int s32;
 //#include <gl\glaux.h>   // Header File For The Glaux Library
 #endif
 
+#include "SDL.h"
+
 //////////////// GAME SPECIFIC DEFINES
 
 #define NUM_MAX_OBJ         300

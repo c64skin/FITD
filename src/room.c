@@ -34,7 +34,7 @@ void loadRoom(int roomNumber)
 		currentCameraIdx = *(short int*)(cameraPtr + (currentCamera+6)*2);
 	}
 
-	cameraPtr = getRoomData(roomNumber);
+	cameraPtr = (char*)getRoomData(roomNumber);
 	roomDataPtr = getRoomData(roomNumber);
 
 	currentDisplayedRoom = roomNumber;
