@@ -5,14 +5,20 @@ int computeAngleModificatorToPositionSub1(int ax)
 	int xOut;
 	int yOut;
 
-	makeRotationMtx(ax,0,1000,&xOut,&yOut);
+	makeRotationMtx(ax,0,1000,&yOut,&xOut);
 
 	yOut *= angleCompX;
 	xOut *= angleCompZ;
 
 	yOut -= xOut;
 
-	return(abs(yOut));
+	if(yOut==0)
+		return(0);
+
+	if(yOut>0)
+		return(1);
+	else
+		return(-1);
 }
 
 int computeAngleModificatorToPosition(int x1,int z1, int beta, int x2, int z2)
@@ -99,7 +105,7 @@ void processTrack(void)
 
 						currentProcessedActorPtr->field_72 = angleModif;
 
-						if(angleModif)
+						if(!angleModif)
 						{
 							currentProcessedActorPtr->rotate.param = 0;
 						}

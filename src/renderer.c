@@ -247,7 +247,7 @@ void computeTranslation2(int transX,int transY,int transZ,char* ptr)
 }
 
 int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, char* ptr)
-{
+ {
 	renderX = x - translateX;
 	renderY = y;
 	renderZ = z - translateZ;
@@ -287,9 +287,9 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 
 	/////////////////////////
 	// DEBUG
-		transX = 0;
+/*		transX = 0;
 		transY = 0;
-		transZ = 0;
+		transZ = 0; */
 
 	/////////////////////////
 

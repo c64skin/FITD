@@ -2244,11 +2244,12 @@ void setupCamera()
 	setupPointTransformSM(*(short int*)(ptr),*(short int*)(ptr+2),*(short int*)(ptr+4));
 	ptr+= 6;
 
+	//TODO: recheck
 	int x = (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+4))) << 3) + (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+4))) << 1);
 	ptr+=2;
-	int y = (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+6))) << 3) + (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+6))) << 1);
+	int y = (((*(short int*)(cameraPtr+6)) - (*(short int*)(ptr))) << 3) + (((*(short int*)(cameraPtr+6)) - (*(short int*)(ptr))) << 1);
 	ptr+=2;
-	int z = (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+8))) << 3) + (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+8))) << 1);
+	int z = (((*(short int*)(cameraPtr+8)) - (*(short int*)(ptr))) << 3) + (((*(short int*)(cameraPtr+8)) - (*(short int*)(ptr))) << 1);
 	ptr+=2;
 
 	setupSelfModifyingCode(x,y,z);
@@ -2307,15 +2308,42 @@ void startActorRotation(short int beta, short int newBeta, short int param, rota
 	rotatePtr->oldAngle = beta;
 	rotatePtr->newAngle = newBeta;
 	rotatePtr->param = param;
-
-	// TODO: implement time stuff
+	rotatePtr->timeOfRotate = timer;
 }
 
 short int updateActorRotation(rotateStruct* rotatePtr)
 {
-	// TODO: proper implementation;
+	if(!rotatePtr->param)
+		return(rotatePtr->newAngle);
 
-	return(rotatePtr->newAngle);
+	int timeDif = timer - rotatePtr->timeOfRotate;
+
+	if(timeDif>rotatePtr->param)
+	{
+		rotatePtr->param = 0;
+		return(rotatePtr->newAngle);
+	}
+
+	int angleDif = (rotatePtr->newAngle&0x3FF) - (rotatePtr->oldAngle&0x3FF);
+
+	if(angleDif<=0x200)
+	{
+		if(angleDif>=-0x200)
+		{
+			int angle = (rotatePtr->newAngle&0x3FF);
+			return (angle*timeDif)/rotatePtr->param;
+		}
+		else
+		{
+			int angle = ((rotatePtr->newAngle&0x3FF)+0x400) - (rotatePtr->oldAngle&0x3FF);
+			return (angle*timeDif)/rotatePtr->param;
+		}
+	}
+	else
+	{
+		int angle = ((rotatePtr->newAngle&0x3FF)+0x400) - ((rotatePtr->oldAngle&0x3FF)+0x400);
+		return ((rotatePtr->oldAngle&0x3FF)+0x400) + ((angle*timeDif)/rotatePtr->param);
+	}
 }
 
 int anim(int animNum,int arg_2, int arg_4)
@@ -2564,13 +2592,14 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 
 	short int cx = ax;
 
-	ax = ((ax+1)<<3)*frame; // seek to keyframe
+	ax = ((ax+1)*8)*frame; // seek to keyframe
 
 	animPtr += ax;
 
+	// animVar1 = ptr to the current keyFrame
 	animVar1 = animPtr;
 
-	unsigned short int dx = *(unsigned short int*)animPtr;
+	unsigned short int dx = *(unsigned short int*)animPtr; // keyframe length
 
 	if(!((*(short int*)bodyPtr) & 2)) // do not anim if the model can't be animated
 	{
@@ -2595,23 +2624,19 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 	bodyPtr+= *(short int*)(bodyPtr-2);
 
 	ax = *(short int*)bodyPtr;
+	ax = (ax*6)+2;
+	bodyPtr+=ax; // skip the points data
 
-	ax = (((ax<<1)+ax)<<1)+2;
-
-	bodyPtr+=ax;
-
-	ax = *(short int*)bodyPtr; // length of keyframe ?
-
+	ax = *(short int*)bodyPtr; // num of bones
 	unsigned short int bx = ax;
-
-	bodyPtr+=bx*2;
+	bodyPtr+=bx*2; // skip bones idx table
 
 	if(cx > ax)
 	{
 		cx = ax;
 	}
 
-	bodyPtr+=10;
+	bodyPtr+=10; // skip bone 0
 
 	unsigned short int time = (unsigned short int)timer - bp;
 
@@ -2620,8 +2645,10 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 
 	if(time<dx) // interpole keyframe
 	{
-		animVar4 += 8;
-		animVar1 += 8;
+		char* animVar1Backup = animVar1;
+		// skip bone 0 anim
+		animVar4 += 8; // anim buffer
+		animVar1 += 8; // current keyframe ptr
 
 		do
 		{
@@ -2648,11 +2675,13 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 		}
 		while(--cx);
 
+		animVar1 = animVar1Backup;
+
 		animVar1+=2;
 
-		animRot2 = ((*(short int*)(animVar1))*bp)/bx;
-		animRot3 = ((*(short int*)(animVar1+2))*bp)/bx;
-		animRot1 = ((*(short int*)(animVar1+4))*bp)/bx;
+		animRot2 = ((*(short int*)(animVar1))*bp)/bx; // X
+		animRot3 = ((*(short int*)(animVar1+2))*bp)/bx; // Y
+		animRot1 = ((*(short int*)(animVar1+4))*bp)/bx; // Z
 
 		animVar1+=6;
 
@@ -2705,7 +2734,7 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 
 void walkStep(int angle1, int angle2, int angle3)
 {
-	makeRotationMtx(angle3,angle1,angle2,&animMoveX,&animMoveY);
+	makeRotationMtx(angle3,angle1,angle2,&animMoveY,&animMoveX);
 }
 
 void copyZv(ZVStruct* source, ZVStruct* dest)
@@ -2721,8 +2750,6 @@ void stopAnim(int actorIdx)
 
 void processActor1(void)
 {
-	return;
-
 	int var_42 = 0;
 	int var_6 = currentProcessedActorPtr->field_44;
 	int var_40;
@@ -2746,6 +2773,14 @@ void processActor1(void)
 
 		if(currentProcessedActorPtr->END_FRAME == 0)
 		{
+			currentProcessedActorPtr->worldX += currentProcessedActorPtr->modX;
+			currentProcessedActorPtr->roomX += currentProcessedActorPtr->modX;
+
+			currentProcessedActorPtr->worldZ += currentProcessedActorPtr->modZ;
+			currentProcessedActorPtr->roomZ += currentProcessedActorPtr->modZ;
+
+			currentProcessedActorPtr->modX = 0;
+			currentProcessedActorPtr->modZ = 0;
 		}
 
 		initBufferAnim(bufferAnim + (bufferAnimCounter++) * 248, HQR_Get(listBody,currentProcessedActorPtr->bodyNum)); 
@@ -2804,13 +2839,13 @@ void processActor1(void)
 	}
 	else // animation
 	{
-		int var_4C = currentProcessedActorPtr->modX;
-		//int var_4A = currentProcessedActorPtr->field_5C;
-		int var_48 = currentProcessedActorPtr->modZ;
+		var_4C = currentProcessedActorPtr->modX;
+		var_4A = currentProcessedActorPtr->modY;
+		var_48 = currentProcessedActorPtr->modZ;
 
 		currentProcessedActorPtr->END_FRAME = processAnim(currentProcessedActorPtr->FRAME, HQR_Get(listAnim, currentProcessedActorPtr->ANIM), HQR_Get(listBody, currentProcessedActorPtr->bodyNum));
 
-		walkStep(animRot1,animRot2,currentProcessedActorPtr->beta);
+		walkStep(animRot2,animRot1,currentProcessedActorPtr->beta);
 
 		var_52 = animMoveX - var_4C;
 		var_50 = animMoveY - var_48;
@@ -2859,22 +2894,14 @@ void processActor1(void)
 
 		// TODO -> actor/actor collision
 
-		///////// TEMP
-
-		var_4C = currentProcessedActorPtr->modX;
-		var_4A = currentProcessedActorPtr->modY;
-		var_48 = currentProcessedActorPtr->modZ;
-
-		/////////
-
 		var_52 += var_4C;
 		currentProcessedActorPtr->modX = var_52;
 
 		var_4E += var_4A;
-		currentProcessedActorPtr->modY = var_4A;
+		currentProcessedActorPtr->modY = var_4E;
 
 		var_50 += var_48;
-		currentProcessedActorPtr->modZ = var_48;
+		currentProcessedActorPtr->modZ = var_50;
 
 	}
 
@@ -2913,7 +2940,7 @@ void processActor1(void)
 		// TODO
 	}
 
-	if(currentProcessedActorPtr->END_FRAME) // anim management
+	if(currentProcessedActorPtr->END_FRAME) // key frame change
 	{
 		currentProcessedActorPtr->FRAME++;
 
@@ -2922,12 +2949,12 @@ void processActor1(void)
 			currentProcessedActorPtr->END_ANIM = 1; // end of anim
 			currentProcessedActorPtr->FRAME = 0;
 
-			if((currentProcessedActorPtr->field_40 & 1) && (currentProcessedActorPtr->field_44 == -1)) // should we loop
+/*			if((currentProcessedActorPtr->field_40 & 1) && (currentProcessedActorPtr->field_44 == -1)) // is another anim waiting ?
 			{
 				currentProcessedActorPtr->field_40 &= 0xFFFD;
 
 				anim(currentProcessedActorPtr->field_42, 1, -1);
-			}
+			} */
 
 			currentProcessedActorPtr->worldX += currentProcessedActorPtr->modX;
 			currentProcessedActorPtr->roomX += currentProcessedActorPtr->modX;
@@ -2941,7 +2968,7 @@ void processActor1(void)
 	}
 	else // not the end of anim
 	{
-		if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->speedChange.param == 0))
+		//if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->speedChange.param == 0))
 		{
 			currentProcessedActorPtr->worldX += currentProcessedActorPtr->modX;
 			currentProcessedActorPtr->roomX += currentProcessedActorPtr->modX;
@@ -3021,7 +3048,7 @@ int drawTopStatusBox(int arg_0, int arg_2, int arg_4)
 				fillBox(0xA,var_A,0x135,var_A+0x10,0x64);
 			}
 
-			drawSlectedText(160,var_A,objPtr->foundName,0,4);
+			drawSlectedText(160,var_A,objPtr->foundName,arg_4,4);
 
 			var_8 = currentObj;
 		}
@@ -3802,6 +3829,9 @@ int main(int argc, char** argv)
 
 				//if(selectHero()!=-1)
 				{
+					readKeyboard();
+					while(input2)
+						readKeyboard();
 					startGame(7,1,0);
 
 				/*	if(!protectionState)
