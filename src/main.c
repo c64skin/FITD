@@ -3330,9 +3330,9 @@ void mainDraw(int mode)
 	//drawHardCol();
 	osystem.cleanScreenKeepZBuffer();
 
-	//drawConverZones();
-	//drawZones();
-	//drawOverlayZones();
+	drawConverZones();
+	drawZones();
+	drawOverlayZones();
 	
 
 #ifdef USE_GL
@@ -3362,7 +3362,7 @@ void mainDraw(int mode)
 				renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
 							actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
 
-				//drawZv(actorPtr);
+				drawZv(actorPtr);
 
 			}
 		}
@@ -4216,7 +4216,42 @@ int checkForHardCol(ZVStruct* zvPtr, char* dataPtr)
 
 int manageFall(int actorIdx, ZVStruct* zvPtr)
 {
-	return(0);
+	int fallResult = 0;
+	int i;
+	int room = actorTable[actorIdx].room;
+
+	for(i=0;i<50;i++)
+	{
+		actorStruct* currentTestedActorPtr = &actorTable[i];
+
+		if(currentTestedActorPtr->field_0 != -1 && i != actorIdx)
+		{
+			ZVStruct* testedZv = &currentTestedActorPtr->zv;
+
+			if(currentTestedActorPtr->room != room)
+			{
+				ZVStruct localZv;
+				copyZv(zvPtr, &localZv);
+				getZvRelativePosition(&localZv, room, currentTestedActorPtr->room);
+
+				if(checkZvCollision(&localZv, testedZv))
+				{
+					actorTable[i].COL_BY = actorIdx;
+					fallResult++;
+				}
+			}
+			else
+			{
+				if(checkZvCollision(zvPtr, testedZv))
+				{
+					actorTable[i].COL_BY = actorIdx;
+					fallResult++;
+				}
+			}
+		}
+	}
+
+	return(fallResult);
 }
 
 int processActor1Sub2(rotateStruct* data)

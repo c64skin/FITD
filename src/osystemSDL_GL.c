@@ -220,14 +220,14 @@ void OSystem::flip(unsigned char *videoBuffer)
 			}
 		}
 
-	/*	glColor4ub(palette[quadTable[bestIdx].color*3],palette[quadTable[bestIdx].color*3+1],palette[quadTable[bestIdx].color*3+2],40);
+		glColor4ub(palette[quadTable[bestIdx].color*3],palette[quadTable[bestIdx].color*3+1],palette[quadTable[bestIdx].color*3+2],40);
 
 		glBegin(GL_QUADS);
 		glVertex3f(quadTable[bestIdx].x1,quadTable[bestIdx].y1,-quadTable[bestIdx].z1/1000.f);
 		glVertex3f(quadTable[bestIdx].x2,quadTable[bestIdx].y2,-quadTable[bestIdx].z2/1000.f);
 		glVertex3f(quadTable[bestIdx].x3,quadTable[bestIdx].y3,-quadTable[bestIdx].z3/1000.f);
 		glVertex3f(quadTable[bestIdx].x4,quadTable[bestIdx].y4,-quadTable[bestIdx].z4/1000.f);
-		glEnd();*/
+		glEnd();
 
 	//	glDisable(GL_DEPTH_TEST);
 		int color = quadTable[bestIdx].color+3;
@@ -498,14 +498,14 @@ void OSystem::draw3dQuad(float x1, float y1, float z1, float x2, float y2, float
 	positionInQuadTable++;
 
 /////
-	glColor4f(1.f,1.f,1.f,1.f);
+/*	glColor4f(1.f,1.f,1.f,1.f);
 
 	glBegin(GL_QUADS);
 	glVertex3f(x1,y1,-z1/1000.f);
 	glVertex3f(x2,y2,-z2/1000.f);
 	glVertex3f(x3,y3,-z3/1000.f);
 	glVertex3f(x4,y4,-z4/1000.f);
-	glEnd();
+	glEnd();*/
 ///
 }
 
