@@ -812,6 +812,9 @@ void executeMusicCommand(channelTable2Element* entry)
     opcode = *(u16*)(entry->commandPtr);
     entry->commandPtr+=2;
 
+    ASSERT(musicCommandTable[opcode&0x7F]);
+    ASSERT((opcode&0x7F)<=10);
+
     musicCommandTable[opcode&0x7F](entry,opcode>>8,entry->commandPtr);
   }while(!(opcode&0x80));
 }
