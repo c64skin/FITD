@@ -55,6 +55,8 @@ char* tempOutPtr;
 
 int renderVar3;
 
+void fillpoly(short unsigned int * datas, int n, char c);
+
 void transformPoint(int* ax, int* bx, int* cx)
 {
 	int x;
@@ -642,7 +644,7 @@ void primType0(int primType, char** ptr, char** out) // line tested
 	}
 }
 
-void primType1(int primType, char** ptr, char** out) // dummy for the momment
+void primType1(int primType, char** ptr, char** out) // poly
 {
 	primVar1 = *out;
 
@@ -688,7 +690,7 @@ void primType1(int primType, char** ptr, char** out) // dummy for the momment
 	*out = saveDi;
 
 	// debug: dummy
-	min = 0;
+	//min = 0;
 	
 	if(min<=0) // behind camera
 	{
@@ -863,6 +865,14 @@ void renderStyle0(char* buffer)
 
 void renderStyle1(char* buffer)
 {
+	int numPoint = *(short int*)buffer;
+	buffer+=2;
+
+	int color = *(short int*)buffer;
+	buffer+=2;
+
+	fillpoly((unsigned short *)buffer,numPoint,color);
+
 }
 
 void defaultRenderFunction(char* buffer)
@@ -998,7 +1008,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 
 	for(i=0;i<numPrim;i++)
 	{
-		char primType = *(ptr++);
+		unsigned char primType = *(ptr++);
 
 		if(primType>3)
 			break;
@@ -1042,7 +1052,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 
 		if(x>=0 && x < 319 && y>=0 && y<199)
 		{
-			screen[y*320+x] = 15;
+	//		screen[y*320+x] = 15;
 		}
 	}
 //
