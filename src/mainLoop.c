@@ -11,6 +11,8 @@ void mainLoop(int allowSystemMenu)
 		input4 = inputKey;
 		button = input1;
 
+    callMusicUpdate();
+
 		if(input3)
 		{
 			if(input3 == 0x1C || input3 == 0x17)

@@ -1452,17 +1452,17 @@ processOpcode:
 					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
-					/*if(currentMusic!=-1)
+				/*	if(currentMusic!=-1)
 					{
-						soundFunc1(0,0,0x8000); // fade out music
+						soundFunc1(0,0,0x8000);    // fade out music
 						startChrono(&musicChrono); // fade out music timer
-						currentMusic = -2; // fade out mode
-						genVar8 = lifeTempVar1; // next music to play
+						currentMusic = -2;         // waiting next music
+						genVar8 = lifeTempVar1;    // next music to play
 					}
-					else
+					else*/
 					{
-						changeMusic(lifeTempVar1);
-					}*/
+						playMusic(lifeTempVar1);
+					}
 
 					break;
 				}

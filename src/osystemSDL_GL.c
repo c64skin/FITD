@@ -21,7 +21,7 @@
 
 #include "SDL.h"
 #include "SDL_thread.h"
-//#include "SDL_sound.h"
+#include "SDL_mixer.h"
 #include "osystem.h"
 
 #include <GL/gl.h>			// Header File For The OpenGL32 Library
@@ -130,6 +130,11 @@ void CALLBACK combineCallback(GLdouble coords[3], GLdouble *vertex_data[4],GLflo
 	}
 
 	*dataOut = vertex;
+}
+
+void OPL_musicPlayer(void *udata, Uint8 *stream, int len)
+{
+  musicUpdate(udata,stream,len);
 }
 
 void CALLBACK vertexCallback(GLvoid *vertex)
@@ -268,6 +273,16 @@ osystem_init()	// that's the constructor of the system dependent
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 #endif
+
+  // SDL_mixer init
+
+  if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 1, 1024)==-1)
+  {
+    printf("Mix_OpenAudio: %s\n", Mix_GetError());
+    exit(2);
+  }
+
+  Mix_HookMusic(OPL_musicPlayer, NULL);
 }
 
 void osystem_setPalette(byte * palette)

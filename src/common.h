@@ -48,6 +48,20 @@ typedef unsigned long int u32;
 
 ///////////////
 
+typedef unsigned char uint8;
+typedef unsigned short uint16;
+typedef unsigned long uint32;
+typedef unsigned int uint;
+typedef signed char int8;
+typedef signed short int16;
+typedef signed long int32;
+
+typedef unsigned char U8;
+typedef unsigned short U16;
+typedef unsigned long U32;
+typedef signed char S8;
+typedef signed short S16;
+typedef signed long S32;
 
 // temp triangulation stuff
 //#include <bool.h>
@@ -83,6 +97,7 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 #include "object.h"
 #include "zv.h"
 #include "music.h"
+#include "fmopl.h"
 
 // debugger
 #ifdef INTERNAL_DEBUGGER
@@ -100,20 +115,6 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 ////
 
 //typedef unsigned char byte;
-typedef unsigned char uint8;
-typedef unsigned short uint16;
-typedef unsigned long uint32;
-typedef unsigned int uint;
-typedef signed char int8;
-typedef signed short int16;
-typedef signed long int32;
-
-typedef unsigned char U8;
-typedef unsigned short U16;
-typedef unsigned long U32;
-typedef signed char S8;
-typedef signed short S16;
-typedef signed long S32;
 
 #ifdef UNIX
 #define FORCEINLINE static inline

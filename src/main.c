@@ -269,7 +269,7 @@ void sysInit(void)
 
 	allocTextes();
 
-	if(musicConfigured)
+//	if(musicConfigured)
 	{
 		listMus = HQR_InitRessource("ListMus",11000,2);
 	}
