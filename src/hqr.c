@@ -188,5 +188,43 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 
 		return(ptr);
 	}
+}
 
+hqrEntryStruct* HQR_Init(int size,int numEntry)
+{
+	hqrEntryStruct* dest;
+	char* dest2;
+
+  ASSERT(size > 0);
+  ASSERT(numEntry > 0);
+
+	dest = (hqrEntryStruct*)malloc(numEntry*sizeof(hqrSubEntryStruct)+sizeof(hqrEntryStruct));
+
+  ASSERT_PTR(dest);
+
+	if(!dest)
+		return NULL;
+
+	dest2 = (char*)malloc(size);
+
+  ASSERT_PTR(dest2);
+
+	if(!dest2)
+		return NULL;
+
+	strcpy(dest->string,"_MEMORY_");
+
+	dest->sizeFreeData = size;
+	dest->maxFreeData = size;
+	dest->numMaxEntry = numEntry;
+	dest->numUsedEntry = 0;
+	dest->dataPtr = dest2;
+
+	return(dest);
+}
+
+void HQR_Reset(hqrEntryStruct* hqrPtr)
+{
+	hqrPtr->sizeFreeData = hqrPtr->maxFreeData;
+	hqrPtr->numUsedEntry = 0;
 }

@@ -81,6 +81,7 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 #include "room.h"
 #include "floor.h"
 #include "object.h"
+#include "zv.h"
 
 // debugger
 #ifdef INTERNAL_DEBUGGER

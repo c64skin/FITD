@@ -183,39 +183,6 @@ void allocTextes(void)
 	}
 }
 
-hqrEntryStruct* HQR_Init(int size,int numEntry)
-{
-	hqrEntryStruct* dest;
-	char* dest2;
-
-  ASSERT(size > 0);
-  ASSERT(numEntry > 0);
-
-	dest = (hqrEntryStruct*)malloc(numEntry*sizeof(hqrSubEntryStruct)+sizeof(hqrEntryStruct));
-
-  ASSERT_PTR(dest);
-
-	if(!dest)
-		return NULL;
-
-	dest2 = (char*)malloc(size);
-
-  ASSERT_PTR(dest2);
-
-	if(!dest2)
-		return NULL;
-
-	strcpy(dest->string,"_MEMORY_");
-
-	dest->sizeFreeData = size;
-	dest->maxFreeData = size;
-	dest->numMaxEntry = numEntry;
-	dest->numUsedEntry = 0;
-	dest->dataPtr = dest2;
-
-	return(dest);
-}
-
 void sysInit(void)
 {
 	int i;
@@ -1134,12 +1101,6 @@ void initVars()
 	initVarsSub1();
 }
 
-void HQR_Reset(hqrEntryStruct* hqrPtr)
-{
-	hqrPtr->sizeFreeData = hqrPtr->maxFreeData;
-	hqrPtr->numUsedEntry = 0;
-}
-
 void loadCamera(int cameraIdx)
 {
 	char name[16];
@@ -1362,81 +1323,6 @@ void updateAllActorAndObjectsSub1(int index) // remove actor
 			actorTurnedToObj = 1;
 		}
 	}
-}
-
-void getZvCube(char* bodyPtr, ZVStruct* zvPtr)
-{
-	short int* ptr;
-
-	ptr = (short int*)(bodyPtr+2);
-
-	zvPtr->ZVX1 = *(ptr++);
-	zvPtr->ZVX2 = *(ptr++);
-	zvPtr->ZVY1 = *(ptr++);
-	zvPtr->ZVY2 = *(ptr++);
-	zvPtr->ZVZ1 = *(ptr++);
-	zvPtr->ZVZ2 = *(ptr++);
-
-	zvPtr->ZVZ2 = zvPtr->ZVX2 = (zvPtr->ZVX2 + zvPtr->ZVZ2)/2;
-	zvPtr->ZVX1 = zvPtr->ZVZ1 = -zvPtr->ZVZ2;
-}
-
-void getZvNormal(char* bodyPtr, ZVStruct* zvPtr)
-{
-	short int* ptr;
-
-	ptr = (short int*)(bodyPtr+2);
-
-	zvPtr->ZVX1 = *(ptr++);
-	zvPtr->ZVX2 = *(ptr++);
-	zvPtr->ZVY1 = *(ptr++);
-	zvPtr->ZVY2 = *(ptr++);
-	zvPtr->ZVZ1 = *(ptr++);
-	zvPtr->ZVZ2 = *(ptr++);
-}
-
-void makeDefaultZV(ZVStruct* zvPtr)
-{
-	zvPtr->ZVX1 = -100;
-	zvPtr->ZVX2 = 100;
-
-	zvPtr->ZVY1 = -2000;
-	zvPtr->ZVY2 = 0;
-
-	zvPtr->ZVZ1 = -100;
-	zvPtr->ZVZ2 = 100;
-}
-
-void getZvMax(char* bodyPtr, ZVStruct* zvPtr)
-{
-	int x1;
-	int x2;
-	int z1;
-	int z2;
-	
-	getZvNormal(bodyPtr,zvPtr);
-
-	x1 = zvPtr->ZVX1;
-	x2 = zvPtr->ZVX2;
-
-	z1 = zvPtr->ZVZ1;
-	z2 = zvPtr->ZVZ2;
-
-	x2 = - x1 + x2;
-	z2 = - z1 + z2;
-
-	if(x2 < z2)
-	{
-		x2 = z2;
-	}
-
-	x2 /= 2;
-
-	zvPtr->ZVX1 = -x2;
-	zvPtr->ZVX2 = x2;
-
-	zvPtr->ZVZ1 = -x2;
-	zvPtr->ZVZ2 = x2;
 }
 
 bool pointRotateEnable = true;
