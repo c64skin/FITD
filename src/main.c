@@ -14,8 +14,8 @@ void initFont(char* fontData, int color)
 	tempDx = *(short int*)fontData; // alignement
 	fontData+=2;
 
-	fontSm1 = *(fontData++);
-	fontSm2 = *(fontData++);
+	fontSm1 = *(fontData++); // character height
+	fontSm2 = *(fontData++); // character size
 
 	if(!fontSm2)
 	{
@@ -422,7 +422,7 @@ void renderText(int x, int y, char* surface, char* string)
 
 			dx &= 0xFFF;
 
-			characterPtr = (dx >>3) + fontVar4;
+			characterPtr = (dx>>3) + fontVar4;
 
 			fontSm9 = flagTable[dx & 7];
 
@@ -430,7 +430,7 @@ void renderText(int x, int y, char* surface, char* string)
 
 			fontSm8 = fontVar6;
 
-			int ch = fontSm1;
+			int ch;
 
 			for(ch = fontSm1; ch>0; ch--)
 			{
@@ -453,7 +453,7 @@ void renderText(int x, int y, char* surface, char* string)
 
 					outPtr++;
 
-					dh = ((dh<<1) & 0xFE) | ((dh&0x7F)>>7);
+					dh = ((dh>>1) & 0x7F) | ((dh<<7)&0x80);
 
 					if(dh&0x80)
 					{
