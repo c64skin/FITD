@@ -39,18 +39,22 @@ int evalVar(void)
 			if(actorIdx==-1)
 			{
 				printf("actorIdx == -1 dans evalVar\n");
-				return(0);
-			//	exit(1);
+				exit(1);
 			}
 		}
 		{
 			
-			
+			var1&=0x7FFF;			
 
 			var1--;
 
 			switch(var1)
 			{
+			case 0x5:
+				{
+					return(actorPtr->ANIM);
+					break;
+				}
 			case 0x9:
 				{
 					return(actorPtr->bodyNum);

@@ -208,7 +208,6 @@ void computeRotationMatrix(char* ptr)
 		}
 
 		(ptr)+=0x10;
-
 	}while(--temp2);
 }
 
@@ -261,7 +260,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 	char* tempPtr = ptr;
 
 	*(short int*)(ptr+0xA) = alpha;
-	*(short int*)(ptr+0xC) = beta;
+	*(short int*)(ptr+0xC) = beta+0x100;
 	*(short int*)(ptr+0xE) = gamma;
 
 	int i;
@@ -286,7 +285,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 			switch(type)
 			{
 			case 0:
-				{
+				{	
 					prepareRotationMatrix(transX,transY,transZ);
 					computeRotationMatrix(boneDataPtr);
 					break;

@@ -1392,9 +1392,12 @@ void initEngine(void)
 
 		fprintf(fHandle,"\t body:%03d",objectTable[i].field_2);
 		fprintf(fHandle,"\t anim:%03d",objectTable[i].field_26);
+		fprintf(fHandle,"\t stage:%01d",objectTable[i].stage);
+		fprintf(fHandle,"\t room:%01d",objectTable[i].room);
 
 		fprintf(fHandle,"\n");
 	}
+	fclose(fHandle);
 //
 
 	vars = (short int*)loadFromItd("VARS.ITD");
@@ -2143,7 +2146,7 @@ void updateAllActorAndObjects()
 						//int var_E = currentObject->field_2;
 						//int var_A = currentObject->field_26;
 
-						int actorIdx = copyObjectToActor(	currentObject->field_2, currentObject->field_6, currentObject->foundName,
+addObject:				int actorIdx = copyObjectToActor(	currentObject->field_2, currentObject->field_6, currentObject->foundName,
 															currentObject->flags & 0xFFDF,
 															currentObject->x, currentObject->y, currentObject->z,
 															currentObject->stage, currentObject->room,
@@ -2176,6 +2179,11 @@ void updateAllActorAndObjects()
 							actorTurnedToObj = 1;
 						}
 					}
+				}
+				else
+				{
+					if(setupCameraSub1Sub1(currentObject->room))
+						goto addObject;
 				}
 			}
 		}
@@ -3696,6 +3704,7 @@ void mainLoop(int allowSystemMenu)
 
 					if(flag & 0x40)
 					{
+						printf("Flag!\n");
 //						processActor2();
 					}
 
