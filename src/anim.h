@@ -3,3 +3,4 @@ int initAnimInBody(int frame, char* anim, char* body);
 short int processAnim(int frame, char* animPtr, char* bodyPtr);
 short int getAnimParam(char* animPtr);
 void initBufferAnim(char* buffer, char* bodyPtr);
+

@@ -9,3 +9,4 @@ extern short int inHandTable[2];
 extern short int currentInHand;
 
 #endif
+

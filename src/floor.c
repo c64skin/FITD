@@ -266,7 +266,7 @@ void loadFloor(int floorNumber)
 
           pCurrentCameraZoneDefEntry->cameraZoneEntryTable = (cameraZoneEntryStruct*)malloc(sizeof(cameraZoneEntryStruct)*numZones);
 
-          assert(pCurrentCameraZoneDefEntry->cameraZoneEntryTable);
+          ASSERT(pCurrentCameraZoneDefEntry->cameraZoneEntryTable);
 
           for(j=0;j<pCurrentCameraZoneDefEntry->numZones;j++)
           {

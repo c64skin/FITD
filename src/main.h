@@ -73,3 +73,4 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr);
 void getZvRot(char* bodyPtr, ZVStruct* zvPtr, int alpha, int beta, int gamma);
 
 #endif
+

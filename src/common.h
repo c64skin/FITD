@@ -2,6 +2,8 @@
 #ifndef _COMMON_
 #define _COMMON_
 
+#include "config.h"
+
 #define NUM_MAX_CAMERA_IN_ROOM 20
 
 #define HAS_YM3812 1

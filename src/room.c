@@ -68,7 +68,7 @@ void loadRoom(int roomNumber)
 
   freezeTime();
 
-  assert(roomNumber >=0);
+  ASSERT(roomNumber >=0);
 
   if(currentCamera == -1)
   {
@@ -94,7 +94,7 @@ void loadRoom(int roomNumber)
 
   numCameraInRoom = roomDataTable[roomNumber].numCameraInRoom;
 
-  assert(numCameraInRoom < NUM_MAX_CAMERA_IN_ROOM);
+  ASSERT(numCameraInRoom < NUM_MAX_CAMERA_IN_ROOM);
 
 /*
   var_20 = cameraPtr + roomDataPtr->offsetToPosDef;
@@ -107,7 +107,7 @@ void loadRoom(int roomNumber)
   var_20 += 2;
   roomZoneData = var_20;*/
  
-  assert(numCameraInRoom < NUM_MAX_CAMERA_IN_ROOM);
+  ASSERT(numCameraInRoom < NUM_MAX_CAMERA_IN_ROOM);
 
   for(i=0;i<numCameraInRoom;i++) // build all the camera list
   {
@@ -116,7 +116,7 @@ void loadRoom(int roomNumber)
 
     currentCameraIdx = roomDataTable[currentDisplayedRoom].cameraIdxTable[i]; // indexes are between the roomDefStruct and the first zone data
 
-    assert(currentCameraIdx<=numGlobalCamera);
+    ASSERT(currentCameraIdx<=numGlobalCamera);
 
     if(oldCameraIdx == currentCameraIdx)
     {
@@ -140,7 +140,7 @@ void loadRoom(int roomNumber)
         break;
     }
 
-    assert(cameraDataTable[i]->cameraZoneDefTable[j].dummy1 == currentDisplayedRoom);
+    ASSERT(cameraDataTable[i]->cameraZoneDefTable[j].dummy1 == currentDisplayedRoom);
 
     currentCameraZoneList[i] = &cameraDataTable[i]->cameraZoneDefTable[j];
   }

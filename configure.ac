@@ -70,8 +70,6 @@ DATAPATH="$datadir/fitd"
 
 LIBS="$LIBS -lGL -lGLU"
 
-AC_DEFINE(UNIX, 1, [UNIX-variant])
-
 AC_MSG_CHECKING(system)
 case "$host_os" in
     linux*)
@@ -231,6 +229,20 @@ CFLAGS="$CFLAGS $SDL_CFLAGS"
 SDL_LIBS="$SDL_LIBS -lSDL_mixer"
 LIBS="$LIBS $SDL_LIBS"
 AC_LANG_CPLUSPLUS
+
+# ---------------------------------------------------------------------
+# zlib
+# ---------------------------------------------------------------------
+
+AC_MSG_CHECKING([for zlib])
+AC_CHECK_HEADERS(zlib.h,
+	[],
+	AC_MSG_ERROR([I did not find a copy of zlib on your system.
+	Please install it. See http://www.gzip.org/zlib/
+	for more information.
+	])
+)
+LIBS="$LIBS -lz"
 
 # ------------------
 # Warning level

@@ -1136,7 +1136,7 @@ void initEngine(void)
   fseek(fHandle,0,SEEK_SET);
 
   pObjectDataBackup = pObjectData = (u8*)malloc(objectDataSize);
-  assert(pObjectData);
+  ASSERT(pObjectData);
 
   fread(pObjectData,objectDataSize,1,fHandle);
   fclose(fHandle);
@@ -4671,7 +4671,7 @@ int changeCameraSub2(void)
 
   for(i=0;i<numCameraInRoom;i++)
   {
-    assert(i<NUM_MAX_CAMERA_IN_ROOM);
+    ASSERT(i<NUM_MAX_CAMERA_IN_ROOM);
     if(changeCameraSub1(x1,x2,z1,z2,currentCameraZoneList[i])) // if in camera zone ?
     {
       int newAngle = actorPtr->beta + (((cameraDataTable[i]->beta)+0x200)&0x3FF);
