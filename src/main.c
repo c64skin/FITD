@@ -2271,7 +2271,7 @@ void drawZone(char* zoneData,int color)
   }
 
 #ifdef USE_GL
-  drawProjectedBox(x1,x2,y1,y2,z1,z2,type);
+  drawProjectedBox(x1,x2,y1,y2,z1,z2,type,255);
 #else
   drawProjectedLine(x1,y1,z1,x1,y1,z2,type);
   drawProjectedLine(x1,y1,z2,x2,y1,z2,type);
@@ -2310,7 +2310,7 @@ void drawOverlayZone(char* zoneData,int color)
   y2=0;
 
 #ifdef USE_GL
-  drawProjectedBox(x1,x2,y1,y2,z1,z2,color);
+  drawProjectedBox(x1,x2,y1,y2,z1,z2,color,255);
 #else
   drawProjectedLine(x1,y1,z1,x1,y1,z2,color);
   drawProjectedLine(x1,y1,z2,x2,y1,z2,color);
