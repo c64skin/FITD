@@ -22,7 +22,7 @@ void fillpoly(short int * datas, int n, ColorP c) {
     int i, j, k, dir = 1;
     double step, curx;
     
-    printf("fillpoly starting\n");
+//    printf("fillpoly starting\n");
     
     assert(n >= 3);
     
@@ -98,7 +98,7 @@ void fillpoly(short int * datas, int n, ColorP c) {
     y2 = datas[1];
     
     if (((y1 < y2) && (dir == -1)) || ((y1 > y2) && (dir == 1))) {
-	printf("Adding extra (%i, %i)\n", x1, y1);
+//	printf("Adding extra (%i, %i)\n", x1, y1);
 	putdot(x1, y1);
     }
     
