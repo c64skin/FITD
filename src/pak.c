@@ -19,7 +19,7 @@ int loadPakToPtr(char* name, int index, char* ptr)
 	FILE* fHandle;
 	int size;
 
-	sprintf(buffer,"%s/%04X.out",name,index);
+	sprintf(buffer,"%s/%04X.OUT",name,index);
 
 	fHandle = fopen(buffer,"rb");
 
@@ -42,7 +42,7 @@ int getPakSize(char* name, int index)
 	FILE* fHandle;
 	int size;
 
-	sprintf(buffer,"%s/%04X.out",name,index);
+	sprintf(buffer,"%s/%04X.OUT",name,index);
 
 	fHandle = fopen(buffer,"rb");
 
@@ -66,7 +66,7 @@ char* loadPak(char* name, int index)
 	int size;
 	char* ptr;
 
-	sprintf(buffer,"%s/%04X.out",name,index);
+	sprintf(buffer,"%s/%04X.OUT",name,index);
 
 	fHandle = fopen(buffer,"rb");
 

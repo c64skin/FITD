@@ -882,7 +882,7 @@ int printTextSub1(hqrEntryStruct* hqrPtr,int size)
 
 	entryNum = hqrPtr->numUsedEntry;
 
-	dataPtr1 = dataPtr2 = (hqrSubEntryStruct*)(hqrPtr+sizeof(hqrEntryStruct));
+	dataPtr1 = dataPtr2 = (hqrSubEntryStruct*)((char*)hqrPtr+sizeof(hqrEntryStruct));
 
 	key = hqrKeyGen;
 
@@ -922,7 +922,7 @@ char* printTextSub2(hqrEntryStruct* hqrPtr, int index)
 	if(index<0)
 		return NULL;
 
-	dataPtr = (hqrSubEntryStruct*)(hqrPtr+sizeof(hqrEntryStruct));
+	dataPtr = (hqrSubEntryStruct*)((char*)hqrPtr+sizeof(hqrEntryStruct));
 
 	ptr = quickFindEntry(index, hqrPtr->numUsedEntry, dataPtr);
 
