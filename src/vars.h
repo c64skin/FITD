@@ -68,10 +68,10 @@ struct regularTextEntryStruct
 struct hqrEntryStruct
 {
 	char string[10];
-	short int maxFreeData;
-	short int sizeFreeData;
-	short int numMaxEntry;
-	short int numUsedEntry;
+	unsigned short int maxFreeData;
+	unsigned short int sizeFreeData;
+	unsigned short int numMaxEntry;
+	unsigned short int numUsedEntry;
 	char* dataPtr;
 };
 
@@ -80,8 +80,7 @@ struct hqrSubEntryStruct
 	short int key;
 	short int offset;
 	short int size;
-	short int field_6;
-	short int field_8;
+	unsigned int lastTimeUsed;
 };
 
 struct ZVStruct
@@ -357,9 +356,9 @@ extern int transformYCos;
 extern int transformYSin;
 extern int transformZCos;
 extern int transformZSin;
-extern bool transfromUseX;
-extern bool transfromUseY;
-extern bool transfromUseZ;
+extern bool transformUseX;
+extern bool transformUseY;
+extern bool transformUseZ;
 
 extern int translateX;
 extern int translateY;
@@ -377,5 +376,15 @@ extern int actorTurnedToObj;
 
 extern int currentProcessedActorIdx;
 extern actorStruct* currentProcessedActorPtr;
+
+extern int currentLifeActorIdx;
+extern actorStruct* currentLifeActorPtr;
+extern int currentLifeNum;
+
+extern char* currentLifePtr;
+
+extern int setupCameraVar1;
+
+extern unsigned short int renderPointList[6400];
 
 #endif

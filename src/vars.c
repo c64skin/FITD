@@ -149,9 +149,9 @@ int transformYCos;
 int transformYSin;
 int transformZCos;
 int transformZSin;
-bool transfromUseX;
-bool transfromUseY;
-bool transfromUseZ;
+bool transformUseX;
+bool transformUseY;
+bool transformUseZ;
 
 int translateX;
 int translateY;
@@ -170,3 +170,12 @@ int actorTurnedToObj = 0;
 int currentProcessedActorIdx;
 actorStruct* currentProcessedActorPtr;
 
+int currentLifeActorIdx;
+actorStruct* currentLifeActorPtr;
+int currentLifeNum;
+
+char* currentLifePtr;
+
+int setupCameraVar1;
+
+unsigned short int renderPointList[6400];

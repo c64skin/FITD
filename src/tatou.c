@@ -84,8 +84,31 @@ void flip()
 		paletteRGBA[i*4+2] = palette[i*3+2];
 		paletteRGBA[i*4+3] = -1;
 	}
+
+	char* outPtr = scaledScreen;
+	char* inPtr = unkScreenVar;
+
+	for(i=0;i<200;i++)
+	{
+		int j;
+		char* copySource = outPtr;
+
+		for(j=0;j<320;j++)
+		{
+			*(outPtr++) = *(inPtr);
+			*(outPtr++) = *(inPtr++);
+		}
+
+		// copy line
+		for(j=0;j<640;j++)
+		{
+			*(outPtr++) = *(copySource++);
+		}
+		
+	}
+
 	osystem.setPalette(paletteRGBA);
-	osystem.Flip((unsigned char*)unkScreenVar);
+	osystem.Flip((unsigned char*)scaledScreen);
 }
 
 void process_events( void )
@@ -121,6 +144,42 @@ int evalChrono(unsigned int* chrono)
 	return(timer-*chrono);
 }
 
+// bp = x, bx = y, cx = z
+// out
+// xOut = dx, yOut = ax
+void makeRotationMtx(int x, int y, int z, int* xOut, int* yOut)
+{
+	if(x)
+	{
+		int var1 = (((cosTable[(x+0x100)&0x3FF] * y) <<1) &0xFFFF0000) - (((cosTable[x&0x3FF] *z) <<1) & 0xFFFF0000);
+		int var2 = (((cosTable[x&0x3FF] *y) <<1) & 0xFFFF0000) - (((cosTable[(x+0x100)&0x3FF] * z) << 1) & 0xFFFF0000);
+
+		*xOut = var2>>16;
+		*yOut = var1>>16;
+	}
+	else
+	{
+		*xOut = z;
+		*yOut = y;
+	}
+}
+
+void rotateModel(int x,int y,int z,int alpha,int beta,int gamma,int time)
+{
+	int x1;
+	int y1;
+	int x2;
+	int y2;
+
+	time = 0x22D8;
+
+	makeRotationMtx(alpha+0x200,-time,0,&x1,&y1);
+	makeRotationMtx(beta+0x200,y1,0,&x2,&y2);
+
+	setupSelfModifyingCode(x2+x,-x1+y,y2+z);
+	setupPointTransformSM(alpha,beta,gamma);
+}
+
 ////////////////////////
 
 int make3dTatou(void)
@@ -144,7 +203,7 @@ int make3dTatou(void)
 	rotation = 256;
 	unk1 = 8;
 
-	//setupSMCode(160,100,128,500,490);
+	setupSMCode(160,100,128,500,490);
 
 	copyPalette(palette,paletteBackup);
 
@@ -165,7 +224,7 @@ int make3dTatou(void)
 	{
 		process_events();
 
-		if(evalChrono(&localChrono)<=0x0) // avant eclair
+		if(evalChrono(&localChrono)<=0x10) // avant eclair
 		{
 		}
 		else // eclair
@@ -184,7 +243,7 @@ int make3dTatou(void)
 
 			clearScreenTatou();
 
-		/*	rotateModel(0,0,0,unk1,rotation,0,time); */
+			rotateModel(0,0,0,unk1,rotation,0,time);
 
 			renderModel(0,0,0,0,0,0,tatou3d);
 
@@ -194,24 +253,26 @@ int make3dTatou(void)
 			fadeIn(palette);
 
 		//	while(input2==0 && input1 == 0 && inputKey == 0) // boucle de rotation du tatou
-		//	while(1)
+			while(1)
 			{
 				process_events();
 
-				time = deltaTime;
+				time = 0;
 
 				if(time>16000)
 					break;
 
 				rotation -=8;
 
-			/*	clearScreenTatou();
+				clearScreenTatou();
 
-				rotateModel(0,0,0,unk1,rotation,0,time);*/
+				rotateModel(0,0,0,unk1,rotation,0,time);
 
 				renderModel(0,0,0,0,0,0,tatou3d);
 
 				blitScreenTatou();
+
+				flip();
 			}
 
 			break;

@@ -1471,7 +1471,7 @@ void initEngine(void)
 	defines.hero = i;
 
 	listLife = HQR_InitRessource("ListLife", 10000, 100);
-	listTrack = HQR_InitRessource("ListTrak", 100, 10);
+	listTrack = HQR_InitRessource("ListTrak", 1000, 10);
 
 	// TODO: missing dos memory check here
 
@@ -1724,11 +1724,11 @@ void setupPointTransformSM(int x, int y, int z)
 	{
 		transformXCos = cosTable[transformX];
 		transformXSin = cosTable[(transformX+0x100)&0x3FF];
-		transfromUseX = true;
+		transformUseX = true;
 	}
 	else
 	{
-		transfromUseX = false;
+		transformUseX = false;
 	}
 
 	transformY = y&0x3FF;
@@ -1736,11 +1736,11 @@ void setupPointTransformSM(int x, int y, int z)
 	{
 		transformYCos = cosTable[transformY];
 		transformYSin = cosTable[(transformY+0x100)&0x3FF];
-		transfromUseY = true;
+		transformUseY = true;
 	}
 	else
 	{
-		transfromUseY = false;
+		transformUseY = false;
 	}
 
 	transformZ = z&0x3FF;
@@ -1748,11 +1748,11 @@ void setupPointTransformSM(int x, int y, int z)
 	{
 		transformZCos = cosTable[transformZ];
 		transformZSin = cosTable[(transformZ+0x100)&0x3FF];
-		transfromUseZ = true;
+		transformUseZ = true;
 	}
 	else
 	{
-		transfromUseZ = false;
+		transformUseZ = false;
 	}
 }
 
@@ -1892,6 +1892,64 @@ void updateAllActorAndObjectsSub1(int index)
 	}
 }
 
+char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
+{
+	if(index<0)
+		return NULL;
+
+	hqrSubEntryStruct* hqrSubPtr = (hqrSubEntryStruct*)(((char*)hqrPtr)+sizeof(hqrEntryStruct));
+
+	hqrSubEntryStruct* foundEntry = quickFindEntry(index,hqrPtr->numUsedEntry,hqrSubPtr);
+
+	if(foundEntry)
+	{
+		foundEntry->lastTimeUsed = timer;
+//		hqrVar1 = 0;
+
+		return(hqrPtr->dataPtr + foundEntry->offset);
+	}
+	else
+	{
+		//freezeTime();
+		int size = getPakSize(hqrPtr->string,index);
+
+		if(size>=hqrPtr->maxFreeData)
+		{
+			theEnd(1,hqrPtr->string);
+		}
+
+		unsigned int time = timer;
+
+		foundEntry = hqrSubPtr;
+
+		while(size>hqrPtr->sizeFreeData || hqrPtr->numUsedEntry>= hqrPtr->numMaxEntry)
+		{
+			printf("Unimplemented code int HQR_Get\n");
+			exit(1);
+		}
+
+		char* ptr = hqrPtr->dataPtr + (hqrPtr->maxFreeData - hqrPtr->sizeFreeData);
+
+		if(!loadPakToPtr(hqrPtr->string,index,ptr))
+		{
+			theEnd(1,hqrPtr->string);
+		}
+
+//		hqrVar1 = 1;
+
+		foundEntry[hqrPtr->numUsedEntry].key = index;
+		foundEntry[hqrPtr->numUsedEntry].lastTimeUsed = timer;
+		foundEntry[hqrPtr->numUsedEntry].offset = hqrPtr->maxFreeData - hqrPtr->sizeFreeData;
+		foundEntry[hqrPtr->numUsedEntry].size = size;
+
+		hqrPtr->numUsedEntry++;
+		hqrPtr->sizeFreeData -= size;
+
+		return(ptr);
+	}
+
+}
+
 int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y, int z, int stage, int room, int alpha, int beta, int gamma, int var2, int var3, int var4, int var5)
 {
 	int i;
@@ -1988,13 +2046,13 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 		{
 			char* animPtr = HQR_Get(listAnim,var2);
 
-			initAnimInBody(var3,animPtr,bodyPtr);
+//			initAnimInBody(var3,animPtr,bodyPtr);
 
-			actorPtr->field_4C = getAnimParam(animPtr);
+//			actorPtr->field_4C = getAnimParam(animPtr);
 			actorPtr->anim = 0;
 			actorPtr->flags |= 1;
 
-			computeScreenBox(actorPtr->field_22 + actorPtr->field_5A, actorPtr->field_24 + actorPtr->field_5C, actorPtr->field_26 + actorPtr->field_5E, actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
+//			computeScreenBox(actorPtr->field_22 + actorPtr->field_5A, actorPtr->field_24 + actorPtr->field_5C, actorPtr->field_26 + actorPtr->field_5E, actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
 
 			if(BBox3D1<0)
 				BBox3D1 = 0;
@@ -2015,7 +2073,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 		}
 		else
 		{
-			if(!actorPtr->flags & 4)
+			if(!(actorPtr->flags & 4))
 			{
 				actorPtr->flags &= 0xFFFE;
 			}
@@ -2053,6 +2111,36 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	}
 
 	return(0);
+}
+
+void setupCameraSub4(void)
+{
+	copyToScreen(aux,aux2);
+
+	//TODO: implementer la suite
+}
+
+void setMoveMode(int trackMode, int trackNumber)
+{
+	currentProcessedActorPtr->trackMode = trackMode;
+
+	switch(trackMode)
+	{
+	case 2:
+		{
+			currentProcessedActorPtr->trackNumber = trackNumber;
+			currentProcessedActorPtr->body = -1;
+			break;
+		}
+	case 3:
+		{
+			currentProcessedActorPtr->trackNumber = trackNumber;
+			currentProcessedActorPtr->body = -1;
+			currentProcessedActorPtr->positionInTrack = 0;
+			currentProcessedActorPtr->body = -1;
+			break;
+		}
+	}
 }
 
 void updateAllActorAndObjects()
@@ -2185,7 +2273,7 @@ void updateAllActorAndObjects()
 
 							currentProcessedActorPtr->field_0 = i;
 
-//							setMoveMode(currentProcessedActorPtr->trackMode, currentProcessedActorPtr->trackNumber);
+							setMoveMode(currentProcessedActorPtr->trackMode, currentProcessedActorPtr->trackNumber);
 
 							currentProcessedActorPtr->positionInTrack = currentObject->positionInTrack;
 
@@ -2231,10 +2319,10 @@ void setupCamera()
 	setupCameraSub1();
 	updateAllActorAndObjects();
 /*	setupCameraSub2();
-	setupCameraSub3();
+	setupCameraSub3(); */
 	setupCameraSub4();
-	setupCameraSub5();
-
+/*	setupCameraSub5();
+*/
 	if(mainVar1==2)
 	{
 		setupCameraVar1 = 2;
@@ -2245,10 +2333,420 @@ void setupCamera()
 		{
 			setupCameraVar1 = 1;
 		}
-	}*/
+	}
 
 	mainVar1 = 0;
 //unfreezeTime();
+}
+
+int evalVar(void)
+{
+	int var1;
+
+	var1 = *(short int*)(currentLifePtr);
+	currentLifePtr+=2;
+
+	if(var1 == -1)
+	{
+		int temp = *(short int*)(currentLifePtr);
+		currentLifePtr+=2;
+
+		return(temp);
+	}
+	else
+	if(var1 == 0)
+	{
+		printf("Unimplemented code int evalVar: var1 == 0\n");
+		exit(1);
+	}
+	else
+	{
+		if(var1 & 0x8000)
+		{
+			printf("Unimplemented code int evalVar: var1 & 0x8000\n");
+			exit(1);
+		}
+		else
+		{
+			int actorIdx = currentLifeActorIdx;
+			actorStruct* actorPtr = currentLifeActorPtr;
+
+			switch(var1)
+			{
+			case 0xC: // NUM_TRACK ?
+				{
+					return(evalChrono(&actorPtr->field_36) / 0x3C0000); // recheck
+					break;
+				}
+			case 0xB: // MARK ?
+				{
+					return(actorPtr->trackNumber);
+					break;
+				}
+			default:
+				{
+					printf("Unhandled test type %X in evalVar\n",var1);
+					exit(1);
+					break;
+				}
+			}
+		}
+	}
+}
+
+void processTrack(void)
+{
+	switch(currentProcessedActorPtr->trackMode)
+	{
+	case 1: // manual
+		{
+			printf("Manual move !\n");
+			break;
+		}
+	case 2: // ?
+		{
+			printf("unsupported move mode 2\n");
+			exit(1);
+			break;
+		}
+	case 3: // track
+		{
+			char* trackPtr = HQR_Get(listTrack,currentProcessedActorPtr->trackNumber);
+			
+			trackPtr+=currentProcessedActorPtr->positionInTrack * 2;
+
+			short int trackMacro = *(short int*)trackPtr;
+			trackPtr += 2;
+
+			switch(trackMacro)
+			{
+			case 4: // BODY
+				{
+					currentProcessedActorPtr->body = *(short int*)(trackPtr);
+					trackPtr += 2;
+					currentProcessedActorPtr->positionInTrack += 2;
+					break;
+				}
+			default:
+				{
+					printf("Unknown track macro %X\n",trackMacro);
+					exit(1);
+					break;
+				}
+			}
+
+			break;
+		}
+	}
+
+	currentProcessedActorPtr->beta &= 0x3FF;
+}
+
+void processLife(int lifeNum)
+{
+	int exitLife = 0;
+	int switchVal = 0;
+	int var_6;
+
+	currentLifeActorIdx = currentProcessedActorIdx;
+	currentLifeActorPtr = currentProcessedActorPtr;
+	currentLifeNum = lifeNum;
+
+	currentLifePtr = HQR_Get(listLife,lifeNum);
+
+	while(!exitLife)
+	{
+		int lifeTempVar1;
+		int lifeTempVar2;
+		int lifeTempVar3;
+
+		int switchVal = 0;
+
+		var_6 = -1;
+
+		short int currentOpcode = *(short int*)(currentLifePtr);
+		currentLifePtr+=2;
+
+		if(currentOpcode & 0x8000)
+		{
+			printf("Unimplemented code in processLife\n");
+			exit(1);
+		}
+		else
+		{
+			switch(currentOpcode & 0x7FFF)
+			{
+			case 0x0: // DO_MOVE
+				{
+					processTrack();
+					break;
+				}
+			case 0x4: // IF_DIF
+				{
+					lifeTempVar1 = evalVar();
+					lifeTempVar2 = evalVar();
+
+					if(lifeTempVar1 == lifeTempVar2)
+					{
+						currentLifePtr+=2;
+					}
+					else
+					{
+						lifeTempVar2 = *(short int*)(currentLifePtr);
+						currentLifePtr += lifeTempVar2*2;
+						currentLifePtr += 2;
+					}
+
+					break;
+				}
+			case 0xC: // RETURN
+				{
+					exitLife = 1;
+					break;
+				}
+			case 0xD: // ?
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					//anim(lifeTempVar1, 1, -1);
+
+					break;
+				}
+			case 0xF: // MOVE
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					lifeTempVar2 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					setMoveMode(lifeTempVar1,lifeTempVar2);
+
+					break;
+				}
+			case 0x11: // MESSAGE
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					//makeMessage(lifeTempVar1);
+
+					break;
+				}
+			case 0x19: // SWITCH
+				{
+					switchVal = evalVar();
+					break;
+				}
+			case 0x1A: // CASE
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					if(lifeTempVar1 == switchVal)
+					{
+						currentLifePtr+=2;
+					}
+					else
+					{
+						lifeTempVar2 = *(short int*)(currentLifePtr);
+						currentLifePtr += lifeTempVar2*2;
+						currentLifePtr += 2;
+					}
+		
+					break;
+				}
+			case 0x1F: // LIFE
+				{
+					currentProcessedActorPtr->life = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					break;
+				}
+			case 0x33: // CAMERA_TARGET
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					if(lifeTempVar1 != currentCameraTarget)
+					{
+						lifeTempVar2 = objectTable[lifeTempVar1].ownerIdx;
+
+						if(lifeTempVar1 != -1)
+						{
+							currentCameraTarget = lifeTempVar1;
+							genVar9 = lifeTempVar2;
+
+							lifeTempVar3 = actorTable[genVar9].room;
+
+							if(lifeTempVar3 != currentDisplayedRoom)
+							{
+								needChangeRoom = 1;
+//								newRoom = lifeTempVar3;
+							}
+						}
+						else
+						{
+							printf("Partialy unimplemented life opcode 0x33\n");
+							exit(1);
+						}
+					}
+
+					break;
+				}
+			case 0x36: // TEST_COL
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					if(lifeTempVar1)
+					{
+						currentProcessedActorPtr->dynFlags |= 1;
+					}
+					else
+					{
+						currentProcessedActorPtr->dynFlags &= 0xFFFE;
+					}
+
+					break;
+				}
+			case 0x40: // LIGHT
+				{
+					lifeTempVar1 = 2-((*(short int*)(currentLifePtr))<<1);
+					currentLifePtr+=2;
+
+					if(!defines.lightVar)
+					{
+						if(lightVar1 != lifeTempVar1)
+						{
+							lightVar1 = lifeTempVar1;
+							lightVar2 = 1;
+						}
+					}
+
+					break;
+				}
+			case 0x41: // SHAKING
+				{
+					//shakingState = shakingAmplitude = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+/*					if(shakingState==0)
+					{
+						stopShaking();
+					} */
+
+					break;
+				}
+			case 0x4D: // ? shaking related
+				{
+//					mainLoopVar1 = shakeVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+/*					if(mainLoopVar1)
+					{
+						//setupShaking(-600);
+					}
+					else
+					{
+						//setupShaking(1000);
+					} */
+
+					break;
+				}
+			case 0x51: // ? fade out music and play another music ?
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					/*if(currentMusic!=-1)
+					{
+						soundFunc1(0,0,0x8000); // fade out music
+						startChrono(&musicChrono); // fade out music timer
+						currentMusic = -2; // fade out mode
+						genVar8 = lifeTempVar1; // next music to play
+					}
+					else
+					{
+						changeMusic(lifeTempVar1);
+					}*/
+
+					break;
+				}
+			default:
+				{
+					printf("Unknown opcode %X in processLife\n",currentOpcode & 0x7FFF);
+					exit(1);
+				}
+			}
+		}
+
+		if(var_6 != -1)
+		{
+			currentProcessedActorIdx = currentLifeActorIdx;
+			currentProcessedActorPtr = currentLifeActorPtr;
+		}
+
+	}
+
+	currentLifeNum = -1;
+}
+
+void mainDraw(int mode)
+{
+	if(mode == 0)
+		mode = 1; // DEBUG
+
+	if(mode== 0)
+	{
+		//restoreDirtyRects();
+	}
+	else
+	{
+		genVar5 = 0;
+		copyToScreen(aux2,screen);
+	}
+
+//	setClipSize(0,0,319,199);
+	genVar6 = 0;
+
+	int i;
+
+	/*for(i=0;i<numActorInList;i++)
+	{
+	}*/
+
+	/*if(drawTextOverlay())
+	{
+		addToRedrawBox();
+	}*/
+
+	if(!lightVar1)
+	{
+		if(mode)
+		{
+			if(mode!=2 || lightVar2)
+			{
+				//makeBlackPalette();
+				flipScreen();
+				//make3dTatouUnk1(0x10,0);
+				lightVar2 = 0;
+			}
+			else
+			{
+				flipScreen();
+			}
+		}
+		else
+		{
+			//mainDrawSub1();
+		}
+	}
+	else
+	{
+	}
+
+	flipScreen();
 }
 
 void mainLoop(int allowSystemMenu)
@@ -2343,7 +2841,7 @@ void mainLoop(int allowSystemMenu)
 				{
 					if(currentProcessedActorPtr->life != -1 && currentProcessedActorPtr->lifeMode != -1)
 					{
-//						processLife(currentProcessedActorPtr->life);
+						processLife(currentProcessedActorPtr->life);
 					}
 				}
 
@@ -2395,7 +2893,7 @@ void mainLoop(int allowSystemMenu)
 
 //		mainLoopSub1();
 
-//		renderActorList(setupCameraVar1);
+		mainDraw(setupCameraVar1);
 
 //		updateSound2();
 	}
