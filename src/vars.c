@@ -25,7 +25,7 @@ char* aitdBoxGfx;
 
 char palette[256*3];
 
-OSystem osystem;
+//OSystem osystem;
 
 char unkScreenVar[320*200];
 
@@ -271,7 +271,7 @@ saveEntry saveTable[] = {
 	{ &lightVar1, 2 },
 	{ &shakingAmplitude, 2 },
 	{ &shakeVar1, 2 },
-	{ (void*)timer, 4 },
+	{ &timer, 4 },
 	{ &timerFreeze1, 4},
 	{ &currentMusic, 2},
 	{ NULL, 0 },

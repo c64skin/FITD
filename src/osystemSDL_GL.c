@@ -24,6 +24,9 @@
 #include "SDL_sound.h"
 #include "osystem.h"
 
+int osystem_mouseRight;
+int osystem_mouseLeft;
+
 struct quadStruct
 {
 	float x1;
@@ -48,6 +51,8 @@ struct quadStruct
 	bool sorted;
 };
 
+typedef struct quadStruct quadStruct;
+
 quadStruct quadTable[5000];
 int positionInQuadTable = 0;
 
@@ -66,12 +71,12 @@ char RGBA_Pal[256*4];
 GLuint		backTexture;
 GLuint		modelsDisplayList;
 
-void OSystem::delay(int time)
+void osystem_delay(int time)
 {
     SDL_Delay(time);
 }
 
-void OSystem::updateImage()
+void osystem_updateImage()
 {
 }
 
@@ -87,7 +92,7 @@ void OSystem::updateImage()
     mouseRight = 0;
 }*/
 
-OSystem::OSystem()	// that's the constructor of the system dependent
+osystem_init()	// that's the constructor of the system dependent
 						// object used for the SDL port
 {
     unsigned char *keyboard;
@@ -163,8 +168,8 @@ OSystem::OSystem()	// that's the constructor of the system dependent
 	    exit(1);
 	}
 
-    mouseLeft = 0;
-    mouseRight = 0;
+    osystem_mouseLeft = 0;
+    osystem_mouseRight = 0;
 
 	glEnable(GL_TEXTURE_2D);
 	//glEnable(GL_CULL_FACE);
@@ -185,19 +190,19 @@ OSystem::OSystem()	// that's the constructor of the system dependent
 	modelsDisplayList = glGenLists(1);
 }
 
-void OSystem::setPalette(byte * palette)
+void osystem_setPalette(byte * palette)
 {
 	memcpy(RGBA_Pal,palette,256*4);
 }
 
-void OSystem::getPalette(char* palette)
+void osystem_getPalette(char* palette)
 {
 	memcpy(palette,RGBA_Pal,256*4);
 }
 
 char tempBuffer2[1024*512*3];
 
-void OSystem::flip(unsigned char *videoBuffer)
+void osystem_flip(unsigned char *videoBuffer)
 {
 	int i;
 	int j;
@@ -206,6 +211,7 @@ void OSystem::flip(unsigned char *videoBuffer)
 	for(j=0;j<positionInQuadTable;j++)
 	{
 		int bestDepth = -1;
+		int color;
 		bestIdx = -1;
 
 		for(i=0;i<positionInQuadTable;i++)
@@ -230,7 +236,7 @@ void OSystem::flip(unsigned char *videoBuffer)
 		glEnd();
 
 	//	glDisable(GL_DEPTH_TEST);
-		int color = quadTable[bestIdx].color+3;
+		color = quadTable[bestIdx].color+3;
 		glColor3ub(palette[color*3],palette[color*3+1],palette[color*3+2]);
 		glBegin(GL_LINE_LOOP);
 		glVertex3f(quadTable[bestIdx].x1,quadTable[bestIdx].y1,-quadTable[bestIdx].z1/1000.f);
@@ -248,7 +254,7 @@ void OSystem::flip(unsigned char *videoBuffer)
 	SDL_GL_SwapBuffers( );
 }
 
-void OSystem::startFrame()
+void osystem_startFrame()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
@@ -257,7 +263,7 @@ void OSystem::startFrame()
 
 char tempBuffer3[320*200*3];
 
-void OSystem::CopyBlockPhys(unsigned char *videoBuffer, int left, int top, int right, int bottom)
+void osystem_CopyBlockPhys(unsigned char *videoBuffer, int left, int top, int right, int bottom)
 {
 	char* out = tempBuffer3;
 	char* in = (char*)videoBuffer + left + top * 320;
@@ -294,7 +300,7 @@ void OSystem::CopyBlockPhys(unsigned char *videoBuffer, int left, int top, int r
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void OSystem::initBuffer(char *buffer, int width, int height)
+void osystem_initBuffer(char *buffer, int width, int height)
 {   
 	memset(tempBuffer2,0,1024*512*3);
 	glGenTextures(1, &backTexture);
@@ -304,7 +310,7 @@ void OSystem::initBuffer(char *buffer, int width, int height)
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 }
 
-void OSystem::crossFade(char *buffer, char *palette)
+void osystem_crossFade(char *buffer, char *palette)
 {
 }
 
@@ -329,14 +335,15 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len)
 	}
 }
 
-void OSystem::playSample(char* sampleName)
+void osystem_playSample(char* sampleName)
 {
+	Sound_Sample *sample;
+	Sound_AudioInfo info;
+
 	return;
 #ifdef UNIX
 	return;
 #endif
-	Sound_Sample *sample;
-	Sound_AudioInfo info;
 
 	info.channels = 0;
 	info.format = 0;
@@ -392,21 +399,21 @@ void OSystem::playSample(char* sampleName)
 	}
 }
 
-void OSystem::startBgPoly()
+void osystem_startBgPoly()
 {
 	glDisable(GL_DEPTH_TEST);
 	glBindTexture(GL_TEXTURE_2D, backTexture);
 	glBegin(GL_POLYGON);
 }
 
-void OSystem::endBgPoly()
+void osystem_endBgPoly()
 {
 	glEnd();
 	glEnable(GL_DEPTH_TEST);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void OSystem::addBgPolyPoint(int x, int y)
+void osystem_addBgPolyPoint(int x, int y)
 {
 	glColor4ub(255,255,255,255);
 	glTexCoord2f(x/(float)1024,y/(float)512);
@@ -414,21 +421,21 @@ void OSystem::addBgPolyPoint(int x, int y)
 }
 
 
-void OSystem::stopFrame()
+void osystem_stopFrame()
 {
 }
 
-void OSystem::startModelRender()
+void osystem_startModelRender()
 {
 	//glNewList(modelsDisplayList, GL_COMPILE);
 }
 
-void OSystem::stopModelRender()
+void osystem_stopModelRender()
 {
 	//glEndList();
 }
 
-void OSystem::fillPoly(float* buffer, int numPoint, unsigned char color)
+void osystem_fillPoly(float* buffer, int numPoint, unsigned char color)
 {
 	int i;
 
@@ -444,7 +451,7 @@ void OSystem::fillPoly(float* buffer, int numPoint, unsigned char color)
 	glEnd();
 }
 
-void OSystem::draw3dLine(float x1, float y1, float z1, float x2, float y2, float z2, unsigned char color)
+void osystem_draw3dLine(float x1, float y1, float z1, float x2, float y2, float z2, unsigned char color)
 {
 	glColor3ub(palette[color*3],palette[color*3+1],palette[color*3+2]);
 
@@ -456,7 +463,7 @@ void OSystem::draw3dLine(float x1, float y1, float z1, float x2, float y2, float
 	glEnd();
 }
 
-void OSystem::cleanScreenKeepZBuffer()
+void osystem_cleanScreenKeepZBuffer()
 {
 	glClear(GL_COLOR_BUFFER_BIT );
 
@@ -484,7 +491,7 @@ void OSystem::cleanScreenKeepZBuffer()
 	glEnable(GL_DEPTH_TEST);
 }
 
-void OSystem::draw3dQuad(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4, unsigned char color)
+void osystem_draw3dQuad(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4, unsigned char color)
 {
 	quadTable[positionInQuadTable].x1 = x1;
 	quadTable[positionInQuadTable].y1 = y1;

@@ -5,12 +5,11 @@ void readKeyboard(void)
 {
     int size;
     int j;
+	unsigned char *keyboard;
 
     inputKey = 0;
 	input1 = 0;
 	input2 = 0;
-
-	unsigned char *keyboard;
 
     SDL_PumpEvents();
 

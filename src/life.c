@@ -46,11 +46,13 @@ int randRange(int min, int max)
 int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, int beta, int gamma, ZVStruct* zvPtr)
 {
 	short int localSpecialTable[4];
+	actorStruct* currentActorPtr;
+	int i;
+	ZVStruct* actorZvPtr;
 
 	memcpy(localSpecialTable, specialTable, 8);
 
-	actorStruct* currentActorPtr = actorTable;
-	int i;
+	currentActorPtr = actorTable;
 
 	for(i=0;i<50;i++) // count the number of active actors
 	{
@@ -90,7 +92,7 @@ int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, i
 	currentActorPtr->modY = 0;
 	currentActorPtr->modZ = 0;
 
-	ZVStruct* actorZvPtr = &currentActorPtr->zv;
+	actorZvPtr = &currentActorPtr->zv;
 
 	copyZv(zvPtr, actorZvPtr);
 
@@ -98,6 +100,9 @@ int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, i
 	{
 	case 0:
 		{
+			char* flowPtr;
+			int j;
+			
 			actorZvPtr->ZVX1 -= X;
 			actorZvPtr->ZVX2 -= X;
 			actorZvPtr->ZVY1 -= Y;
@@ -107,7 +112,7 @@ int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, i
 
 			currentActorPtr->FRAME = printTextSub1(hqrUnk,304);
 
-			char* flowPtr = printTextSub2(hqrUnk,currentActorPtr->FRAME);
+			flowPtr = printTextSub2(hqrUnk,currentActorPtr->FRAME);
 
 			if(!flowPtr)
 			{
@@ -122,7 +127,6 @@ int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, i
 			*(short int*)flowPtr = 30; // num of points
 			flowPtr+=2;
 
-			int j;
 
 			for(j=0;j<30;j++)
 			{
@@ -165,13 +169,13 @@ void getHardClip()
 {
 	ZVStruct* zvPtr = &currentProcessedActorPtr->zv;
 	char* etageData = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4);
+	short int numEntry;
+	int i;
 
 	etageData += *(short int*)etageData;
 
-	short int numEntry = *(short int*)etageData;
+	numEntry = *(short int*)etageData;
 	etageData += 2;
-
-	int i;
 
 	for(i=0;i<numEntry;i++)
 	{
@@ -236,12 +240,12 @@ void animMove(int a,int b,int c,int d,int e,int f,int g)
 
 void setStage(int newStage, int newRoomLocal, int X, int Y, int Z)
 {
-	currentProcessedActorPtr->stage = newStage;
-	currentProcessedActorPtr->room = newRoomLocal;
-
 	int animX;
 	int animY;
 	int animZ;
+	
+	currentProcessedActorPtr->stage = newStage;
+	currentProcessedActorPtr->room = newRoomLocal;
 
 	animX = currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
 	animY = currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
@@ -303,9 +307,11 @@ void setStage(int newStage, int newRoomLocal, int X, int Y, int Z)
 
 void doRealZv(actorStruct* actorPtr)
 {
+	ZVStruct* zvPtr;
+	
 	computeScreenBox(0,0,0,actorPtr->alpha, actorPtr->beta, actorPtr->gamma, HQR_Get(listBody, actorPtr->bodyNum) );
 
-	ZVStruct* zvPtr = &actorPtr->zv;
+	zvPtr = &actorPtr->zv;
 
 	printf("implement setupRealZv\n");
 //	setupRealZv(zvPtr);
@@ -323,14 +329,13 @@ void processLife(int lifeNum)
 	int exitLife = 0;
 	//int switchVal = 0;
 	int var_6;
+	int switchVal = 0;
 
 	currentLifeActorIdx = currentProcessedActorIdx;
 	currentLifeActorPtr = currentProcessedActorPtr;
 	currentLifeNum = lifeNum;
 
 	currentLifePtr = HQR_Get(listLife,lifeNum);
-
-	int switchVal = 0;
 
 	while(!exitLife)
 	{
@@ -341,10 +346,11 @@ void processLife(int lifeNum)
 		int lifeTempVar5;
 		int lifeTempVar6;
 		int lifeTempVar7;
+		short int currentOpcode;
 
 		var_6 = -1;
 
-		short int currentOpcode = *(short int*)(currentLifePtr);
+		currentOpcode = *(short int*)(currentLifePtr);
 		currentLifePtr+=2;
 
 //		printf("%d:opcode: %04X\n",lifeNum, currentOpcode);
@@ -838,11 +844,11 @@ processOpcode:
 				}
 			case 0x1D: // MULTI_CASE
 				{
+					int i;
 					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
 					lifeTempVar2 = 0;
-					int i;
 
 					for(i=0;i<lifeTempVar1;i++)
 					{
@@ -1398,13 +1404,13 @@ processOpcode:
 				}
 			case 0x4E: // displayScreen
 				{
+					unsigned int chrono;
+					
 					loadPakToPtr("ITD_RESS", *(short int*)currentLifePtr, aux);
 					currentLifePtr+=2;
 
 					copyToScreen(aux,unkScreenVar);
 					flip();
-
-					unsigned int chrono;
 
 					startChrono(&chrono);
 					lifeTempVar1 = *(short int*)currentLifePtr;
@@ -1417,9 +1423,10 @@ processOpcode:
 
 					do
 					{
+						unsigned int time;
 						process_events();
 						readKeyboard();
-						unsigned int time;
+						
 						timer = timeGlobal;
 
 						time = evalChrono(&chrono);

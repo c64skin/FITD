@@ -290,12 +290,14 @@ void computeRotationMatrix(char* ptr)
 {
 	int baseBone = *(short int*)(ptr);
 	int numPoints = *(short int*)((ptr)+2);
+	int temp;
+	int temp2;
 
 	computeBoneRotation(pointBuffer+baseBone/2,numPoints);
 
-	int temp = *((ptr)+7);
+	temp = *((ptr)+7);
 
-	int temp2 = numOfBones - temp;
+	temp2 = numOfBones - temp;
 
 	do
 	{
@@ -338,6 +340,10 @@ void computeTranslation2(int transX,int transY,int transZ,char* ptr)
 
 int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, char* ptr)
 {
+	char* tempPtr;
+	int i;
+	char* si;
+
 	renderX = x - translateX;
 	renderY = y;
 	renderZ = z - translateZ;
@@ -354,13 +360,11 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 	memcpy(bonesBuffer,ptr,numOfBones*2);
 	ptr+=numOfBones*2;
 
-	char* tempPtr = ptr;
+	tempPtr = ptr;
 
 	*(short int*)(ptr+0xA) = alpha;
 	*(short int*)(ptr+0xC) = beta;
 	*(short int*)(ptr+0xE) = gamma;
-
-	int i;
 
 	for(i=0;i<numOfBones;i++)
 	{
@@ -401,7 +405,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 		}
 	}
 
-	char* si = tempPtr;
+	si = tempPtr;
 
 	for(i=0;i<numOfBones;i++)
 	{
@@ -430,10 +434,17 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 	tempOutPtr = si;
 
 	{
-		numPointInPoly = numOfPoints;
 		char* ptr = (char*)pointBuffer;
-
 		short int* outPtr = pointBuffer;
+		
+
+#ifdef USE_GL
+		float* outPtr2;
+#else
+		short int* outPtr2;
+#endif
+
+		numPointInPoly = numOfPoints;
 
 		for(i=0;i<numOfPoints;i++)
 		{
@@ -471,19 +482,19 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 		}
 
 		ptr = (char*)pointBuffer;
-#ifdef USE_GL
-		float* outPtr2 = renderPointList;
-#else
-		short int* outPtr2 = renderPointList;
-#endif
+		outPtr2 = renderPointList;
 		
 		do
 		{
-			float X = *(short int*)ptr;
+			float X;
+			float Y;
+			float Z;
+			
+			X = *(short int*)ptr;
 			ptr+=2;
-			float Y = *(short int*)ptr;
+			Y = *(short int*)ptr;
 			ptr+=2;
-			float Z = *(short int*)ptr;
+			Z = *(short int*)ptr;
 			ptr+=2;
 
 			Z += cameraX;
@@ -497,6 +508,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 			else
 			{
 				float transformedX = ((X * cameraY) / Z) + cameraCenterX;
+				float transformedY;
 
 				*(outPtr2++) = transformedX;
 
@@ -506,7 +518,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 				if(transformedX > BBox3D3)
 					BBox3D3 = transformedX;
 
-				float transformedY = ((Y * cameraZ) / Z) + cameraCenterY;
+				transformedY = ((Y * cameraZ) / Z) + cameraCenterY;
 
 				*(outPtr2++) = transformedY;
 
@@ -534,6 +546,13 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 int prerenderFlag0(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, char* ptr)
 {
 
+	int var1;
+#ifdef USE_GL
+		float* outPtr;
+#else
+		short int* outPtr;
+#endif
+
 	renderX = x - translateX;
 	renderY = y;
 	renderZ = z - translateZ;
@@ -556,34 +575,38 @@ int prerenderFlag0(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr
 		modelSinGamma = cosTable[(gamma+0x100)&0x3FF];
 	}
 
-	int var1 = *(short int*)ptr;
+	var1 = *(short int*)ptr;
 	ptr+=2;
 
 // DEBUG
 	numPointInPoly = var1;
 //
 
-#ifdef USE_GL
-		float* outPtr = renderPointList;
-#else
-		short int* outPtr = renderPointList;
-#endif
+	outPtr = renderPointList;
 
 	do
 	{
 #ifdef USE_GL
-		float X = *(short int*)ptr;
+		float X;
+		float Y;
+		float Z;
+		
+		X = *(short int*)ptr;
 		ptr+=2;
-		float Y = *(short int*)ptr;
+		Y = *(short int*)ptr;
 		ptr+=2;
-		float Z = *(short int*)ptr;
+		Z = *(short int*)ptr;
 		ptr+=2;
 #else
-		int X = *(short int*)ptr;
+		int X;
+		int Y;
+		int Z;
+		
+		X = *(short int*)ptr;
 		ptr+=2;
-		int Y = *(short int*)ptr;
+		Y = *(short int*)ptr;
 		ptr+=2;
-		int Z = *(short int*)ptr;
+		Z = *(short int*)ptr;
 		ptr+=2;
 #endif
 
@@ -625,6 +648,9 @@ int prerenderFlag0(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr
 		}
 		else
 		{
+			float transformedX;
+			float transformedY;
+			
 			Y -= translateY;
 			Z += renderZ;
 
@@ -632,7 +658,7 @@ int prerenderFlag0(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr
 
 			Z += cameraX;
 
-			float transformedX = ((X * cameraY) / Z) + cameraCenterX;
+			transformedX = ((X * cameraY) / Z) + cameraCenterX;
 
 			*(outPtr++) = transformedX;
 
@@ -642,7 +668,7 @@ int prerenderFlag0(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr
 			if(transformedX > BBox3D3)
 				BBox3D3 = transformedX;
 
-			float transformedY = ((Y * cameraZ) / Z) + cameraCenterY;
+			transformedY = ((Y * cameraZ) / Z) + cameraCenterY;
 
 			*(outPtr++) = transformedY;
 
@@ -682,12 +708,18 @@ void primFunctionDefault(int primType,char** ptr,char** out)
 
 void primType0(int primType, char** ptr, char** out) // line tested
 {
+	int ax;
+	int depth1;
+	int depth2;
+	int depthLow;
+	int depthHi;
+	
 	primVar1 = *(out);
 	*(short int*)(*out) = *(short int*)(*ptr);
 	*out+=2;
 	*ptr+=3;
 
-	int ax = *(short int*)(*ptr);
+	ax = *(short int*)(*ptr);
 	*ptr+=2;
 
 #ifdef USE_GL
@@ -695,7 +727,7 @@ void primType0(int primType, char** ptr, char** out) // line tested
 	*out+=sizeof(float);
 	*(float*)(*out) = renderPointList[ax/2+1]; // Y
 	*out+=sizeof(float);
-	int depth1 = *(float*)(*out) = renderPointList[ax/2+2]; // Z
+	depth1 = *(float*)(*out) = renderPointList[ax/2+2]; // Z
 	*out+=sizeof(float);
 #else
 	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
@@ -704,7 +736,7 @@ void primType0(int primType, char** ptr, char** out) // line tested
 	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Y
 	ax+=2;
 	*out+=2;
-	int depth1 = *(short int*)(((char*)renderPointList) + ax); // Z
+	depth1 = *(short int*)(((char*)renderPointList) + ax); // Z
 	ax+=2;
 #endif
 
@@ -716,7 +748,7 @@ void primType0(int primType, char** ptr, char** out) // line tested
 	*out+=sizeof(float);
 	*(float*)(*out) = renderPointList[ax/2+1]; // Y
 	*out+=sizeof(float);
-	int depth2 = *(float*)(*out) = renderPointList[ax/2+2]; // Z
+	depth2 = *(float*)(*out) = renderPointList[ax/2+2]; // Z
 	*out+=sizeof(float);
 #else
 	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
@@ -725,14 +757,12 @@ void primType0(int primType, char** ptr, char** out) // line tested
 	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Y
 	ax+=2;
 	*out+=2;
-	int depth2 = *(short int*)(((char*)renderPointList) + ax); // Z
+	depth2 = *(short int*)(((char*)renderPointList) + ax); // Z
 	ax+=2;
 #endif
 
 	primVar2 = *out;
 
-	int depthLow;
-	int depthHi;
 
 	if(depth1 <= depth2)
 	{
@@ -771,11 +801,20 @@ void primType0(int primType, char** ptr, char** out) // line tested
 
 void primType1(int primType, char** ptr, char** out) // poly
 {
+	int ax;
+	int cx;
+	int min = 32000;
+	int max = -32000;
+	int depth;
+	int i;
+
+	char* saveDi;
+
 	primVar1 = *out;
 
-	int ax = **ptr;
+	ax = **ptr;
 	**out = ax;
-	int cx = ax;
+	cx = ax;
 	(*out)++;
 	(*ptr)++;
 
@@ -783,12 +822,7 @@ void primType1(int primType, char** ptr, char** out) // poly
 	*out+=3;
 	*ptr+=2;
 
-	int min = 32000;
-	int max = -32000;
-
-	int i;
-
-	char* saveDi = *out;
+	saveDi = *out;
 
 	for(i=0;i<cx;i++)
 	{
@@ -802,7 +836,7 @@ void primType1(int primType, char** ptr, char** out) // poly
 		*(float*)(*out) = renderPointList[pointNumber/2+1]; // Y
 		ax+=2;
 		*out+=sizeof(float);
-		int depth = *(float*)(*out) = renderPointList[pointNumber/2+2]; // Z
+		depth = *(float*)(*out) = renderPointList[pointNumber/2+2]; // Z
 		ax+=2;
 		*out+=sizeof(float);
 #else
@@ -812,7 +846,7 @@ void primType1(int primType, char** ptr, char** out) // poly
 		*(short int*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber + 2); // Y
 		ax+=2;
 		*out+=2;
-		int depth = *(short int*)(((char*)renderPointList) + pointNumber + 4); // Z
+		depth = *(short int*)(((char*)renderPointList) + pointNumber + 4); // Z
 		ax+=2;
 #endif
 
@@ -832,8 +866,11 @@ void primType1(int primType, char** ptr, char** out) // poly
 	}
 	else
 	{
-		renderVar3 = max;
-
+		
+		int prod1;
+		int prod2;
+		int prod;
+		int cx;
 #ifdef USE_GL
 		int bx = *(short int*)((*out)+6) - *(short int*)((*out));
 		int ax = *(short int*)((*out)+2) - *(short int*)((*out)+14);
@@ -841,22 +878,23 @@ void primType1(int primType, char** ptr, char** out) // poly
 		int bx = *(short int*)((*out)+4) - *(short int*)((*out));
 		int ax = *(short int*)((*out)+2) - *(short int*)((*out)+10);
 #endif
+		renderVar3 = max;
 		ax *= bx;
 
-		int prod1 = ax;
+		prod1 = ax;
 
 #ifdef USE_GL
-		int cx = *(short int*)((*out)+8) - *(short int*)((*out)+2);
+		cx = *(short int*)((*out)+8) - *(short int*)((*out)+2);
 		ax = *(short int*)((*out)) - *(short int*)((*out)+12);
 #else
-		int cx = *(short int*)((*out)+6) - *(short int*)((*out)+2);
+		cx = *(short int*)((*out)+6) - *(short int*)((*out)+2);
 		ax = *(short int*)((*out)) - *(short int*)((*out)+8);
 #endif
 		ax *= cx;
 
-		int prod2 = ax;
+		prod2 = ax;
 
-		int prod = prod2 - prod1;
+		prod = prod2 - prod1;
 
 #ifdef USE_GL
 		prod = 1;
@@ -891,7 +929,7 @@ void primType1(int primType, char** ptr, char** out) // poly
 void primType2(int primType, char** ptr, char** out)
 {
 	return;
-	primVar1 = *out;
+/*	primVar1 = *out;
 
 	*(short int*)(*out) = *(short int*)(*ptr);
 	*out+=2;
@@ -937,14 +975,14 @@ void primType2(int primType, char** ptr, char** out)
 
 		renderVar2 = *out;
 		*out = primVar2;
-	}
+	} */
 
 }
 
 void primType3(int primType, char** ptr, char** out)
 {
 	return;
-	primVar1 = *out;
+/*	primVar1 = *out;
 
 	*(short int*)(*out) = *(short int*)(*ptr);
 	*out+=2;
@@ -988,45 +1026,64 @@ void primType3(int primType, char** ptr, char** out)
 
 		renderVar2 = *out;
 		*out = primVar2;
-	}
+	}*/
 }
 
 void line(int x1, int y1, int x2, int y2, char c);
 
 void renderStyle0(char* buffer)
 {
+	char color;
+#ifdef USE_GL
+	float X1;
+	float Y1;
+	float Z1;
+
+	float X2;
+	float Y2;
+	float Z2;
+
+#else
+	short int X1;
+	short int Y1;
+	short int X2;
+	short int Y2;
+#endif
+
+	
+	
 	buffer++;
 
-	char color = *(buffer++);
+	color = *(buffer++);
 
 #ifdef USE_GL
-	float X1 = *(float*)buffer;
+	X1 = *(float*)buffer;
 	buffer+=sizeof(float);
-	float Y1 = *(float*)buffer;
+	Y1 = *(float*)buffer;
 	buffer+=sizeof(float);
-	float Z1 = *(float*)buffer;
+	Z1 = *(float*)buffer;
 	buffer+=sizeof(float);
 
-	float X2 = *(float*)buffer;
+	X2 = *(float*)buffer;
 	buffer+=sizeof(float);
-	float Y2 = *(float*)buffer;
+	Y2 = *(float*)buffer;
 	buffer+=sizeof(float);
-	float Z2 = *(float*)buffer;
+	Z2 = *(float*)buffer;
 	buffer+=sizeof(float);
 
 #else
-	short int X1 = *(short int*)buffer;
+	X1 = *(short int*)buffer;
 	buffer+=2;
-	short int Y1 = *(short int*)buffer;
+	Y1 = *(short int*)buffer;
 	buffer+=2;
-	short int X2 = *(short int*)buffer;
+	X2 = *(short int*)buffer;
 	buffer+=2;
-	short int Y2 = *(short int*)buffer;
+	Y2 = *(short int*)buffer;
 	buffer+=2;
 #endif
 
 #ifdef USE_GL
-	osystem.draw3dLine(X1,Y1,Z1,X2,Y2,Z2,color);
+	osystem_draw3dLine(X1,Y1,Z1,X2,Y2,Z2,color);
 #else
 	line(X1,Y1,X2,Y2,color);
 #endif
@@ -1048,11 +1105,12 @@ void renderStyle1(char* buffer)
 	int min = -3000;
 
 	int numPoint = *(short int*)buffer;
+	int color;
 	buffer+=2;
 
 	numPoint &= 0xF;
 
-	int color = *(short int*)buffer;
+	color = *(short int*)buffer;
 	buffer+=2;
 
 	{
@@ -1074,7 +1132,7 @@ void renderStyle1(char* buffer)
 	}
 
 #ifdef USE_GL
-	osystem.fillPoly((float *)buffer,numPoint,color);
+	osystem_fillPoly((float *)buffer,numPoint,color);
 #else
 	if(max>=0 && min <320)
 		fillpoly((short *)buffer,numPoint,color);
@@ -1143,6 +1201,17 @@ primFunction primFunctionTable[]={
 int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 {
 	char* ptr = (char*)modelPtr;
+	int numPrim;
+	int i;
+	char* out;
+
+	char* source;
+#ifndef USE_GL
+	char sortedBuffer[32000];
+
+	char* inBuffer;
+	char* outBuffer;
+#endif
 
 	BBox3D1 = 0x7FFF;
 	BBox3D2 = 0x7FFF;
@@ -1197,7 +1266,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 	}
 
 	ptr = tempOutPtr;
-	int numPrim = *(short int*)ptr;
+	numPrim = *(short int*)ptr;
 	ptr+=2;
 
 	if(!numPrim)
@@ -1209,8 +1278,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 		return(2);
 	}
 
-	int i;
-	char* out = primBuffer;
+	out = primBuffer;
 
 	for(i=0;i<numPrim;i++)
 	{
@@ -1228,12 +1296,10 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 
 	// TODO: poly sorting by depth
 #ifdef USE_GL
-	char* source = renderBuffer;
+	source = renderBuffer;
 #else
-	char sortedBuffer[32000];
-
-	char* inBuffer = renderBuffer;
-	char* outBuffer = sortedBuffer;
+	inBuffer = renderBuffer;
+	outBuffer = sortedBuffer;
 
 	for(i=0;i<numOfPolyToRender;i++)
 	{
@@ -1259,7 +1325,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 		*(short int*)(renderBuffer+10*bestIdx) = -32000;
 		outBuffer+=10;
 	}
-	char* source = sortedBuffer;
+	source = sortedBuffer;
 
 #endif
 	
@@ -1277,11 +1343,14 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 //	source += 10 * 1;
 	for(i=0;i<numOfPolyToRender;i++)
 	{
+		int renderType;
+		char* bufferSource;
+		
 		source+=4;
 
-		int renderType = *(short int*)(source);
+		renderType = *(short int*)(source);
 		source+=2;
-		char* bufferSource = *(char**)(source);
+		bufferSource = *(char**)(source);
 		source+=4;
 
 		if(renderType == 0 || renderType == 1)

@@ -6,6 +6,9 @@ int getPosRel(actorStruct* actor1, actorStruct* actor2)
 {
 	int beta1 = actor1->beta;
 	int counter = 3;
+	ZVStruct localZv;
+	int centerX;
+	int centerZ;
 
 	if(beta1 >= 0x80 && beta1 < 0x180)
 	{
@@ -22,8 +25,7 @@ int getPosRel(actorStruct* actor1, actorStruct* actor2)
 		counter = 0;
 	}
 
-	ZVStruct localZv;
-
+	
 	copyZv(&actor2->zv, &localZv);
 
 	if(actor1->room != actor2->room)
@@ -31,8 +33,8 @@ int getPosRel(actorStruct* actor1, actorStruct* actor2)
 		getZvRelativePosition(&localZv, actor2->room, actor1->room);
 	}
 
-	int centerX = (localZv.ZVX1 + localZv.ZVX2) / 2;
-	int centerZ = (localZv.ZVZ1 + localZv.ZVZ2) / 2;
+	centerX = (localZv.ZVX1 + localZv.ZVX2) / 2;
+	centerZ = (localZv.ZVZ1 + localZv.ZVZ2) / 2;
 
 	if(actor1->zv.ZVZ2 >= centerZ && actor1->zv.ZVZ1 <= centerZ)
 	{

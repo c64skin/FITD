@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#ifdef WIN32
 #include <search.h>
+#endif
 
 #ifdef _WIN32
 #include <windows.h>
@@ -70,7 +72,11 @@ typedef signed long S32;
 #ifdef UNIX
 #define FORCEINLINE inline
 #else
+#ifdef WIN32
 #define FORCEINLINE __forceinline
+#else
+#define FORCEINLINE inline
+#endif
 #endif
 
 FORCEINLINE uint16 READ_LE_U16(void *ptr)

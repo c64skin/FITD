@@ -1,7 +1,10 @@
 // seg 4
 
 #include "common.h"
+
+#ifdef PCLIKE
 #include "SDL.h"
+#endif
 
 
 //////////// stuff to move
@@ -80,8 +83,10 @@ void blitPalette(char* palettePtr,unsigned char startColor,unsigned char nbColor
 {
 	int i;
 	char paletteRGBA[256*4];
+	char* outPtr = scaledScreen;
+	char* inPtr = unkScreenVar;
 
-	osystem.getPalette(paletteRGBA);
+	osystem_getPalette(paletteRGBA);
 
 	for(i=startColor;i<startColor+nbColor;i++)
 	{
@@ -91,9 +96,6 @@ void blitPalette(char* palettePtr,unsigned char startColor,unsigned char nbColor
 		paletteRGBA[i*4+3] = -1;
 	}
 
-	char* outPtr = scaledScreen;
-	char* inPtr = unkScreenVar;
-
 	for(i=0;i<200;i++)
 	{
 		int j;
@@ -113,16 +115,18 @@ void blitPalette(char* palettePtr,unsigned char startColor,unsigned char nbColor
 		
 	}
 
-	osystem.setPalette(paletteRGBA);
-	osystem.flip((unsigned char*)scaledScreen);
+	osystem_setPalette(paletteRGBA);
+	osystem_flip((unsigned char*)scaledScreen);
 }
 
 void flipOtherPalette(char* palettePtr)
 {
 	int i;
 	char paletteRGBA[256*4];
+	char* outPtr = scaledScreen;
+	char* inPtr = unkScreenVar;
 
-	osystem.getPalette(paletteRGBA);
+	osystem_getPalette(paletteRGBA);
 
 	for(i=0;i<256;i++)
 	{
@@ -132,9 +136,6 @@ void flipOtherPalette(char* palettePtr)
 		paletteRGBA[i*4+3] = -1;
 	}
 
-	char* outPtr = scaledScreen;
-	char* inPtr = unkScreenVar;
-
 	for(i=0;i<200;i++)
 	{
 		int j;
@@ -154,8 +155,8 @@ void flipOtherPalette(char* palettePtr)
 		
 	}
 
-	osystem.setPalette(paletteRGBA);
-	osystem.flip((unsigned char*)scaledScreen);
+	osystem_setPalette(paletteRGBA);
+	osystem_flip((unsigned char*)scaledScreen);
 }
 
 void computeProportionalPalette(unsigned char* inPalette, unsigned char* outPalette, int coef)
@@ -227,13 +228,15 @@ void fadeIn(void* sourcePal)
 
 void flip()
 {
-#ifdef USE_GL
-	osystem.flip(NULL);
-	return;
-#endif
-
+	char* outPtr = scaledScreen;
+	char* inPtr = unkScreenVar;
 	int i;
 	char paletteRGBA[256*4];
+
+#ifdef USE_GL
+	osystem_flip(NULL);
+	return;
+#endif
 
 	for(i=0;i<256;i++)
 	{
@@ -242,9 +245,6 @@ void flip()
 		paletteRGBA[i*4+2] = palette[i*3+2];
 		paletteRGBA[i*4+3] = -1;
 	}
-
-	char* outPtr = scaledScreen;
-	char* inPtr = unkScreenVar;
 
 	for(i=0;i<200;i++)
 	{
@@ -265,10 +265,11 @@ void flip()
 		
 	}
 
-	osystem.setPalette(paletteRGBA);
-	osystem.flip((unsigned char*)scaledScreen);
+	osystem_setPalette(paletteRGBA);
+	osystem_flip((unsigned char*)scaledScreen);
 }
 
+#ifdef PCLIKE
 void process_events( void )
 {
     /* Our SDL event placeholder. */
@@ -291,6 +292,11 @@ void process_events( void )
     }
 
 }
+#else
+void process_events( void )
+{
+}
+#endif
 
 void startChrono(unsigned int* chrono)
 {
@@ -342,7 +348,7 @@ void playSound(int num)
 
 	sprintf(buffer,"LISTSAMP/%04X.VOC",num);
 
-	osystem.playSample(buffer);
+	osystem_playSample(buffer);
 }
 
 ////////////////////////
@@ -381,7 +387,7 @@ int make3dTatou(void)
 	copyToScreen(unkScreenVar,aux2);
 
 #ifdef USE_GL
-	osystem.CopyBlockPhys((unsigned char*)unkScreenVar,0,0,320,200);
+	osystem_CopyBlockPhys((unsigned char*)unkScreenVar,0,0,320,200);
 	flip();
 #endif
 
@@ -397,7 +403,7 @@ int make3dTatou(void)
 		if(evalChrono(&localChrono)<=180) // avant eclair
 		{
 #ifdef USE_GL
-			osystem.startFrame();
+			osystem_startFrame();
 #endif
 
 			if(input2 || input1)
@@ -406,7 +412,7 @@ int make3dTatou(void)
 			}
 
 #ifdef USE_GL
-			osystem.stopFrame();
+			osystem_stopFrame();
 			flip();
 #endif
 		}
@@ -432,7 +438,7 @@ int make3dTatou(void)
 
 			blitScreenTatou();
 #ifdef USE_GL
-			osystem.CopyBlockPhys((unsigned char*)unkScreenVar,0,0,320,200);
+			osystem_CopyBlockPhys((unsigned char*)unkScreenVar,0,0,320,200);
 #endif
 
 			copyPalette(tatouPal,palette);
@@ -452,7 +458,7 @@ int make3dTatou(void)
 				clearScreenTatou();
 
 #ifdef USE_GL
-			osystem.startFrame();
+			osystem_startFrame();
 #endif
 
 				rotateModel(0,0,0,unk1,rotation,0,time);
@@ -462,7 +468,7 @@ int make3dTatou(void)
 				blitScreenTatou();
 
 #ifdef USE_GL
-			osystem.stopFrame();
+			osystem_stopFrame();
 #endif
 
 				flip();

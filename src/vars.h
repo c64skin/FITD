@@ -12,11 +12,15 @@ struct textEntryStruct
 	short int width;
 };
 
+typedef struct textEntryStruct textEntryStruct;
+
 struct messageStruct
 {
 	textEntryStruct* string;
 	short int time;
 };
+
+typedef struct messageStruct messageStruct;
 
 struct definesStruct // warning ! Used to read data from a file. Alignement check required
 {
@@ -67,17 +71,23 @@ struct definesStruct // warning ! Used to read data from a file. Alignement chec
 	short int field_58;
 };
 
+typedef struct definesStruct definesStruct;
+
 struct saveEntry
 {
 	void* ptr;
 	unsigned int size;
 };
 
+typedef struct saveEntry saveEntry;
+
 struct regularTextEntryStruct
 {
 	char* textPtr;
 	short int width;
 };
+
+typedef struct regularTextEntryStruct regularTextEntryStruct;
 
 struct hqrEntryStruct
 {
@@ -89,6 +99,8 @@ struct hqrEntryStruct
 	char* dataPtr;
 };
 
+typedef struct hqrEntryStruct hqrEntryStruct;
+
 struct hqrSubEntryStruct
 {
 	short int key;
@@ -96,6 +108,8 @@ struct hqrSubEntryStruct
 	short int size;
 	unsigned int lastTimeUsed;
 };
+
+typedef struct hqrSubEntryStruct hqrSubEntryStruct;
 
 struct ZVStruct
 {
@@ -107,6 +121,8 @@ struct ZVStruct
 	 short int ZVZ2;
 };
 
+typedef struct ZVStruct ZVStruct;
+
 struct rotateStruct
 {
 	short int oldAngle;
@@ -114,6 +130,8 @@ struct rotateStruct
 	short int param;
 	short int timeOfRotate;
 };
+
+typedef struct rotateStruct rotateStruct;
 
 struct actorStruct // used to read data from file too
 {
@@ -183,6 +201,8 @@ struct actorStruct // used to read data from file too
 	short int field_9E;
 };
 
+typedef struct actorStruct actorStruct;
+
 struct objectStruct
 {
 	short int ownerIdx;
@@ -213,6 +233,8 @@ struct objectStruct
 	short int positionInTrack;
 };
 
+typedef struct objectStruct objectStruct;
+
 struct boxStruct
 {
 	short int var0;
@@ -220,6 +242,8 @@ struct boxStruct
 	short int var2;
 	short int var3;
 };
+
+typedef struct boxStruct boxStruct;
 
 struct roomDefStruct
 {
@@ -230,6 +254,8 @@ struct roomDefStruct
 	short int worldZ;//8
 	short int numCameraInRoom;//0xA
 };
+
+typedef struct roomDefStruct roomDefStruct;
 
 extern hqrEntryStruct* hqrUnk;
 
@@ -256,7 +282,7 @@ extern char* aitdBoxGfx;
 
 extern char palette[0x300];
 
-extern OSystem osystem;
+//extern OSystem osystem;
 
 extern char unkScreenVar[320*200];
 

@@ -87,12 +87,15 @@ void moveHqrEntry(hqrEntryStruct* hqrPtr, int index)
 
 char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 {
+	hqrSubEntryStruct* hqrSubPtr;
+	hqrSubEntryStruct* foundEntry;
+	
 	if(index<0)
 		return NULL;
 
-	hqrSubEntryStruct* hqrSubPtr = (hqrSubEntryStruct*)(((char*)hqrPtr)+sizeof(hqrEntryStruct));
+	hqrSubPtr = (hqrSubEntryStruct*)(((char*)hqrPtr)+sizeof(hqrEntryStruct));
 
-	hqrSubEntryStruct* foundEntry = quickFindEntry(index,hqrPtr->numUsedEntry,hqrSubPtr);
+	foundEntry = quickFindEntry(index,hqrPtr->numUsedEntry,hqrSubPtr);
 
 	if(foundEntry)
 	{
@@ -103,15 +106,19 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 	}
 	else
 	{
+		int size;
+		unsigned int time;
+		char* ptr;
+		
 		freezeTime();
-		int size = getPakSize(hqrPtr->string,index);
+		size = getPakSize(hqrPtr->string,index);
 
 		if(size>=hqrPtr->maxFreeData)
 		{
 			theEnd(1,hqrPtr->string);
 		}
 
-		unsigned int time = timer;
+		time = timer;
 
 		foundEntry = hqrSubPtr;
 
@@ -133,7 +140,7 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 			moveHqrEntry(hqrPtr,bestEntry);
 		}
 
-		char* ptr = hqrPtr->dataPtr + (hqrPtr->maxFreeData - hqrPtr->sizeFreeData);
+		ptr = hqrPtr->dataPtr + (hqrPtr->maxFreeData - hqrPtr->sizeFreeData);
 
 		if(!loadPakToPtr(hqrPtr->string,index,ptr))
 		{

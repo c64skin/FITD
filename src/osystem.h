@@ -7,56 +7,62 @@
 
 #define byte char
 
+#define bool char
+#define true 1
+#define false 0
+
+/*
 class OSystem
 {
   public:
-    OSystem();
+  */
+    osystem_init();
 
-    int mouseRight;
-    int mouseLeft;
+    extern int osystem_mouseRight;
+    extern int osystem_mouseLeft;
 
-    void delay(int time);
-    void crossFade(char *buffer, char *palette);
-    void fadeBlackToWhite();
-	void updateImage();
-    void initBuffer(char *buffer, int width, int height);
-	void initVideoBuffer(char *buffer, int width, int height);
-    void putpixel(int x, int y, int pixel);
-    void setColor(byte i, byte R, byte G, byte B);
-    void setPalette(byte * palette);
-	void setPalette320x200(byte * palette);
-    void flip(unsigned char *videoBuffer);
-	void draw320x200BufferToScreen(unsigned char *videoBuffer);
-    void CopyBlockPhys(unsigned char *videoBuffer, int left, int top, int right, int bottom);
-    void drawText(int X, int Y, char *text);
-    void drawTextColor(int X, int Y, char *string, unsigned char R, unsigned char G, unsigned char B);
-    void drawLine(int X1,int X2,int Y1,int Y2,unsigned char color, unsigned char* palette);
-	void getPalette(char* palette);
-	void playSample(char* sampleName);
+    void osystem_delay(int time);
+    void osystem_crossFade(char *buffer, char *palette);
+    void osystem_fadeBlackToWhite();
+	void osystem_updateImage();
+    void osystem_initBuffer(char *buffer, int width, int height);
+	void osystem_initVideoBuffer(char *buffer, int width, int height);
+    void osystem_putpixel(int x, int y, int pixel);
+    void osystem_setColor(byte i, byte R, byte G, byte B);
+    void osystem_setPalette(byte * palette);
+	void osystem_setPalette320x200(byte * palette);
+    void osystem_flip(unsigned char *videoBuffer);
+	void osystem_draw320x200BufferToScreen(unsigned char *videoBuffer);
+    void osystem_CopyBlockPhys(unsigned char *videoBuffer, int left, int top, int right, int bottom);
+    void osystem_drawText(int X, int Y, char *text);
+    void osystem_drawTextColor(int X, int Y, char *string, unsigned char R, unsigned char G, unsigned char B);
+    void osystem_drawLine(int X1,int X2,int Y1,int Y2,unsigned char color, unsigned char* palette);
+	void osystem_getPalette(char* palette);
+	void osystem_playSample(char* sampleName);
 //    void getMouseStatus(mouseStatusStruct * mouseData);
 
-	void set320x200Mode(bool mode);
+	void osystem_set320x200Mode(bool mode);
 
-	void startFrame();
-	void stopFrame();
-	void startModelRender();
-	void stopModelRender();
+	void osystem_startFrame();
+	void osystem_stopFrame();
+	void osystem_startModelRender();
+	void osystem_stopModelRender();
 #ifdef USE_GL
-	void fillPoly(float* buffer, int numPoint, unsigned char color);
-	void draw3dLine(float x1, float y1, float z1, float x2, float y2, float z2, unsigned char color);
-	void draw3dQuad(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4, unsigned char color);
-	void cleanScreenKeepZBuffer();
+	void osystem_fillPoly(float* buffer, int numPoint, unsigned char color);
+	void osystem_draw3dLine(float x1, float y1, float z1, float x2, float y2, float z2, unsigned char color);
+	void osystem_draw3dQuad(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4, unsigned char color);
+	void osystem_cleanScreenKeepZBuffer();
 
-	void startBgPoly();
-	void endBgPoly();
-	void addBgPolyPoint(int x, int y);
+	void osystem_startBgPoly();
+	void osystem_endBgPoly();
+	void osystem_addBgPolyPoint(int x, int y);
 #else
-	void fillPoly(short int* buffer, int numPoint, unsigned char color);
-	void draw3dLine(int x1, int y1, int z1, int x2, int y2, int z2, unsigned char color);
-	void draw3dQuad(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3, int x4, int y4, int z4, unsigned char color);
+	void osystem_fillPoly(short int* buffer, int numPoint, unsigned char color);
+	void osystem_draw3dLine(int x1, int y1, int z1, int x2, int y2, int z2, unsigned char color);
+	void osystem_draw3dQuad(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3, int x4, int y4, int z4, unsigned char color);
 #endif
-
+/*
   private:
-};
+};*/
 
 #endif

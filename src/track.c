@@ -17,6 +17,12 @@ int GetAngle(int X1, int Y1, int X2, int Y2)
     int difY;
 	short int* tab3 = &cosTable[384];
 	short int* tab2 = &cosTable[256];
+	
+    int destVal;
+    int startAngle;
+    int stopAngle;
+    int finalAngle;
+
 
     difY = edi = Y2 - Y1;
     newY = edi * edi;
@@ -41,11 +47,6 @@ int GetAngle(int X1, int Y1, int X2, int Y2)
 
     if (!DoTrackVar1)
 	return (0);
-
-    int destVal;
-    int startAngle;
-    int stopAngle;
-    int finalAngle;
 
     destVal = (difY << 14) / DoTrackVar1;
 
@@ -168,12 +169,15 @@ int computeAngleModificatorToPositionSub1(int ax)
 
 int computeAngleModificatorToPosition(int x1,int z1, int beta, int x2, int z2)
 {
+	int resultMin;
+	int resultMax;
+	
 	angleCompX = x2 - x1;
 	angleCompZ = z2 - z1;
 	angleCompBeta = beta;
 
-	int resultMin = computeAngleModificatorToPositionSub1(beta - 4);
-	int resultMax = computeAngleModificatorToPositionSub1(beta + 4);
+	resultMin = computeAngleModificatorToPositionSub1(beta - 4);
+	resultMax = computeAngleModificatorToPositionSub1(beta + 4);
 
 	if(resultMax == -1 && resultMin == 1) // in the middle
 	{
@@ -310,13 +314,14 @@ void processTrack(void)
 				int x = followedActorPtr->roomX;
 				int y = followedActorPtr->roomY;
 				int z = followedActorPtr->roomZ;
+				int angleModif;
 
 				if(currentProcessedActorPtr->room != roomNumbfer)
 				{
 					printf("Following actor in another room !\n");
 				}
 
-				int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+				angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 																	currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
 																	currentProcessedActorPtr->beta, x, z );
 
@@ -344,10 +349,11 @@ void processTrack(void)
 	case 3: // track
 		{
 			char* trackPtr = HQR_Get(listTrack,currentProcessedActorPtr->trackNumber);
+			short int trackMacro;
 			
 			trackPtr+=currentProcessedActorPtr->positionInTrack * 2;
 
-			short int trackMacro = *(short int*)trackPtr;
+			trackMacro = *(short int*)trackPtr;
 			trackPtr += 2;
 
 			//printf("Track macro %X\n",trackMacro);
@@ -356,6 +362,7 @@ void processTrack(void)
 			{
 			case 0: // warp
 				{
+					char* ptr;
 					int roomNumber = *(short int*)(trackPtr);
 					trackPtr += 2;
 
@@ -384,7 +391,7 @@ void processTrack(void)
 					currentProcessedActorPtr->worldZ = currentProcessedActorPtr->roomZ = *(short int*)(trackPtr);
 					trackPtr += 2;
 
-					char* ptr = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4);
+					ptr = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4);
 
 					currentProcessedActorPtr->worldX -= (*(short int*)(cameraPtr+4) - *(short int*)(ptr+4)) * 10;
 					currentProcessedActorPtr->worldY += (*(short int*)(cameraPtr+6) - *(short int*)(ptr+6)) * 10;
@@ -407,12 +414,17 @@ void processTrack(void)
 			case 1: // goToPosition
 				{
 					int roomNumber = *(short int*)(trackPtr);
+					int x;
+					int y;
+					int z;
+					unsigned int distanceToPoint;
+					
 					trackPtr += 2;
 
-					int x = *(short int*)(trackPtr);
+					x = *(short int*)(trackPtr);
 					trackPtr += 2;
-					int y = 0;
-					int z = *(short int*)(trackPtr);
+					y = 0;
+					z = *(short int*)(trackPtr);
 					trackPtr += 2;
 		
 					if(roomNumber != currentProcessedActorPtr->room)
@@ -424,7 +436,7 @@ void processTrack(void)
 						z -= ((*(short int*)(roomSourceDataPtr+8)) - (*(short int*)(roomDestDataPtr+8))) * 10;
 					}
 
-					unsigned int distanceToPoint = computeDistanceToPoint(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+					distanceToPoint = computeDistanceToPoint(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
 																			x,z );
 
@@ -564,16 +576,23 @@ void processTrack(void)
 				}
 			case 0x11: // walk up/down stairs on X
 				{
-					int x = *(short int*)(trackPtr);
+					int x;
+					int y;
+					int z;
+					int objX;
+					int objY;
+					int objZ;
+					
+					x = *(short int*)(trackPtr);
 					trackPtr += 2;
-					int y = *(short int*)(trackPtr);
+					y = *(short int*)(trackPtr);
 					trackPtr += 2;
-					int z = *(short int*)(trackPtr);
+					z = *(short int*)(trackPtr);
 					trackPtr += 2;
 					
-					int objX = objectTable[currentProcessedActorPtr->field_0].x;
-					int objY = objectTable[currentProcessedActorPtr->field_0].y;
-					int objZ = objectTable[currentProcessedActorPtr->field_0].z;
+					objX = objectTable[currentProcessedActorPtr->field_0].x;
+					objY = objectTable[currentProcessedActorPtr->field_0].y;
+					objZ = objectTable[currentProcessedActorPtr->field_0].z;
 
 					if(		currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY < y - 100
 						||	currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY > y + 100)
@@ -581,13 +600,14 @@ void processTrack(void)
 						int propX = makeProportional(objY, y, x - objX, (currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX) - objX);
 
 						int difY = propX - currentProcessedActorPtr->worldY;
+						int angleModif;
 
 						currentProcessedActorPtr->worldY += difY;
 						currentProcessedActorPtr->roomY += difY;
 						currentProcessedActorPtr->zv.ZVY1 += difY;
 						currentProcessedActorPtr->zv.ZVY2 += difY;
 
-						int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+						angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
 																			currentProcessedActorPtr->beta,
 																			x,z );
@@ -626,16 +646,23 @@ void processTrack(void)
 				}
 			case 0x12: // walk up/down stairs on Z
 				{
-					int x = *(short int*)(trackPtr);
+					int x;
+					int y;
+					int z;
+					int objX;
+					int objY;
+					int objZ;
+					
+					x = *(short int*)(trackPtr);
 					trackPtr += 2;
-					int y = *(short int*)(trackPtr);
+					y = *(short int*)(trackPtr);
 					trackPtr += 2;
-					int z = *(short int*)(trackPtr);
+					z = *(short int*)(trackPtr);
 					trackPtr += 2;
 
-					int objX = objectTable[currentProcessedActorPtr->field_0].x;
-					int objY = objectTable[currentProcessedActorPtr->field_0].y;
-					int objZ = objectTable[currentProcessedActorPtr->field_0].z;
+					objX = objectTable[currentProcessedActorPtr->field_0].x;
+					objY = objectTable[currentProcessedActorPtr->field_0].y;
+					objZ = objectTable[currentProcessedActorPtr->field_0].z;
 
 					if(		currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY < y - 100
 						||	currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY > y + 100)
@@ -643,13 +670,15 @@ void processTrack(void)
 						int propZ = makeProportional(objY, y, z - objZ, (currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ) - objZ);
 
 						int difY = propZ - currentProcessedActorPtr->worldY;
+						
+						int angleModif;
 
 						currentProcessedActorPtr->worldY += difY;
 						currentProcessedActorPtr->roomY += difY;
 						currentProcessedActorPtr->zv.ZVY1 += difY;
 						currentProcessedActorPtr->zv.ZVY2 += difY;
 
-						int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+						angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
 																			currentProcessedActorPtr->beta,
 																			x,z );

@@ -21,30 +21,38 @@ int statusVar1;
 
 void updateInHand(int objIdx)
 {
+	int var_2;
+	int actorIdx;
+	int lifeOffset;
+	int currentActorIdx;
+	int currentActorLifeIdx;
+	int currentActorLifeNum;
+	int foundLife;
+	actorStruct* currentActorPtr;
+	actorStruct* currentActorLifePtr;
+
 	if(objIdx == -1)
 		return;
 
-	int foundLife = objectTable[objIdx].foundLife;
+	foundLife = objectTable[objIdx].foundLife;
 
 	if(objectTable[objIdx].foundLife == -1)
 		return;
 
-	actorStruct* currentActorPtr = currentProcessedActorPtr;
-	int currentActorIdx = currentProcessedActorIdx;
-	int currentActorLifeIdx = currentLifeActorIdx;
-	actorStruct* currentActorLifePtr = currentLifeActorPtr;
-	int currentActorLifeNum = currentLifeNum;
-
-	int lifeOffset;
+	currentActorPtr = currentProcessedActorPtr;
+	currentActorIdx = currentProcessedActorIdx;
+	currentActorLifeIdx = currentLifeActorIdx;
+	currentActorLifePtr = currentLifeActorPtr;
+	currentActorLifeNum = currentLifeNum;
 
 	if(currentLifeNum != -1)
 	{
 		lifeOffset = (currentLifePtr - HQR_Get(listLife,currentActorLifeNum))/2;
 	}
 
-	int var_2 = 0;
+	var_2 = 0;
 
-	int actorIdx = objectTable[objIdx].ownerIdx;
+	actorIdx = objectTable[objIdx].ownerIdx;
 
 	if(actorIdx==-1)
 	{
@@ -278,7 +286,11 @@ void sysInit(void)
 {
 	int i;
 
+#ifndef PCLIKE
+	unsigned long int ltime;
+#else
 	time_t ltime;
+#endif
 	FILE* fHandle;
 
 	setupScreen();
@@ -547,6 +559,8 @@ void renderText(int x, int y, char* surface, char* string)
 		if(data&0xF) // real character (width != 0)
 		{
 			char* characterPtr;
+			int bp;
+			int ch;
 
 			dx &= 0xFFF;
 
@@ -554,16 +568,16 @@ void renderText(int x, int y, char* surface, char* string)
 
 			fontSm9 = flagTable[dx & 7];
 
-			int bp = fontSm7;
+			bp = fontSm7;
 
 			fontSm8 = fontVar6;
 
-			int ch;
+			ch;
 
 			for(ch = fontSm1; ch>0; ch--)
 			{
 				char* outPtr = screen + bp*320 + fontSm8;
-				bp++;
+				
 
 				int dh = fontSm9;
 				int cl = data&0xF;
@@ -571,6 +585,8 @@ void renderText(int x, int y, char* surface, char* string)
 				int al = *characterPtr;
 
 				int bx;
+
+				bp++;
 
 				for(bx = 0; cl>0; cl--)
 				{
@@ -707,13 +723,14 @@ void drawStartupMenu(int selectedEntry)
 
 void flipScreen()
 {
-#ifdef USE_GL
-	osystem.flip(NULL);
-	return;
-#endif
-
 	int i;
 	char paletteRGBA[256*4];
+	char* outPtr = scaledScreen;
+	char* inPtr = unkScreenVar;
+#ifdef USE_GL
+	osystem_flip(NULL);
+	return;
+#endif
 
 	memcpy(unkScreenVar,screen,320*200);
 
@@ -725,8 +742,8 @@ void flipScreen()
 		paletteRGBA[i*4+3] = -1;
 	}
 
-	char* outPtr = scaledScreen;
-	char* inPtr = unkScreenVar;
+	outPtr = scaledScreen;
+	inPtr = unkScreenVar;
 
 	for(i=0;i<200;i++)
 	{
@@ -747,8 +764,8 @@ void flipScreen()
 		
 	}
 
-	//osystem.setPalette(paletteRGBA);
-	osystem.flip((unsigned char*)scaledScreen);
+	//osystem_setPalette(paletteRGBA);
+	osystem_flip((unsigned char*)scaledScreen);
 }
 
 void flushScreen(void)
@@ -775,9 +792,9 @@ int processStartupMenu(void)
 
 	drawStartupMenu(0);
 #ifdef USE_GL
-	osystem.startFrame();
-	osystem.stopFrame();
-	osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+	osystem_startFrame();
+	osystem_stopFrame();
+	osystem_CopyBlockPhys((unsigned char*)screen,0,0,320,200);
 #endif
 	flipScreen();
 	make3dTatouUnk1(16,0);
@@ -786,8 +803,8 @@ int processStartupMenu(void)
 	while(evalChrono(&chrono) <= 0x10000) // exit loop only if time out or if choice made
 	{
 #ifdef USE_GL
-	osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
-	osystem.startFrame();
+	osystem_CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+	osystem_startFrame();
 #endif
 
 		if(selectedEntry!=-1 || evalChrono(&chrono) > 0x10000)
@@ -846,7 +863,7 @@ int processStartupMenu(void)
 			selectedEntry = currentSelectedEntry;
 		}
 #ifdef USE_GL
-		osystem.stopFrame();
+		osystem_stopFrame();
 		flipScreen();
 #endif
 	}
@@ -1045,14 +1062,17 @@ int printText(int index, int left, int top, int right, int bottom, int mode, int
 	int var_1C3;
 	char* localTextTable[100];
 	int currentTextIdx;
+	int maxStringWidth;
+	int var_8;
+	char* textPtr;
 
 	initFont(fontData, color);
 
-	int maxStringWidth = right - left + 4;
+	maxStringWidth = right - left + 4;
 
-	int var_8 = printTextSub1(hqrUnk,getPakSize(languageNameString,index)+300);
+	var_8 = printTextSub1(hqrUnk,getPakSize(languageNameString,index)+300);
 
-	char* textPtr = printTextSub2(hqrUnk, var_8);
+	textPtr = printTextSub2(hqrUnk, var_8);
 
 	if(!loadPakToPtr( languageNameString, index, textPtr))
 	{
@@ -1066,19 +1086,23 @@ int printText(int index, int left, int top, int right, int bottom, int mode, int
 
 	while(!quit)
 	{
+		char* var_1C2;
+		int currentTextY;
 		copyToScreen(aux,screen);
 		process_events();
 		setClipSize(left,top,right,bottom);
 
-		char* var_1C2 = localTextTable[currentPage];
+		var_1C2 = localTextTable[currentPage];
 
-		int currentTextY = top;
+		currentTextY = top;
 		lastPageReached = false;
 
 		while(currentTextY <= bottom - 16)
 		{
 			int var_1AA = 1;
 			int var_1BA = 0;
+			int currentStringWidth;
+			int currentTextX;
 
 			regularTextEntryStruct* currentText = textTable;
 
@@ -1156,7 +1180,7 @@ parseSpe:	while(*var_1C2 == '#')
 
 			*(var_1C2-1) = 0; // add end of string marker to cut the word
 
-			int currentStringWidth = computeStringWidth(currentText->textPtr) + 3;
+			currentStringWidth = computeStringWidth(currentText->textPtr) + 3;
 
 			if(currentStringWidth <= maxStringWidth)
 			{
@@ -1226,7 +1250,7 @@ parseSpe:	while(*var_1C2 == '#')
 			}
 
 			currentText = textTable;
-			int currentTextX;
+			currentTextX;
 
 			if(var_1AA & 8) // center
 			{
@@ -1676,6 +1700,11 @@ void loadRoom(int roomNumber)
 	int cameraVar1;
 	int cameraVar2;
 	int currentCameraIdx;
+	roomDefStruct* roomDataPtr;
+	char* var_20;
+	int var_1A = 0;
+	int var_10 = -1;
+	int var_1C;
 
 	freezeTime();
 	printf("Load room %d\n",roomNumber);
@@ -1694,13 +1723,13 @@ void loadRoom(int roomNumber)
 	}
 
 	cameraPtr = etageVar0+*(unsigned int*)(etageVar0 + (roomNumber * 4));
-	roomDefStruct* roomDataPtr = (roomDefStruct*)(etageVar0+*(unsigned int*)(etageVar0 + (roomNumber * 4)));
+	roomDataPtr = (roomDefStruct*)(etageVar0+*(unsigned int*)(etageVar0 + (roomNumber * 4)));
 
 	currentDisplayedRoom = roomNumber;
 
 	numCameraInRoom = roomDataPtr->numCameraInRoom;
 
-	char* var_20 = cameraPtr + roomDataPtr->offsetToPosDef;
+	var_20 = cameraPtr + roomDataPtr->offsetToPosDef;
 	numCameraZone = *(short int*)var_20;
 	var_20 += 2;
 	cameraZoneData = var_20;
@@ -1709,14 +1738,12 @@ void loadRoom(int roomNumber)
 	numRoomZone = *(short int*)var_20;
 	var_20 += 2;
 	roomZoneData = var_20;
-
-	int var_1A = 0;
-	int var_10 = -1;
-	int var_1C;
 	
 	for(i=0;i<numCameraInRoom;i++) // build all the camera list
 	{
 		int cameraIdx = *(short int*)(cameraPtr + (i+6)*2); // indexes are between the roomDefStruct and the first zone data
+		int j;
+		char* var_8;
 
 		if(currentCameraIdx == cameraIdx)
 		{
@@ -1728,8 +1755,6 @@ void loadRoom(int roomNumber)
 		var_20 = roomVar5[i] + 0x12;
 		cameraIdx = *(short int*)var_20;
 		var_20 +=2;
-
-		int j;
 
 	/*	for(j=0;*(short int*)(var_20+=2)!=currentDisplayedRoom;(j++) && (var_20+=0xA))
 		{
@@ -1750,7 +1775,7 @@ void loadRoom(int roomNumber)
 
 		var_1C = j;
 
-		char* var_8 = roomVar5[i] + (var_1C*12) + 0x18;
+		var_8 = roomVar5[i] + (var_1C*12) + 0x18;
 
 		roomVar6[i] = (*(short int*)var_8)/2;
 	}
@@ -1903,6 +1928,8 @@ void setupCameraSub1()
 	int j;
 	int var_10;
 	int var_6;
+	short int* ptr2;
+	int var_12;
 
 	char* dataTabPos = cameraDataTab;
 	short int* ptr = (short int*)(etageVar0 + currentDisplayedRoom*4);
@@ -1925,9 +1952,9 @@ void setupCameraSub1()
 		}
 	}
 
-	short int* ptr2 = (short int*)(roomVar5[currentCamera] + 18);
+	ptr2 = (short int*)(roomVar5[currentCamera] + 18);
 
-	int var_12 = *(ptr2++);
+	var_12 = *(ptr2++);
 
 	for(j=0;j<var_12;j++)
 	{
@@ -2045,13 +2072,18 @@ void makeDefaultZV(ZVStruct* zvPtr)
 
 void getZvMax(char* bodyPtr, ZVStruct* zvPtr)
 {
+	int x1;
+	int x2;
+	int z1;
+	int z2;
+	
 	getZvNormal(bodyPtr,zvPtr);
 
-	int x1 = zvPtr->ZVX1;
-	int x2 = zvPtr->ZVX2;
+	x1 = zvPtr->ZVX1;
+	x2 = zvPtr->ZVX2;
 
-	int z1 = zvPtr->ZVZ1;
-	int z2 = zvPtr->ZVZ2;
+	z1 = zvPtr->ZVZ1;
+	z2 = zvPtr->ZVZ2;
 
 	x2 = - x1 + x2;
 	z2 = - z1 + z2;
@@ -2150,12 +2182,12 @@ void getZvRot(char* bodyPtr, ZVStruct* zvPtr, int alpha, int beta, int gamma)
 	int Y2 = -32000;
 	int Z2 = -32000;
 
-	getZvNormal(bodyPtr, zvPtr);
-
 	int i;
 	int tempX;
 	int tempY;
 	int tempZ;
+
+	getZvNormal(bodyPtr, zvPtr);
 
 	for(i=0;i<8;i++)
 	{
@@ -2245,6 +2277,8 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	int i;
 	int j;
 	actorStruct* actorPtr = actorTable;
+	char* bodyPtr;
+	ZVStruct* zvPtr;
 
 	for(i=0;i<50;i++)
 	{
@@ -2329,8 +2363,6 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	actorPtr->HIT = -1;
 	actorPtr->HIT_BY = -1;
 
-	char* bodyPtr;
-
 	if(flag2 != -1)
 	{
 		bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
@@ -2376,7 +2408,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	startChrono(&actorPtr->ROOM_CHRONO);
 	startChrono(&actorPtr->CHRONO);
 
-	ZVStruct* zvPtr = &actorPtr->zv;
+	zvPtr = &actorPtr->zv;
 
 	switch(var1)
 	{
@@ -2431,13 +2463,13 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	case 4:
 		{
 			char* roomDataPtr = etageVar0 + *(unsigned int*)(etageVar0 + room*4);
+			int numElements;
+			int j;
 
 			roomDataPtr += *(short int*)roomDataPtr;
 
-			int numElements = *(short int*)roomDataPtr;
+			numElements = *(short int*)roomDataPtr;
 			roomDataPtr+=2;
-
-			int j;
 
 			for(j=0;j<numElements;j++)
 			{
@@ -2445,21 +2477,25 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 				{
 					if(*(short int*)(roomDataPtr+0xC) == foundName)
 					{
+						int tempX;
+						int tempY;
+						int tempZ;
+						
 						copyZv((ZVStruct*)roomDataPtr,zvPtr);
 
 						x = 0;
 						y = 0;
 						z = 0;
 
-						int tempX = ((*(short int*)roomDataPtr) + (*(short int*)(roomDataPtr+2)))/2;
+						tempX = ((*(short int*)roomDataPtr) + (*(short int*)(roomDataPtr+2)))/2;
 						actorPtr->worldX = tempX;
 						actorPtr->roomX = tempX;
 
-						int tempY = ((*(short int*)(roomDataPtr+4)) + (*(short int*)(roomDataPtr+6)))/2;
+						tempY = ((*(short int*)(roomDataPtr+4)) + (*(short int*)(roomDataPtr+6)))/2;
 						actorPtr->worldY = tempY;
 						actorPtr->roomY = tempY;
 
-						int tempZ = ((*(short int*)(roomDataPtr+8)) + (*(short int*)(roomDataPtr+0xA)))/2;
+						tempZ = ((*(short int*)(roomDataPtr+8)) + (*(short int*)(roomDataPtr+0xA)))/2;
 						actorPtr->worldZ = tempZ;
 						actorPtr->roomZ = tempZ;
 
@@ -2539,6 +2575,7 @@ void updateAllActorAndObjects()
 {
 	int i;
 	actorStruct *currentActor = actorTable;
+	objectStruct* currentObject;
 
 	for(i=0;i<50;i++)
 	{
@@ -2594,7 +2631,7 @@ void updateAllActorAndObjects()
 		currentActor++;
 	}
 
-	objectStruct* currentObject = objectTable;
+	currentObject = objectTable;
 
 	for(i=0;i<maxObjects;i++)
 	{
@@ -2613,6 +2650,8 @@ void updateAllActorAndObjects()
 				{
 					if(currentObject->lifeMode != -1)
 					{
+						int actorIdx;
+						
 						switch(currentObject->lifeMode)
 						{
 						case 1:
@@ -2639,7 +2678,7 @@ void updateAllActorAndObjects()
 						//int var_E = currentObject->field_2;
 						//int var_A = currentObject->field_26;
 
-addObject:				int actorIdx = copyObjectToActor(	currentObject->field_2, currentObject->field_6, currentObject->foundName,
+addObject:				actorIdx = copyObjectToActor(	currentObject->field_2, currentObject->field_6, currentObject->foundName,
 															currentObject->flags & 0xFFDF,
 															currentObject->x, currentObject->y, currentObject->z,
 															currentObject->stage, currentObject->room,
@@ -2715,9 +2754,11 @@ int checkActorInRoom(int room)
 void createActorList()
 {
 	int i;
+	actorStruct* actorPtr;
+	
 	numActorInList = 0;
 
-	actorStruct* actorPtr = actorTable;
+	actorPtr = actorTable;
 
 	for(i=0;i<50;i++)
 	{
@@ -2741,23 +2782,28 @@ void createActorList()
 
 void setupCamera()
 {
+	char* ptr;
+	int x;
+	int y;
+	int z;
+	
 	freezeTime();
 
 	currentCamera = startGameVar1;
 
 	loadCamera(*(cameraPtr+(startGameVar1+6)*2));
 
-	char* ptr = roomVar5[currentCamera];
+	ptr = roomVar5[currentCamera];
 
 	setupPointTransformSM(*(short int*)(ptr),*(short int*)(ptr+2),*(short int*)(ptr+4));
 	ptr+= 6;
 
 	//TODO: recheck
-	int x = (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+4))) << 3) + (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+4))) << 1);
+	x = (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+4))) << 3) + (((*(short int*)(ptr)) - (*(short int*)(cameraPtr+4))) << 1);
 	ptr+=2;
-	int y = (((*(short int*)(cameraPtr+6)) - (*(short int*)(ptr))) << 3) + (((*(short int*)(cameraPtr+6)) - (*(short int*)(ptr))) << 1);
+	y = (((*(short int*)(cameraPtr+6)) - (*(short int*)(ptr))) << 3) + (((*(short int*)(cameraPtr+6)) - (*(short int*)(ptr))) << 1);
 	ptr+=2;
-	int z = (((*(short int*)(cameraPtr+8)) - (*(short int*)(ptr))) << 3) + (((*(short int*)(cameraPtr+8)) - (*(short int*)(ptr))) << 1);
+	z = (((*(short int*)(cameraPtr+8)) - (*(short int*)(ptr))) << 3) + (((*(short int*)(cameraPtr+8)) - (*(short int*)(ptr))) << 1);
 	ptr+=2;
 //
 	//setupSelfModifyingCode(x-5000,y,z-5000); // debug intro
@@ -2825,10 +2871,13 @@ void startActorRotation(short int beta, short int newBeta, short int param, rota
 
 short int updateActorRotation(rotateStruct* rotatePtr)
 {
+	int timeDif;
+	int angleDif;
+	
 	if(!rotatePtr->param)
 		return(rotatePtr->newAngle);
 
-	int timeDif = timer - rotatePtr->timeOfRotate;
+	timeDif = timer - rotatePtr->timeOfRotate;
 
 	if(timeDif>rotatePtr->param)
 	{
@@ -2836,7 +2885,7 @@ short int updateActorRotation(rotateStruct* rotatePtr)
 		return(rotatePtr->newAngle);
 	}
 
-	int angleDif = (rotatePtr->newAngle&0x3FF) - (rotatePtr->oldAngle&0x3FF);
+	angleDif = (rotatePtr->newAngle&0x3FF) - (rotatePtr->oldAngle&0x3FF);
 
 	if(angleDif<=0x200)
 	{
@@ -3009,6 +3058,21 @@ void drawProjectedLine(float x1, float y1, float z1, float x2, float y2, float z
 void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
 #endif
 {
+#ifdef USE_GL
+	float transformedX1;
+	float transformedX2;
+
+	float transformedY1;
+	float transformedY2;
+#else
+	int transformedX1;
+	int transformedX2;
+
+	int transformedY1;
+	int transformedY2;
+#endif
+
+
 	x1 -= translateX;
 	x2 -= translateX;
 
@@ -3025,22 +3089,22 @@ void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
 	z2 += cameraX;
 
 #ifdef USE_GL
-	float transformedX1 = ((x1 * cameraY) / (float)z1) + cameraCenterX;
-	float transformedX2 = ((x2 * cameraY) / (float)z2) + cameraCenterX;
+	transformedX1 = ((x1 * cameraY) / (float)z1) + cameraCenterX;
+	transformedX2 = ((x2 * cameraY) / (float)z2) + cameraCenterX;
 
-	float transformedY1 = ((y1 * cameraZ) / (float)z1) + cameraCenterY;
-	float transformedY2 = ((y2 * cameraZ) / (float)z2) + cameraCenterY;
+	transformedY1 = ((y1 * cameraZ) / (float)z1) + cameraCenterY;
+	transformedY2 = ((y2 * cameraZ) / (float)z2) + cameraCenterY;
 #else
-	int transformedX1 = ((x1 * cameraY) / z1) + cameraCenterX;
-	int transformedX2 = ((x2 * cameraY) / z2) + cameraCenterX;
+	transformedX1 = ((x1 * cameraY) / z1) + cameraCenterX;
+	transformedX2 = ((x2 * cameraY) / z2) + cameraCenterX;
 
-	int transformedY1 = ((y1 * cameraZ) / z1) + cameraCenterY;
-	int transformedY2 = ((y2 * cameraZ) / z2) + cameraCenterY;
+	transformedY1 = ((y1 * cameraZ) / z1) + cameraCenterY;
+	transformedY2 = ((y2 * cameraZ) / z2) + cameraCenterY;
 #endif
 
 #ifdef USE_GL
 	if(z1>0 && z2>0)
-		osystem.draw3dLine(transformedX1,transformedY1,z1,transformedX2,transformedY2,z2,c);
+		osystem_draw3dLine(transformedX1,transformedY1,z1,transformedX2,transformedY2,z2,c);
 #else
 	if(z1>0 && z2>0)
 		line(transformedX1,transformedY1,transformedX2,transformedY2,c);
@@ -3098,6 +3162,7 @@ void drawConverZone(char* src, int param)
 
 	for(i=0;i<param;i++)
 	{
+		int j;
 		char* dest = cameraBuffer;
 
 		int var1 = *(short int*)src;
@@ -3115,16 +3180,19 @@ void drawConverZone(char* src, int param)
 
 		dest = cameraBuffer;
 
-		int j;
-
 		for(j=0;j<var1;j++)
 		{
-			int zoneX1= *(short int*)dest;
+			int zoneX1;
+			int zoneZ1;
+			int zoneX2;
+			int zoneZ2;
+			
+			zoneX1= *(short int*)dest;
 			dest+=2;
-			int zoneZ1= *(short int*)dest;
+			zoneZ1= *(short int*)dest;
 			dest+=2;
-			int zoneX2= *(short int*)dest;
-			int zoneZ2= *(short int*)(dest+2);
+			zoneX2= *(short int*)dest;
+			zoneZ2= *(short int*)(dest+2);
 
 			drawProjectedLine(zoneX1*10,0,zoneZ1*10,zoneX2*10,0,zoneZ2*10,20);
 		}
@@ -3145,6 +3213,16 @@ void drawConverZones()
 #ifdef USE_GL
 void drawProjectedQuad(float x1,float x2, float x3, float x4, float y1,float y2, float y3, float y4, float z1,float z2, float z3, float z4, int color)
 {
+	float transformedX1;
+	float transformedX2;
+	float transformedX3;
+	float transformedX4;
+
+	float transformedY1;
+	float transformedY2;
+	float transformedY3;
+	float transformedY4;
+	
 	x1 -= translateX;
 	x2 -= translateX;
 	x3 -= translateX;
@@ -3170,18 +3248,18 @@ void drawProjectedQuad(float x1,float x2, float x3, float x4, float y1,float y2,
 	z3 += cameraX;
 	z4 += cameraX;
 
-	float transformedX1 = ((x1 * cameraY) / (float)z1) + cameraCenterX;
-	float transformedX2 = ((x2 * cameraY) / (float)z2) + cameraCenterX;
-	float transformedX3 = ((x3 * cameraY) / (float)z3) + cameraCenterX;
-	float transformedX4 = ((x4 * cameraY) / (float)z4) + cameraCenterX;
+	transformedX1 = ((x1 * cameraY) / (float)z1) + cameraCenterX;
+	transformedX2 = ((x2 * cameraY) / (float)z2) + cameraCenterX;
+	transformedX3 = ((x3 * cameraY) / (float)z3) + cameraCenterX;
+	transformedX4 = ((x4 * cameraY) / (float)z4) + cameraCenterX;
 
-	float transformedY1 = ((y1 * cameraZ) / (float)z1) + cameraCenterY;
-	float transformedY2 = ((y2 * cameraZ) / (float)z2) + cameraCenterY;
-	float transformedY3 = ((y3 * cameraZ) / (float)z3) + cameraCenterY;
-	float transformedY4 = ((y4 * cameraZ) / (float)z4) + cameraCenterY;
+	transformedY1 = ((y1 * cameraZ) / (float)z1) + cameraCenterY;
+	transformedY2 = ((y2 * cameraZ) / (float)z2) + cameraCenterY;
+	transformedY3 = ((y3 * cameraZ) / (float)z3) + cameraCenterY;
+	transformedY4 = ((y4 * cameraZ) / (float)z4) + cameraCenterY;
 
 	if(z1>500 && z2>500 && z3>500 && z4>500)
-		osystem.draw3dQuad(transformedX1,transformedY1,z1, transformedX2,transformedY2,z2, transformedX3,transformedY3,z3, transformedX4,transformedY4,z4, color);
+		osystem_draw3dQuad(transformedX1,transformedY1,z1, transformedX2,transformedY2,z2, transformedX3,transformedY3,z3, transformedX4,transformedY4,z4, color);
 }
 
 void drawProjectedBox(int x1,int x2,int y1,int y2,int z1,int z2, int color)
@@ -3285,12 +3363,13 @@ void drawOverlayZone(char* zoneData,int color)
 void drawHardCol()
 {
 	char* data = etageVar0 + *(unsigned int*)(etageVar0 + actorTable[genVar9].room * 4);
+	short int numHardCol;
+	int i;
+	
 	data += *(short int*)(data);
 
-	short int numHardCol = *(short int*)data;
+	numHardCol = *(short int*)data;
 	data+=2;
-
-	int i;
 
 	for(i=0;i<numHardCol;i++)
 	{
@@ -3302,11 +3381,12 @@ void drawHardCol()
 void drawZones()
 {
 	int i;
-
+	int numZones;
+	
 	char* zoneData = etageVar0 + *(unsigned int*)(etageVar0 + actorTable[genVar9].room *4);
 	zoneData += *(short int*)(zoneData+2);
 
-	int numZones = *(short int*)zoneData;
+	numZones = *(short int*)zoneData;
 	zoneData+=2;
 
 	for(i=0;i<numZones;i++)
@@ -3319,13 +3399,13 @@ void drawZones()
 void drawOverlayZones()
 {
 	char* etageData = etageVar0 + *(unsigned int*)(etageVar0 + actorTable[genVar9].room * 4);
-
+	short int numEntry;
+	int i;
+	
 	etageData += *(short int*)etageData;
 
-	short int numEntry = *(short int*)(etageData);
+	numEntry = *(short int*)(etageData);
 	etageData += 2;
-
-	int i;
 
 	for(i=0;i<numEntry;i++)
 	{
@@ -3362,19 +3442,30 @@ int isBgOverlayRequired( int X1, int X2, int Z1, int Z2, char* data, int param )
 
 void drawBgOverlaySub2(int size)
 {
-	overlaySize1 = size;
-	overlaySize2 = size;
-
-	bgOverlayVar1 = 0;
-
 	int bx = 32767;
 	int bp = 32767;
 	int cx = -32768;
 	int dx = -32768;
+	short int* out;
+	int tempBxPtr;
+	int tempCxPtr;
+
+	char* si;
 
 	int i;
+	int saveDx;
+	int saveAx;
+
+	char* tempBufferSE;
+
+	int direction = 1;
 
 	short int* data = (short int*)cameraBuffer;
+	
+	overlaySize1 = size;
+	overlaySize2 = size;
+
+	bgOverlayVar1 = 0;
 
 	for(i=0;i<size;i++)
 	{
@@ -3395,7 +3486,7 @@ void drawBgOverlaySub2(int size)
 		data += 2;
 	}
 
-	short int* out = data;
+	out = data;
 	data = (short int*)cameraBuffer;
 
 	out[0] = data[0];
@@ -3403,11 +3494,6 @@ void drawBgOverlaySub2(int size)
 
 	out+=4;
 	data+=4;
-
-	int tempBxPtr;
-	int tempCxPtr;
-
-	char* si;
 
 	if(cx == bp)
 	{
@@ -3424,30 +3510,31 @@ void drawBgOverlaySub2(int size)
 	tempCxPtr = *(short int*)si;
 	si += 2;
 
-	int saveDx;
-	int saveAx;
+	tempBufferSE = cameraBuffer4;
 
-	char* tempBufferSE = cameraBuffer4;
+	direction = 1;
 
-	int direction = 1;
-
-	osystem.startBgPoly();
+	osystem_startBgPoly();
 
 	do
 	{
+		int dx;
+		int ax;
+		
 		saveDx = *(short int*)si;
 		si += 2;
 		saveAx = *(short int*)si;
 		si += 2;
 
-		//osystem.draw3dLine(tempBxPtr, tempCxPtr, 0, saveDx,saveAx, 0, 130);
-		osystem.addBgPolyPoint(tempBxPtr, tempCxPtr);
+		//osystem_draw3dLine(tempBxPtr, tempCxPtr, 0, saveDx,saveAx, 0, 130);
+		osystem_addBgPolyPoint(tempBxPtr, tempCxPtr);
 
-		int dx = saveDx;
-		int ax = saveAx;
+		dx = saveDx;
+		ax = saveAx;
 
 		if(ax != tempCxPtr)
 		{
+			char* ptr1;
 			if(tempCxPtr == bp || tempCxPtr == cx)
 			{
 				char* temp = cameraBuffer3Ptr;
@@ -3467,12 +3554,13 @@ void drawBgOverlaySub2(int size)
 				ax = temp;
 			}
 
-			char* ptr1 = tempBufferSE+tempCxPtr*2;
+			ptr1 = tempBufferSE+tempCxPtr*2;
 
 			if(tempCxPtr > ax)
 			{
-				direction = -1;
 				int temp;
+				direction = -1;
+				
 
 				temp = tempCxPtr;
 				tempCxPtr = ax;
@@ -3523,11 +3611,17 @@ void drawBgOverlaySub2(int size)
 		tempBxPtr = saveDx;
 	}while(--overlaySize1);
 
-	osystem.endBgPoly();
+	osystem_endBgPoly();
 }
 
 void drawBgOverlay(actorStruct* actorPtr)
 {
+	char* data;
+	char* data2;
+	int numEntry;
+	int i;
+	int numOverlayZone;
+	
 	actorPtr->field_14 = BBox3D1;
 	actorPtr->field_16 = BBox3D2;
 	actorPtr->field_18 = BBox3D3;
@@ -3535,11 +3629,9 @@ void drawBgOverlay(actorStruct* actorPtr)
 
 	setClipSize(BBox3D1, BBox3D2, BBox3D3, BBox3D4);
 
-	char* data = roomVar5[currentCamera] + 0x12;
-	int numEntry = *(short int*)(data);
+	data = roomVar5[currentCamera] + 0x12;
+	numEntry = *(short int*)(data);
 	data+=2;
-
-	int i;
 
 	while(numEntry>0)
 	{
@@ -3556,11 +3648,11 @@ void drawBgOverlay(actorStruct* actorPtr)
 
 	data+=2;
 
-	char* data2 = roomVar5[currentCamera] + *(unsigned short int*)(data);
+	data2 = roomVar5[currentCamera] + *(unsigned short int*)(data);
 	data = data2;
 	data+=2;
 
-	int numOverlayZone = *(short int*)(data2);
+	numOverlayZone = *(short int*)(data2);
 
 	for(i=0;i<numOverlayZone;i++)
 	{
@@ -3572,10 +3664,9 @@ void drawBgOverlay(actorStruct* actorPtr)
 								data+4,
 								*(short int*)(data) ))
 		{
+			int j;
 			numOverlay = *(short int*)src;
 			src += 2;
-
-			int j;
 
 			for(j=0;j<numOverlay;j++)
 			{
@@ -3611,9 +3702,10 @@ void mainDrawSub2(int actorIdx) // draw flow
 
 void mainDraw(int mode)
 {
+	int i;
 #ifdef USE_GL
 	if(mode == 2)
-		osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+		osystem_CopyBlockPhys((unsigned char*)screen,0,0,320,200);
 #endif
 
 
@@ -3628,17 +3720,15 @@ void mainDraw(int mode)
 	}
 
 #ifdef USE_GL
-	osystem.startFrame();
+	osystem_startFrame();
 #endif
 
 	setClipSize(0,0,319,199);
 	genVar6 = 0;
 
-	int i;
-
 	//drawHardCol();
 #ifdef USE_GL
-	osystem.cleanScreenKeepZBuffer();
+	osystem_cleanScreenKeepZBuffer();
 #endif
 
 	//drawConverZones();
@@ -3647,7 +3737,7 @@ void mainDraw(int mode)
 	
 
 #ifdef USE_GL
-	osystem.startModelRender();
+	osystem_startModelRender();
 #endif
 
 	for(i=0;i<numActorInList;i++)
@@ -3719,7 +3809,7 @@ void mainDraw(int mode)
 	}
 
 #ifdef USE_GL
-	osystem.stopModelRender();
+	osystem_stopModelRender();
 #endif
 
 	if(drawTextOverlay())
@@ -3753,7 +3843,7 @@ void mainDraw(int mode)
 	}
 
 #ifdef USE_GL
-	osystem.stopFrame();
+	osystem_stopFrame();
 #endif
 
 	flipScreen();
@@ -3764,26 +3854,27 @@ void initBufferAnim(char* buffer, char* bodyPtr)
 	if((*(short int*)bodyPtr) & 2)
 	{
 		char* source = bodyPtr+0x10;
+		short int ax;
+		int cx;
+		int i;
 
 		*(unsigned short int*)(source+4) = (unsigned short int)timer;
 		*(char**)(source) = buffer;
 
 		source += *(short int*)(source-2);
 
-		short int ax = *(short int*)(source);
+		ax = *(short int*)(source);
 
 		ax = (((ax * 2) + ax)*2)+2;
 
 		source += ax;
 
-		int cx = *(short int*)source;
+		cx = *(short int*)source;
 		
 		source += cx*2;
 
 		buffer+= 8;
 		source+= 10;
-
-		int i;
 
 		for(i=0;i<cx;i++)
 		{
@@ -3823,12 +3914,15 @@ short int getAnimType(char** bodyPtr)
 void processAnimRotation(char** bodyPtr, int bp, int bx)
 {
 	short int oldRotation = *(short int*)animVar4;
+	short int newRotation;
+	short int diff;
+	
 	animVar4+=2;
 
-	short int newRotation = *(short int*)animVar1;
+	newRotation = *(short int*)animVar1;
 	animVar1+=2;
 
-	short int diff = newRotation - oldRotation;
+	diff = newRotation - oldRotation;
 
 	if(diff == 0)
 	{
@@ -3865,9 +3959,10 @@ void processAnimRotation(char** bodyPtr, int bp, int bx)
 void processAnimTranslation(char** bodyPtr, int bp, int bx)
 {
 	short int cx = *(short int*)animVar4;
+	short int ax;
 	animVar4+=2;
 
-	short int ax = *(short int*)animVar1;
+	ax = *(short int*)animVar1;
 	animVar1+=2;
 
 	if(ax == cx)
@@ -3885,6 +3980,14 @@ void processAnimTranslation(char** bodyPtr, int bp, int bx)
 short int processAnim(int frame, char* animPtr, char* bodyPtr)
 {
 	int numOfBonesInAnim = *(short int*)(animPtr+2);
+	unsigned short int keyframeLength;
+	unsigned short int timeOfKeyframeStart;
+	char* animBufferPtr;
+	int ax;
+	unsigned short int bx;
+	unsigned short int time;
+	int bp;
+	
 	animPtr+=4;
 
 	animPtr += ((numOfBonesInAnim+1)*8)*frame; // seek to keyframe
@@ -3892,7 +3995,7 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 	// animVar1 = ptr to the current keyFrame
 	animVar1 = animPtr;
 
-	unsigned short int keyframeLength = *(unsigned short int*)animPtr; // keyframe length
+	keyframeLength = *(unsigned short int*)animPtr; // keyframe length
 
 	if(!((*(short int*)bodyPtr) & 2)) // do not anim if the model can't be animated
 	{
@@ -3903,9 +4006,9 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 
 	animVar3 = bodyPtr;
 
-	unsigned short int timeOfKeyframeStart = *(unsigned short int*)(bodyPtr+4); // time of start of keyframe
+	timeOfKeyframeStart = *(unsigned short int*)(bodyPtr+4); // time of start of keyframe
 	
-	char* animBufferPtr = *(char**)(bodyPtr);
+	animBufferPtr = *(char**)(bodyPtr);
 
 	if(!animBufferPtr)
 	{
@@ -3917,12 +4020,12 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 
 	bodyPtr+= *(short int*)(bodyPtr-2);
 
-	int ax = *(short int*)bodyPtr;
+	ax = *(short int*)bodyPtr;
 	ax = (ax*6)+2;
 	bodyPtr+=ax; // skip the points data
 
 	ax = *(short int*)bodyPtr; // num of bones
-	unsigned short int bx = ax;
+	bx = ax;
 	bodyPtr+=bx*2; // skip bones idx table
 
 	if(numOfBonesInAnim > ax)
@@ -3932,10 +4035,10 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 
 	bodyPtr+=10; // skip bone 0
 
-	unsigned short int time = (unsigned short int)timer - timeOfKeyframeStart;
+	time = (unsigned short int)timer - timeOfKeyframeStart;
 
 	bx = keyframeLength;
-	int bp = time;
+	bp = time;
 
 	if(time<keyframeLength) // interpole keyframe
 	{
@@ -4209,13 +4312,18 @@ int input5;
 
 void foundObject(int objIdx, int param)
 {
+	objectStruct* objPtr;
 	int var_C = 0;
 	int var_6 = 1;
+	int var_2 = 0;
+	int i;
+	int var_A = 15000;
+	int var_8 = -200;
 
 	if(objIdx < 0)
 		return;
 
-	objectStruct* objPtr = &objectTable[objIdx];
+	objPtr = &objectTable[objIdx];
 
 	if( param != 0 && (objPtr->flags2 & 0xC000))
 	{
@@ -4233,10 +4341,6 @@ void foundObject(int objIdx, int param)
 	freezeTime();
 //	setupShaking(1000); // probably to remove the shaking when in foundObject screen
 
-	int var_2 = 0;
-
-	int i;
-
 	for(i=0;i<numObjInInventory;i++)
 	{
 		var_2 += objectTable[inventory[i]].positionInTrack;
@@ -4252,8 +4356,6 @@ void foundObject(int objIdx, int param)
 
 	setupSMCode(160,100,128,300,298);
 
-	int var_A = 15000;
-	int var_8 = -200;
 	statusVar1 = 0;
 
 	copyToScreen(unkScreenVar,screen);
@@ -4268,9 +4370,9 @@ void foundObject(int objIdx, int param)
 	while(!var_C)
 	{
 #ifdef USE_GL
-		osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
-		osystem.startFrame();
-		osystem.cleanScreenKeepZBuffer();
+		osystem_CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+		osystem_startFrame();
+		osystem_cleanScreenKeepZBuffer();
 #endif
 
 		process_events();
@@ -4385,7 +4487,12 @@ void hardColSuB1Sub1(int flag)
 void hardColSuB1(ZVStruct* startZv, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
 {
 	int flag = 0;
-
+	int var_8;
+	int halfX;
+	int halfZ;
+	int var_A;
+	int var_6;
+	
 	if(startZv->ZVX2 > zvPtr3->ZVX1)
 	{
 		if(zvPtr3->ZVX2 <= startZv->ZVX1)
@@ -4410,8 +4517,6 @@ void hardColSuB1(ZVStruct* startZv, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
 		flag |= 1;
 	}
 
-	int var_8;
-
 	if( flag == 5 || flag == 9 || flag == 6 || flag == 10 )
 	{
 		var_8 = 2;
@@ -4433,10 +4538,8 @@ void hardColSuB1(ZVStruct* startZv, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
 		}
 	}
 
-	int halfX = (zvPtr2->ZVX1 + zvPtr2->ZVX2) / 2;
-	int halfZ = (zvPtr2->ZVZ1 + zvPtr2->ZVZ2) / 2;
-
-	int var_A;
+	halfX = (zvPtr2->ZVX1 + zvPtr2->ZVX2) / 2;
+	halfZ = (zvPtr2->ZVZ1 + zvPtr2->ZVZ2) / 2;
 
 	if(zvPtr3->ZVX1 > halfX)
 	{
@@ -4469,8 +4572,6 @@ void hardColSuB1(ZVStruct* startZv, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
 			var_A |= 2;
 		}
 	}
-
-	int var_6;
 
 	if( var_A == 5 || var_A == 9 || var_A == 6 || var_A == 10 )
 	{
@@ -4530,11 +4631,12 @@ void hardColSuB1(ZVStruct* startZv, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
 
 int checkForHardCol(ZVStruct* zvPtr, char* dataPtr)
 {
+	int hardColVar = 0;
+	short int counter;
+	
 	dataPtr += *(short int*)(dataPtr); // skip to data
 
-	int hardColVar = 0;
-
-	short int counter = *(short int*)dataPtr;
+	counter = *(short int*)dataPtr;
 	dataPtr+=2;
 
 	do
@@ -4623,6 +4725,8 @@ void processActor1(void)
 	int var_56;
 	short int localTable[3];
 	ZVStruct zvLocal;
+	ZVStruct* zvPtr;
+	int j;
 
 	if(var_6 != -1) // next anim ?
 	{
@@ -4752,8 +4856,6 @@ void processActor1(void)
 	memcpy(localTable,currentProcessedActorPtr->COL,6);
 	var_56 = -1;
 
-	ZVStruct* zvPtr;
-
 	if(var_52 || var_50 || var_4E) // start of movement management
 	{
 		zvPtr = &currentProcessedActorPtr->zv;
@@ -4819,10 +4921,9 @@ void processActor1(void)
 
 		var_42 = processActor1Sub1(currentProcessedActorIdx,&zvLocal); // get the number of actor/actor collision
 
-		int j;
-
 		for(j=0;j<var_42;j++) // process the actor/actor collision
 		{
+			ZVStruct* touchedZv;
 			actorStruct* actorTouchedPtr;
 
 			var_56 = currentProcessedActorPtr->COL[j];
@@ -4831,7 +4932,7 @@ void processActor1(void)
 
 			actorTouchedPtr->COL_BY = currentProcessedActorIdx;
 
-			ZVStruct* touchedZv = &actorTouchedPtr->zv;
+			touchedZv = &actorTouchedPtr->zv;
 
 			if(actorTouchedPtr->flags & 0x80) // takable
 			{
@@ -5087,10 +5188,12 @@ void processActor1(void)
 
 void drawInventoryActions(int arg)
 {
+	int var_2;
+	int i;
+	
 	drawAITDBox(240,150,160,100);
 
-	int var_2 = 150 - ((numInventoryActions<<4)/2);
-	int i;
+	var_2 = 150 - ((numInventoryActions<<4)/2);
 
 	for(i=0;i<numInventoryActions;i++)
 	{
@@ -5110,13 +5213,14 @@ void drawInventoryActions(int arg)
 
 int drawTopStatusBox(int arg_0, int arg_2, int arg_4)
 {
-	drawAITDBox(160,50,320,100);
 	int var_A = currentMenuTop+1;
 	int var_6 = arg_0;
 	int var_E = 0;
 	int var_8;
 	int currentObj;
 	objectStruct* objPtr;
+
+	drawAITDBox(160,50,320,100);
 
 	while(var_E<5)
 	{
@@ -5230,9 +5334,9 @@ void makeStatusScreen(void)
 	while(!exitMenu)
 	{
 #ifdef USE_GL
-		osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
-		osystem.startFrame();
-		osystem.cleanScreenKeepZBuffer();
+		osystem_CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+		osystem_startFrame();
+		osystem_cleanScreenKeepZBuffer();
 #endif
 
 		readKeyboard();
@@ -5451,15 +5555,18 @@ int changeCameraSub1Sub1(int x1, int z1, int x2, int z2, int x3, int z3, int x4,
 	int var6 = z1 - z3;
 
 	int result1 = (var1 * var2) - (var3 * var4);
+	
+	int result2;
+	int result3;
 
 	if(!result1)
 	{
 		return(returnFlag);
 	}
 
-	int result2 = (var5 * var2) - (var3 * var6);
+	result2 = (var5 * var2) - (var3 * var6);
 
-	int result3 = (-var1 * var6) + (var5 * var4);
+	result3 = (-var1 * var6) + (var5 * var4);
 
 	if(result1<0)
 	{
@@ -5492,7 +5599,8 @@ int changeCameraSub1(int x1, int x2, int z1, int z2, char* ptr, short int param)
 	for(i=0;i<param;i++)
 	{
 		char* dest = cameraBuffer;
-
+		int j;
+		int flag = 0;
 		int var1 = *(short int*)src;
 		src+=2;
 
@@ -5508,18 +5616,19 @@ int changeCameraSub1(int x1, int x2, int z1, int z2, char* ptr, short int param)
 
 		dest = cameraBuffer;
 
-		int j;
-
-		int flag = 0;
-
 		for(j=0;j<var1;j++)
 		{
-			int zoneX1= *(short int*)dest;
+			int zoneX1;
+			int zoneZ1;
+			int zoneX2;
+			int zoneZ2;
+			
+			zoneX1= *(short int*)dest;
 			dest+=2;
-			int zoneZ1= *(short int*)dest;
+			zoneZ1= *(short int*)dest;
 			dest+=2;
-			int zoneX2= *(short int*)dest;
-			int zoneZ2= *(short int*)(dest+2);
+			zoneX2= *(short int*)dest;
+			zoneZ2= *(short int*)(dest+2);
 
 			if(changeCameraSub1Sub1(xMid,zMid,xMid-10000,zMid,zoneX1,zoneZ1,zoneX2,zoneZ2))
 			{
@@ -5587,16 +5696,19 @@ void checkIfCameraChangeIsRequired(void)
 	if(currentCamera!=-1)
 	{
 		char* cameraDataPtr = roomVar5[currentCamera] + 2*roomVar6[currentCamera];
-
 		actorStruct* actorPtr;
+		int zvx1;
+		int zvx2;
+		int zvz1;
+		int zvz2;
 
 		actorPtr = &actorTable[genVar9];
 
-		int zvx1 = actorPtr->zv.ZVX1/10;
-		int zvx2 = actorPtr->zv.ZVX2/10;
+		zvx1 = actorPtr->zv.ZVX1/10;
+		zvx2 = actorPtr->zv.ZVX2/10;
 
-		int zvz1 = actorPtr->zv.ZVZ1/10;
-		int zvz2 = actorPtr->zv.ZVZ2/10;
+		zvz1 = actorPtr->zv.ZVZ1/10;
+		zvz2 = actorPtr->zv.ZVZ2/10;
 
 		if(changeCameraSub1(zvx1,zvx2,zvz1,zvz2,cameraDataPtr+2,*(short int*)cameraDataPtr)) // is still in current camera zone ?
 		{
@@ -5621,11 +5733,12 @@ void checkIfCameraChangeIsRequired(void)
 
 char* processActor2Sub(int x, int y, int z, char* zoneData)
 {
-	zoneData += *(short int*)(zoneData+2);
-	int numOfZones = *(short int*)zoneData;
-	zoneData+=2;
-
 	int i;
+	int numOfZones;
+	
+	zoneData += *(short int*)(zoneData+2);
+	numOfZones = *(short int*)zoneData;
+	zoneData+=2;
 
 	for(i=0;i<numOfZones;i++)
 	{
@@ -5650,6 +5763,7 @@ char* processActor2Sub(int x, int y, int z, char* zoneData)
 void processActor2()
 {
 	char * ptr;
+	int type;
 
 	ptr = processActor2Sub(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 							currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY,
@@ -5662,21 +5776,25 @@ void processActor2()
 		return;
 	}
 
-	int type = *(short int*) (ptr + 0xE);
+	type = *(short int*) (ptr + 0xE);
 
 	switch(type)
 	{
 	case 0:
 		{
 			char* ptr2 = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room*4);
+			char* ptr3;
+			int x;
+			int y;
+			int z;
 
 			currentProcessedActorPtr->room = *(short int*) (ptr + 0xC);
 
-			char* ptr3 = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room*4);
+			ptr3 = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room*4);
 
-			int x = (*(short int*)(ptr3+4) - *(short int*)(ptr2+4)) * 10;
-			int y = (*(short int*)(ptr3+6) - *(short int*)(ptr2+6)) * 10;
-			int z = (*(short int*)(ptr3+8) - *(short int*)(ptr2+8)) * 10;
+			x = (*(short int*)(ptr3+4) - *(short int*)(ptr2+4)) * 10;
+			y = (*(short int*)(ptr3+6) - *(short int*)(ptr2+6)) * 10;
+			z = (*(short int*)(ptr3+8) - *(short int*)(ptr2+8)) * 10;
 	
 			currentProcessedActorPtr->roomX -= x;
 			currentProcessedActorPtr->roomY += y;
@@ -5713,11 +5831,12 @@ void processActor2()
 		}
 	case 10:
 		{
+			int life;
 // FIXME: fix the stairs zone in green room
 			if(*(short int*) (ptr + 0xC) == 1/* && currentProcessedActorPtr->zv.ZVZ1 >= -1600*/)
 				break;
 
-			int life = objectTable[currentProcessedActorPtr->field_0].field_24;
+			life = objectTable[currentProcessedActorPtr->field_0].field_24;
 
 			if(life==-1)
 				return;
@@ -5733,6 +5852,9 @@ void processActor2()
 int checkLineProjectionWithActors( int actorIdx, int X, int Y, int Z, int beta, int room, int param )
 {
 	ZVStruct localZv;
+	int foundFlag = -2;
+	int tempX;
+	int tempZ;
 
 	localZv.ZVX1 = X - param;
 	localZv.ZVX2 = X + param;
@@ -5742,11 +5864,6 @@ int checkLineProjectionWithActors( int actorIdx, int X, int Y, int Z, int beta, 
 	localZv.ZVZ2 = Z + param;
 
 	walkStep(param * 2, 0, beta);
-
-	int foundFlag = -2;
-
-	int tempX;
-	int tempZ;
 
 	while(foundFlag == -2)
 	{
@@ -5941,18 +6058,24 @@ void processAnimAction(void)
 		}
 	case 2: // HIT
 		{
+			int x;
+			int y;
+			int z;
+			int range;
+			int collision;
+			int i;
+			ZVStruct rangeZv;
+			
 			if(currentProcessedActorPtr->ANIM != currentProcessedActorPtr->animActionANIM)
 			{
 				currentProcessedActorPtr->animActionType = 0;
 			}
 
-			int x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
-			int y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
-			int z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
+			x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
+			y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
+			z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
 
-			ZVStruct rangeZv;
-
-			int range = currentProcessedActorPtr->animActionParam;
+			range = currentProcessedActorPtr->animActionParam;
 
 			rangeZv.ZVX1 = x - range;
 			rangeZv.ZVX2 = x + range;
@@ -5961,14 +6084,14 @@ void processAnimAction(void)
 			rangeZv.ZVZ1 = z - range;
 			rangeZv.ZVZ2 = z + range;
 
-			int collision = processActor1Sub1(currentProcessedActorIdx,&rangeZv);
-
-			int i;
+			collision = processActor1Sub1(currentProcessedActorIdx,&rangeZv);
 
 			for(i=0;i<collision;i++)
 			{
+				actorStruct* actorPtr2;
+				
 				currentProcessedActorPtr->HIT = currentProcessedActorPtr->COL[i];
-				actorStruct* actorPtr2 = &actorTable[currentProcessedActorPtr->COL[i]];
+				actorPtr2 = &actorTable[currentProcessedActorPtr->COL[i]];
 
 				actorPtr2->HIT_BY = currentProcessedActorIdx;
 				actorPtr2->hitForce = currentProcessedActorPtr->hitForce;
@@ -5995,6 +6118,8 @@ void processAnimAction(void)
 		}
 	case 5: // FIRE
 		{
+			int touchedActor;
+			
 			createFlow(	3,
 						currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A,
 						currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C,
@@ -6006,7 +6131,7 @@ void processAnimAction(void)
 						0,
 						NULL);
 
-			int touchedActor = checkLineProjectionWithActors(
+			touchedActor = checkLineProjectionWithActors(
 												currentProcessedActorIdx,
 												currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A,
 												currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C,
@@ -6072,11 +6197,15 @@ void processAnimAction(void)
 				{
 					if(currentProcessedActorPtr->FRAME == currentProcessedActorPtr->animActionFRAME)
 					{
+						int x;
+						int y;
+						int z;
+						
 						currentProcessedActorPtr->animActionType = 7;
 
-						int x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
-						int y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
-						int z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
+						x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
+						y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
+						z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
 
 						removeObjFromInventory(objIdx);
 
@@ -6101,20 +6230,27 @@ void processAnimAction(void)
 		}
 	case 7: // THROW
 		{
+			int x;
+			int y;
+			int z;
+			int objIdx;
+			int actorIdx;
+			actorStruct* actorPtr;
+			
 			currentProcessedActorPtr->animActionType = 0;
 
-			int x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
-			int y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
-			int z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
+			x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
+			y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
+			z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
 
-			int objIdx = currentProcessedActorPtr->animActionParam;
+			objIdx = currentProcessedActorPtr->animActionParam;
 
-			int actorIdx = objectTable[objIdx].ownerIdx;
+			actorIdx = objectTable[objIdx].ownerIdx;
 
 			if(actorIdx == -1)
 				return;
 
-			actorStruct* actorPtr = &actorTable[actorIdx];
+			actorPtr = &actorTable[actorIdx];
 
 			actorPtr->roomX = x;
 			actorPtr->roomY = y;
@@ -6159,13 +6295,25 @@ void processAnimAction(void)
 
 			ZVStruct rangeZv;
 			ZVStruct rangeZv2;
+			int xtemp;
+			int ytemp;
+			int ztemp;
+			int x1;
+			int x2;
+			int x3;
+			int y1;
+			int y2;
+			int z1;
+			int z2;
+			int z3;
+			int step;
 
 			copyZv(&currentProcessedActorPtr->zv, &rangeZv);
 			copyZv(&currentProcessedActorPtr->zv, &rangeZv2);
 
-			int xtemp = currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
-			int ytemp = currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
-			int ztemp = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+			xtemp = currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+			ytemp = currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+			ztemp = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
 
 			rangeZv2.ZVX1 -= xtemp;
 			rangeZv2.ZVX2 -= xtemp;
@@ -6174,24 +6322,27 @@ void processAnimAction(void)
 			rangeZv2.ZVZ1 -= ztemp;
 			rangeZv2.ZVZ2 -= ztemp;
 
-			int x1 = objPtr->x;
-			int x2 = objPtr->x;
-			int x3 = objPtr->x;
+			x1 = objPtr->x;
+			x2 = objPtr->x;
+			x3 = objPtr->x;
 
-			int y1 = objPtr->y;
-			int y2 = objPtr->y;
+			y1 = objPtr->y;
+			y2 = objPtr->y;
 
-			int z1 = objPtr->z;
-			int z2 = objPtr->z;
-			int z3 = objPtr->z;
+			z1 = objPtr->z;
+			z2 = objPtr->z;
+			z3 = objPtr->z;
 
-			int step = 0;
+			step = 0;
 
 			animMoveY = 0;
 			animMoveX = 0;
 
 			do
 			{
+				int collision;
+				char* ptr;
+				
 				walkStep(0,-step,currentProcessedActorPtr->beta);
 				step += 100;
 				x2 = x1 + animMoveX;
@@ -6207,16 +6358,16 @@ void processAnimAction(void)
 				rangeZv.ZVZ1 = z2 - 200;
 				rangeZv.ZVZ2 = z2 + 200;
 
-				int collision =  processActor1Sub1(currentProcessedActorIdx,&rangeZv);
+				collision =  processActor1Sub1(currentProcessedActorIdx,&rangeZv);
 
 				if(collision)
 				{
+					 int collision2 = collision;
+					 int i;
+
 					currentProcessedActorPtr->field_9A = 0;
 					currentProcessedActorPtr->field_9C = 0;
 					currentProcessedActorPtr->field_9E = 0;
-
-					 int collision2 = collision;
-					 int i;
 
 					 for(i=0;i<collision;i++)
 					 {
@@ -6266,8 +6417,10 @@ void processAnimAction(void)
 						 }
 						 else
 						 {
+						 	 actorStruct* actorPtr;
+						 	 
 							 currentProcessedActorPtr->HIT = currentActorCol;
-							 actorStruct* actorPtr = &actorTable[currentActorCol];
+							 actorPtr = &actorTable[currentActorCol];
 							 actorPtr->HIT_BY = currentProcessedActorIdx;
 							 actorPtr->hitForce = currentProcessedActorPtr->hitForce;
 						 }
@@ -6281,7 +6434,7 @@ void processAnimAction(void)
 					 }
 				}
 
-				char* ptr = processActor2Sub(x2,y2,z2, etageVar0 + *(unsigned int*)(etageVar0+currentProcessedActorPtr->room *4));
+				ptr = processActor2Sub(x2,y2,z2, etageVar0 + *(unsigned int*)(etageVar0+currentProcessedActorPtr->room *4));
 
 				if(ptr)
 				{
@@ -6497,7 +6650,7 @@ void mainLoop(int allowSystemMenu)
 
 		mainDraw(setupCameraVar1);
 
-		//osystem.delay(100);
+		//osystem_delay(100);
 
 //		updateSound2();
 	}
@@ -6556,6 +6709,11 @@ void configureHqrHero(hqrEntryStruct* hqrPtr, char* name)
 int initAnimInBody(int frame, char* anim, char* body)
 {
 	short int temp;
+	short int ax;
+	short int cx;
+	short int bx;
+	char* saveAnim;
+	int i;
 
 	temp = *(short int*)anim;
 	anim+=2;
@@ -6565,10 +6723,10 @@ int initAnimInBody(int frame, char* anim, char* body)
 		return(0);
 	}
 
-	short int ax = *(short int*)anim;
+	ax = *(short int*)anim;
 	anim+=2;
 
-	short int cx = ax;
+	cx = ax;
 
 	ax = ((ax+1)<<3)*frame;
 
@@ -6591,7 +6749,7 @@ int initAnimInBody(int frame, char* anim, char* body)
 	body+=2;
 
 	ax = *(short int*)body;
-	short int bx = ax;
+	bx = ax;
 
 	body+=(((ax << 1) + bx) << 1) +2;
 
@@ -6604,11 +6762,9 @@ int initAnimInBody(int frame, char* anim, char* body)
 
 	body+=10;
 
-	char* saveAnim = anim;
+	saveAnim = anim;
 
 	anim += 8;
-
-	int i;
 
 	for(i=0;i<cx;i++)
 	{
@@ -6647,7 +6803,16 @@ int loadSave(int saveNumber)
 {
 	char buffer[256];
 	FILE* fHandle;
-
+	unsigned int var28;
+	int var_14 = 0;
+	char* ptr;
+	int var_E;
+	int var_16;
+	unsigned int offsetToVars;
+	unsigned short int tempVarSize;
+	unsigned int offsetToActors;
+	int i;
+	
 	sprintf(buffer,"SAVE%d.ITD",saveNumber);
 
 	fHandle = fopen(buffer,"rb");
@@ -6662,15 +6827,11 @@ int loadSave(int saveNumber)
 
 	fseek(fHandle,8,SEEK_SET);
 
-	unsigned int var28;
 	fread(&var28,4,1,fHandle);
 
 	var28 = ((var28 & 0xFF) << 24) | ((var28 & 0xFF00) << 8) | (( var28 & 0xFF0000) >> 8) | ((var28 & 0xFF000000) >> 24);
 
 	fseek(fHandle,var28,SEEK_SET);
-
-	int var_14 = 0;
-	char* ptr;
 
 	do
 	{
@@ -6686,22 +6847,20 @@ int loadSave(int saveNumber)
 
 	//timerFreeze = 1;
 
-	int var_E = currentCamera;
+	var_E = currentCamera;
 
 	loadFloor(currentEtage);
 	currentCamera = -1;
 	loadRoom(currentDisplayedRoom);
-	int var_16 = currentMusic;
+	var_16 = currentMusic;
 	currentMusic = -1;
 //	changeMusic(var_16);
 
 	fseek(fHandle,12,SEEK_SET);
-	unsigned int offsetToVars;
 	fread(&offsetToVars,4,1,fHandle);
 	offsetToVars = ((offsetToVars & 0xFF) << 24) | ((offsetToVars & 0xFF00) << 8) | (( offsetToVars & 0xFF0000) >> 8) | ((offsetToVars & 0xFF000000) >> 24);
 	fseek(fHandle,offsetToVars,SEEK_SET);
 
-	unsigned short int tempVarSize;
 	fread(&tempVarSize,2,1,fHandle);
 	varSize = tempVarSize;
 
@@ -6711,15 +6870,12 @@ int loadSave(int saveNumber)
 	configureHqrHero(listAnim,listAnimSelect[defines.hero]);
 
 	fseek(fHandle,16,SEEK_SET);
-	unsigned int offsetToActors;
 	fread(&offsetToActors,4,1,fHandle);
 	offsetToVars = ((offsetToActors & 0xFF) << 24) | ((offsetToActors & 0xFF00) << 8) | (( offsetToActors & 0xFF0000) >> 8) | ((offsetToActors & 0xFF000000) >> 24);
 	fseek(fHandle,offsetToVars,SEEK_SET);
 
 	fread(actorTable,8000,1,fHandle);
 	fclose(fHandle);
-
-	int i;
 
 	for(i=0;i<50;i++)
 	{
@@ -6742,6 +6898,7 @@ int loadSave(int saveNumber)
 
 int restoreSave(int arg0, int arg1)
 {
+	int selectedSave;
 //	restoreSaveVar1 = arg0;
 
 	if(arg1==0)
@@ -6751,7 +6908,7 @@ int restoreSave(int arg0, int arg1)
 		make3dTatouUnk1(0x40,0);
 	}
 
-	int selectedSave = parseAllSaves(0);
+	selectedSave = parseAllSaves(0);
 
 	if(arg1==0)
 	{
@@ -6781,7 +6938,8 @@ int main(int argc, char** argv)
 
 	printf(version);
 
-	osystem.initBuffer(scaledScreen,640,400);
+	osystem_init();
+	osystem_initBuffer(scaledScreen,640,400);
 	startThreadTimer();
 
 	sysInit();
@@ -6904,16 +7062,15 @@ int main(int argc, char** argv)
 int drawTextOverlay(void)
 {
 	int var_2 = 0;
+	int var_14 = 0;
+	int var_10 = 183;
+	messageStruct* currentMessage;
 
 	BBox3D4 = 199;
 	BBox3D1 = 319;
 	BBox3D3 = 0;
 
-	int var_14 = 0;
-
-	int var_10 = 183;
-
-	messageStruct* currentMessage = messageTable;
+	currentMessage = messageTable;
 
 	if(lightVar1==0)
 	{

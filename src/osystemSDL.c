@@ -24,6 +24,9 @@
 #include "SDL_sound.h"
 #include "osystem.h"
 
+int osystem_mouseRight;
+int osystem_mouseLeft;
+
 char *tempBuffer;
 SDL_Surface *sdl_buffer;
 SDL_Surface *sdl_buffer320x200;
@@ -36,12 +39,12 @@ SDL_Surface *surfaceTable[16];
 char RGBA_Pal[256*4];
 //TTF_Font *font;
 
-void OSystem::delay(int time)
+void osystem_delay(int time)
 {
     SDL_Delay(time);
 }
 
-void OSystem::updateImage()
+void osystem_updateImage()
 {
 }
 
@@ -57,7 +60,7 @@ void OSystem::updateImage()
     mouseRight = 0;
 }*/
 
-OSystem::OSystem()	// that's the constructor of the system dependent
+osystem_init()	// that's the constructor of the system dependent
 						// object used for the SDL port
 {
     unsigned char *keyboard;
@@ -133,11 +136,11 @@ OSystem::OSystem()	// that's the constructor of the system dependent
 	    exit(1);
 	}
 
-    mouseLeft = 0;
-    mouseRight = 0;
+    osystem_mouseLeft = 0;
+    osystem_mouseRight = 0;
 }
 
-void OSystem::putpixel(int x, int y, int pixel)
+void osystem_putpixel(int x, int y, int pixel)
 {
     int bpp = sdl_screen->format->BytesPerPixel;
 
@@ -149,11 +152,12 @@ void OSystem::putpixel(int x, int y, int pixel)
     *p = pixel;
 }
 
-void OSystem::setPalette(byte * palette)
+void osystem_setPalette(byte * palette)
 {
+	SDL_Color *sdl_colorsTemp;
 	memcpy(RGBA_Pal,palette,256*4);
    // int i;
-    SDL_Color *sdl_colorsTemp = (SDL_Color *) palette;
+    sdl_colorsTemp = (SDL_Color *) palette;
 
     SDL_SetColors(sdl_buffer, sdl_colorsTemp, 0, 256);
 
@@ -162,12 +166,12 @@ void OSystem::setPalette(byte * palette)
     SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
 }
 
-void OSystem::getPalette(char* palette)
+void osystem_getPalette(char* palette)
 {
 	memcpy(palette,RGBA_Pal,256*4);
 }
 
-void OSystem::setPalette320x200(byte * palette)
+void osystem_setPalette320x200(byte * palette)
 {
    // int i;
     SDL_Color *sdl_colorsTemp = (SDL_Color *) palette;
@@ -179,7 +183,7 @@ void OSystem::setPalette320x200(byte * palette)
   //  SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
 }
 
-void OSystem::fadeBlackToWhite()
+void osystem_fadeBlackToWhite()
 {
     int i;
 
@@ -194,14 +198,14 @@ void OSystem::fadeBlackToWhite()
 	}
 }
 
-void OSystem::flip(unsigned char *videoBuffer)
+void osystem_flip(unsigned char *videoBuffer)
 {
     SDL_BlitSurface(sdl_buffer, NULL, sdl_screen, NULL);
 
     SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
 }
 
-void OSystem::draw320x200BufferToScreen(unsigned char *videoBuffer)
+void osystem_draw320x200BufferToScreen(unsigned char *videoBuffer)
 {
 	SDL_BlitSurface(sdl_buffer320x200,NULL,sdl_bufferRGBA,NULL);
 
@@ -216,7 +220,7 @@ void OSystem::draw320x200BufferToScreen(unsigned char *videoBuffer)
 	SDL_FreeSurface(sdl_bufferStretch);
 }
 
-void OSystem::CopyBlockPhys(unsigned char *videoBuffer, int left, int top, int right, int bottom)
+void osystem_CopyBlockPhys(unsigned char *videoBuffer, int left, int top, int right, int bottom)
 {
     SDL_Rect rectangle;
 
@@ -230,17 +234,18 @@ void OSystem::CopyBlockPhys(unsigned char *videoBuffer, int left, int top, int r
     SDL_UpdateRect(sdl_screen, left, top, right - left +1, bottom - top+1);
 }
 
-void OSystem::initBuffer(char *buffer, int width, int height)
+void osystem_initBuffer(char *buffer, int width, int height)
 {   
 	sdl_buffer = SDL_CreateRGBSurfaceFrom(buffer, width, height, 8, width, 0, 0, 0, 0);
 }
 
-void OSystem::crossFade(char *buffer, char *palette)
+void osystem_crossFade(char *buffer, char *palette)
 {
     SDL_Surface *backupSurface;
     SDL_Surface *newSurface;
     SDL_Surface *tempSurface;
     Uint32 rmask, gmask, bmask, amask;
+	int i;
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
     rmask = 0xff000000;
@@ -265,7 +270,6 @@ void OSystem::crossFade(char *buffer, char *palette)
     SDL_BlitSurface(tempSurface, NULL, newSurface, NULL);
 
 #ifndef FASTDEBUG
-    int i;
 
 /*    for (i = 0; i < 16; i++)
 	{
@@ -322,15 +326,15 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len)
 	}
 }
 
-void OSystem::playSample(char* sampleName)
+void osystem_playSample(char* sampleName)
 {
+	Sound_Sample *sample;
+	Sound_AudioInfo info;
+
 	return;
 #ifdef UNIX
 	return;
 #endif
-	Sound_Sample *sample;
-	Sound_AudioInfo info;
-
 	info.channels = 0;
 	info.format = 0;
 	info.rate = 0;
@@ -384,5 +388,18 @@ void OSystem::playSample(char* sampleName)
 		deviceStatus = true;
 	}
 }
+
+void osystem_startBgPoly()
+{
+}
+
+void osystem_endBgPoly()
+{
+}
+
+void osystem_addBgPolyPoint(int x, int y)
+{
+}
+
 
 #endif
