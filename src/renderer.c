@@ -871,9 +871,6 @@ void renderStyle1(char* buffer)
 	int numPoint = *(short int*)buffer;
 	buffer+=2;
 
-	if(numPoint>4)
-		numPoint = 3;
-
 	int color = *(short int*)buffer;
 	buffer+=2;
 
