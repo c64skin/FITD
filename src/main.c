@@ -1530,7 +1530,7 @@ void initEngine(void)
 
 	fclose(fHandle);
 
-//
+/*
 	fHandle = fopen("objDump.txt","w+");
 	for(i=0;i<maxObjects;i++)
 	{
@@ -1546,7 +1546,7 @@ void initEngine(void)
 
 		fprintf(fHandle,"\n");
 	}
-	fclose(fHandle);
+	fclose(fHandle);*/
 
 /*	fHandle = fopen("objNames.txt","w+");
 	for(i=0;i<maxObjects;i++)
@@ -6772,9 +6772,9 @@ void mainLoop(int allowSystemMenu)
 			updateAllActorAndObjects();
 		} 
 
-		if(actorTurnedToObj)
+//		if(actorTurnedToObj)
 		{
-//			createActorList();
+			createActorList();
 		}
 
 		sortActorList();
