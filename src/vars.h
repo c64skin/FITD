@@ -107,7 +107,7 @@ struct rotateStruct
 	short int timeOfRotate;
 };
 
-struct actorStruct
+struct actorStruct // used to read data from file too
 {
 	short int field_0;
 	short int bodyNum;
@@ -118,12 +118,12 @@ struct actorStruct
 	short int field_16;
 	short int field_18;
 	short int field_1A;
-	short int x;
-	short int y;
-	short int z;
-	short int field_22;
-	short int field_24;
-	short int field_26;
+	short int roomX;
+	short int roomY;
+	short int roomZ;
+	short int worldX;
+	short int worldY;
+	short int worldZ;
 	short int alpha;
 	short int beta;
 	short int gamma;
@@ -147,9 +147,11 @@ struct actorStruct
 	short int trackNumber;
 	short int MARK;
 	short int positionInTrack;
-	short int field_5A;
-	short int field_5C;
-	short int field_5E;
+
+	short int modX;
+	short int modY;
+	short int modZ;
+
 	short int field_60;
 	short int field_62;
 	short int field_64;
@@ -420,6 +422,12 @@ extern int paletteVar;
 
 extern char* listBodySelect[];
 extern char* listAnimSelect[];
+
+extern short int inventory[30];
+
+extern short int shakeVar1;
+extern short int shakingAmplitude;
+extern unsigned int timerFreeze1;
 
 extern saveEntry saveTable[];
 

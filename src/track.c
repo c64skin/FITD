@@ -80,15 +80,15 @@ void processTrack(void)
 						z -= ((*(short int*)(roomSourceDataPtr+8)) - (*(short int*)(roomDestDataPtr+8))) * 10;
 					}
 
-					int distanceToPoint = computeDistanceToPoint(	currentProcessedActorPtr->x + currentProcessedActorPtr->field_5A,
-																	currentProcessedActorPtr->z + currentProcessedActorPtr->field_5E,
+					int distanceToPoint = computeDistanceToPoint(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+																	currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
 																	x,z );
 
 
 					if(distanceToPoint >= 400) // not yet at position
 					{
-						int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->x + currentProcessedActorPtr->field_5A,
-																			currentProcessedActorPtr->z + currentProcessedActorPtr->field_5E,
+						int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
 																			currentProcessedActorPtr->beta,
 																			x,z );
 

@@ -17,6 +17,7 @@ void makeRotationMtx(int x, int y, int z, int* xOut, int* yOut);
 void make3dTatouUnk1(int var1,int var2);
 void fadeOut(int var1, int var2);
 void playSound(int num);
+void rotateModel(int x,int y,int z,int alpha,int beta,int gamma,int time);
 
 //////////////
 #endif

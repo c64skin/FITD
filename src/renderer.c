@@ -285,6 +285,14 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 		transY = *(short int*)(boneDataPtr+0xC);
 		transZ = *(short int*)(boneDataPtr+0xE);
 
+	/////////////////////////
+	// DEBUG
+		transX = 0;
+		transY = 0;
+		transZ = 0;
+
+	/////////////////////////
+
 		if(transX || transY || transZ)
 		{
 			int type = *(short int*)(boneDataPtr+0x8);

@@ -192,6 +192,8 @@ void make3dTatouUnk1(int var1,int var2)
 
 	paletteVar = 1;
 
+	flip();
+
 	//unfreezeTime();
 }
 

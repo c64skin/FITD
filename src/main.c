@@ -741,6 +741,12 @@ int processStartupMenu(void)
 		fadeOut(16,0);
 	}
 
+	readKeyboard();
+	while(inputKey)
+	{
+		readKeyboard();
+	}
+
 	return(selectedEntry);
 }
 
@@ -1598,9 +1604,9 @@ void loadRoom(int roomNumber)
 		{
 			if(actorTable[i].field_0 != -1)
 			{
-				actorTable[i].field_22 -= var_E;
-				actorTable[i].field_24 -= var_C;
-				actorTable[i].field_26 -= var_A;
+				actorTable[i].worldX -= var_E;
+				actorTable[i].worldY -= var_C;
+				actorTable[i].worldZ -= var_A;
 			}
 		}
 	}
@@ -1817,9 +1823,9 @@ void updateAllActorAndObjectsSub1(int index)
 				objectPtr->positionInTrack = actorPtr->positionInTrack;
 			}
 
-			objectPtr->x = actorPtr->x + actorPtr->field_5A;
-			objectPtr->y = actorPtr->y + actorPtr->field_5C;
-			objectPtr->z = actorPtr->z + actorPtr->field_5E;
+			objectPtr->x = actorPtr->roomX + actorPtr->modX;
+			objectPtr->y = actorPtr->roomY + actorPtr->modY;
+			objectPtr->z = actorPtr->roomZ + actorPtr->modZ;
 
 			objectPtr->alpha = actorPtr->alpha;
 			objectPtr->beta = actorPtr->beta;
@@ -1857,17 +1863,17 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	actorPtr->flags = flag;
 	actorPtr->stage = stage;
 	actorPtr->room = room;
-	actorPtr->field_22 = actorPtr->x = x;
-	actorPtr->field_24 = actorPtr->y = y;
-	actorPtr->field_26 = actorPtr->z = z;
+	actorPtr->worldX = actorPtr->roomX = x;
+	actorPtr->worldY = actorPtr->roomY = y;
+	actorPtr->worldZ = actorPtr->roomZ = z;
 
 	if(room != currentDisplayedRoom)
 	{
 		char* roomPtr = etageVar0+room*4;
 
-		actorPtr->field_22 = ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
-		actorPtr->field_24 = ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;
-		actorPtr->field_26 = ((*(short int*)(cameraPtr+8)) - (*(short int*)(roomPtr+8))) * 10;
+		actorPtr->worldX = ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
+		actorPtr->worldY = ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;
+		actorPtr->worldZ = ((*(short int*)(cameraPtr+8)) - (*(short int*)(roomPtr+8))) * 10;
 	}
 
 	actorPtr->alpha = alpha;
@@ -1887,9 +1893,10 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	actorPtr->field_44 = -1;
 	actorPtr->field_46 = 0;
 	actorPtr->field_48 = -1;
-	actorPtr->field_5A = 0;
-	actorPtr->field_5C = 0;
-	actorPtr->field_5E = 0;
+
+	actorPtr->modX = 0;
+	actorPtr->modY = 0;
+	actorPtr->modZ = 0;
 
 	for(j=0;j<3;j++)
 	{
@@ -2385,7 +2392,7 @@ void mainDraw(int mode)
 					//TODO: implement anim stuff
 				}
 
-				renderModel(actorPtr->field_22 + actorPtr->field_5A, actorPtr->field_24 + actorPtr->field_5C, actorPtr->field_26 + actorPtr->field_5E,
+				renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
 							actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
 
 			}
@@ -2714,6 +2721,8 @@ void stopAnim(int actorIdx)
 
 void processActor1(void)
 {
+	return;
+
 	int var_42 = 0;
 	int var_6 = currentProcessedActorPtr->field_44;
 	int var_40;
@@ -2795,9 +2804,9 @@ void processActor1(void)
 	}
 	else // animation
 	{
-		int var_4C = currentProcessedActorPtr->field_5A;
+		int var_4C = currentProcessedActorPtr->modX;
 		//int var_4A = currentProcessedActorPtr->field_5C;
-		int var_48 = currentProcessedActorPtr->field_5E;
+		int var_48 = currentProcessedActorPtr->modZ;
 
 		currentProcessedActorPtr->END_FRAME = processAnim(currentProcessedActorPtr->FRAME, HQR_Get(listAnim, currentProcessedActorPtr->ANIM), HQR_Get(listBody, currentProcessedActorPtr->bodyNum));
 
@@ -2852,30 +2861,30 @@ void processActor1(void)
 
 		///////// TEMP
 
-		var_4C = currentProcessedActorPtr->field_5A;
-		var_4A = currentProcessedActorPtr->field_5C;
-		var_48 = currentProcessedActorPtr->field_5E;
+		var_4C = currentProcessedActorPtr->modX;
+		var_4A = currentProcessedActorPtr->modY;
+		var_48 = currentProcessedActorPtr->modZ;
 
 		/////////
 
 		var_52 += var_4C;
-		currentProcessedActorPtr->field_5A = var_52;
+		currentProcessedActorPtr->modX = var_52;
 
 		var_4E += var_4A;
-		currentProcessedActorPtr->field_5C = var_4A;
+		currentProcessedActorPtr->modY = var_4A;
 
 		var_50 += var_48;
-		currentProcessedActorPtr->field_5E = var_48;
+		currentProcessedActorPtr->modZ = var_48;
 
 	}
 
 	if(!currentProcessedActorPtr->field_64)
 	{
 		// fall management ?
-		currentProcessedActorPtr->field_24 += currentProcessedActorPtr->field_5C;
-		currentProcessedActorPtr->y += currentProcessedActorPtr->field_5C;
+		currentProcessedActorPtr->worldY += currentProcessedActorPtr->modY;
+		currentProcessedActorPtr->roomY += currentProcessedActorPtr->modY;
 
-		currentProcessedActorPtr->field_5C = 0;
+		currentProcessedActorPtr->modY = 0;
 
 		if(currentProcessedActorPtr->flags & 0x100)
 		{
@@ -2920,28 +2929,28 @@ void processActor1(void)
 				anim(currentProcessedActorPtr->field_42, 1, -1);
 			}
 
-			currentProcessedActorPtr->field_22 += currentProcessedActorPtr->field_5A;
-			currentProcessedActorPtr->x += currentProcessedActorPtr->field_5A;
+			currentProcessedActorPtr->worldX += currentProcessedActorPtr->modX;
+			currentProcessedActorPtr->roomX += currentProcessedActorPtr->modX;
 
-			currentProcessedActorPtr->field_26 += currentProcessedActorPtr->field_5E;
-			currentProcessedActorPtr->z += currentProcessedActorPtr->field_5E;
+			currentProcessedActorPtr->worldZ += currentProcessedActorPtr->modZ;
+			currentProcessedActorPtr->roomZ += currentProcessedActorPtr->modZ;
 
-			currentProcessedActorPtr->field_5A = 0;
-			currentProcessedActorPtr->field_5E = 0;
+			currentProcessedActorPtr->modX = 0;
+			currentProcessedActorPtr->modZ = 0;
 		}
 	}
 	else // not the end of anim
 	{
 		if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->speedChange.param == 0))
 		{
-			currentProcessedActorPtr->field_22 += currentProcessedActorPtr->field_5A;
-			currentProcessedActorPtr->x += currentProcessedActorPtr->field_5A;
+			currentProcessedActorPtr->worldX += currentProcessedActorPtr->modX;
+			currentProcessedActorPtr->roomX += currentProcessedActorPtr->modX;
 
-			currentProcessedActorPtr->field_26 += currentProcessedActorPtr->field_5E;
-			currentProcessedActorPtr->z += currentProcessedActorPtr->field_5E;
+			currentProcessedActorPtr->worldZ += currentProcessedActorPtr->modZ;
+			currentProcessedActorPtr->roomZ += currentProcessedActorPtr->modZ;
 
-			currentProcessedActorPtr->field_5A = 0;
-			currentProcessedActorPtr->field_5E = 0;
+			currentProcessedActorPtr->modX = 0;
+			currentProcessedActorPtr->modZ = 0;
 
 			startActorRotation(0,currentProcessedActorPtr->speed,60,&currentProcessedActorPtr->speedChange);
 		}
@@ -2950,17 +2959,386 @@ void processActor1(void)
 	}
 }
 
+int currentFoundBodyIdx;
+char* currentFoundBody;
+int numInventoryActions;
+short int inventoryActionTable[5];
+//short int inventory[30];
+
+int statusLeft;
+int statusTop;
+int statusRight;
+int statusBottom;
+
+int statusVar1;
+
+void drawInventoryActions(int arg)
+{
+	drawAITDBox(240,150,160,100);
+
+	int var_2 = 150 - ((numInventoryActions<<4)/2);
+	int i;
+
+	for(i=0;i<numInventoryActions;i++)
+	{
+		if(arg == i)
+		{
+			fillBox(170,var_2,309,var_2+16,100);
+			drawSlectedText(240,var_2,inventoryActionTable[i],15,4);
+		}
+		else
+		{
+			drawText(240,var_2,inventoryActionTable[i],4);
+		}
+
+		var_2 += 16;
+	}
+}
+
+int drawTopStatusBox(int arg_0, int arg_2, int arg_4)
+{
+	drawAITDBox(160,50,320,100);
+	int var_A = currentMenuTop+1;
+	int var_6 = arg_0;
+	int var_E = 0;
+	int var_8;
+	int currentObj;
+	objectStruct* objPtr;
+
+	while(var_E<5)
+	{
+		if(arg_0>=numObjInInventory)
+			break;
+
+		currentObj = inventory[arg_0];
+
+		objPtr = &objectTable[currentObj];
+
+		if(arg_0 == arg_2)
+		{
+			if(arg_4 == 15)
+			{
+				fillBox(0xA,var_A,0x135,var_A+0x10,0x64);
+			}
+
+			drawSlectedText(160,var_A,objPtr->foundName,0,4);
+
+			var_8 = currentObj;
+		}
+		else
+		{
+			drawText(160,var_A,objPtr->foundName,4);
+		}
+
+		var_A += 0x10;
+		arg_0++;
+		var_E++;
+	}
+
+	printTextSub5(298,0x10,0x10,aitdBoxGfx);
+
+	if(var_6+5 < numObjInInventory)
+	{
+		printTextSub5(298,74,9,aitdBoxGfx);
+	}
+
+	return(var_8);
+}
+
+void menuWaitVSync()
+{
+}
+
+void renderInventoryObject(int arg)
+{
+//	setClipSize(statusLeft,statusTop,statusRight,statusBottom);
+	fillBox(statusLeft,statusTop,statusRight,statusBottom,0);
+
+	statusVar1 -= 8;
+
+	rotateModel(0,0,0,60,statusVar1,0,24000);
+	renderModel(0,0,0,0,0,0,currentFoundBody);
+
+	if(arg!=-1)
+	{
+		char buffer[256];
+		initFont(fontData,4);
+		sprintf(buffer,"%d",vars[arg]);
+		renderText(statusLeft+4,statusTop+4,screen,buffer);
+	}
+
+	menuWaitVSync();
+}
+
+void makeStatusScreen(void)
+{
+	int exitMenu = 0;
+	int var_10 = 0;
+	int firstTime = 1;
+	unsigned int chrono;
+	int var_14;
+	int var_16;
+	int var_18;
+	int var_1A;
+	int var_1C;
+	int var_8;
+	int var_A;
+	int var_C;
+	int var_E;
+
+	if(!numObjInInventory)
+		return;
+
+	var_1C = 0;
+	var_14 = -1;
+	var_18 = 0;
+	var_A = 0;
+	var_8 = 2;
+
+	statusVar1 = 0;
+
+	//freezeTime();
+	//pauseShaking();
+
+	if(lightVar1!=0)
+	{
+		//makeBlackPalette();
+	}
+
+	drawAITDBox(80,150,160,100);
+
+	statusLeft = currentMenuLeft;
+	statusTop = currentMenuTop;
+	statusRight = currentMenuRight;
+	statusBottom = currentMenuBottom;
+
+	setupSMCode(((statusRight-statusLeft)/2)+statusLeft,((statusBottom-statusTop)/2) + statusTop,128,400,390);
+
+	while(!exitMenu)
+	{
+		readKeyboard();
+		process_events();
+
+		input3 = input2;
+		input4 = inputKey;
+		button = input1;
+
+		if(!input3 && !input4 && !button)
+		{
+			var_8 = 0;
+		}
+
+		if(input3 == 1)
+		{
+			var_10 = 0;
+			exitMenu = 1;
+		}
+
+		if(var_A == 0)
+		{
+			if(var_8<1)
+			{
+				if((input3 == 0x1C) || (button != 0) || (input4 == 0xC))
+				{
+					drawTopStatusBox(var_1C,var_18,14);
+					menuWaitVSync();
+					var_A = 1;
+					var_14 = -1;
+					var_1A = 0;
+
+					while(input2)
+					{
+						readKeyboard();
+					}
+				}
+				else
+				{
+					if(input4&1 && var_18>0)
+					{		
+						var_18--;
+					}
+
+					if(input4&2 && var_18 < (numObjInInventory-1))
+					{
+						var_18++;
+					}
+
+					if(var_1C+5 <= var_18)
+					{
+						var_1C++;
+					}
+
+					if(var_18 < var_1C)
+					{
+						var_1C--;
+					}
+
+					if(input3 || input4 || button)
+					{
+						if(var_8==0)
+						{
+							var_8 = 1;
+							startChrono(&chrono);
+						}
+					}
+				}
+			}
+			else
+			{
+				if(var_8 == 1)
+				{
+					if(evalChrono(&chrono)>0x280000)
+					{
+						var_8 = -1;
+					}
+				}
+			}
+
+			if(var_14!=var_18)
+			{
+				var_16 = drawTopStatusBox(var_1C,var_18,15);
+
+				currentFoundBodyIdx = objectTable[var_16].foundBody;
+
+				currentFoundBody = HQR_Get(listBody,currentFoundBodyIdx);
+
+				var_C = objectTable[var_16].flags2;
+
+				numInventoryActions = 0;
+				var_E = 0;
+
+				while(var_E<11)
+				{
+					if(var_C & (1<<var_E))
+					{
+						if(numInventoryActions<5)
+						{
+							inventoryActionTable[numInventoryActions++] = var_E+23;
+						}
+					}
+					var_E ++;
+				}
+
+				drawInventoryActions(-1);
+				flipScreen();
+
+				var_14 = var_18;
+			}
+		}
+		else
+		{
+			if(var_8<1)
+			{
+				if(input3 == 0x1C || button)
+				{
+					var_18 = inventory[var_18];
+					action = (1 << (233 + inventoryActionTable[var_1A]));
+					var_10 = 1;
+					exitMenu = 1;
+				}
+
+				if(input4 & 0xC)
+				{
+					drawInventoryActions(-1);
+					var_A = 0;
+					var_14 = -1;
+					var_8 = 2;
+					continue;
+				}
+
+				if(input4&1 && var_1A>0)
+				{
+					var_1A --;
+				}
+
+				if(input4&2 && var_1A<(numInventoryActions-1))
+				{
+					var_1A++;
+				}
+
+				if(input3 || input4 || button)
+				{
+					if(var_8==0)
+					{
+						var_8 = 1;
+						startChrono(&chrono);
+					}
+				}
+			}
+			else
+			{
+				if(var_8==1)
+				{
+					if(evalChrono(&chrono)>0x280000)
+					{
+						var_8 = -1;
+					}
+				}
+
+				if(var_14 != var_1A)
+				{
+					var_14 = var_1A;
+					drawInventoryActions(var_14);
+					menuWaitVSync();
+				}
+			}
+		}
+		renderInventoryObject(objectTable[var_16].field_24);
+
+		if(firstTime)
+		{
+			firstTime = 0;
+			if(lightVar1)
+			{
+				make3dTatouUnk1(0x40,0);
+			}
+		}
+
+		flipScreen();
+	}
+
+	readKeyboard();
+	while(input1 || input2 || inputKey)
+	{
+		readKeyboard();
+	}
+
+	input4 = 0;
+	input3 = 0;
+	button = 0;
+
+	if(var_10 == 1)
+	{
+	//	updateInHand(var_18);
+	}
+
+	//updateShaking();
+}
+
 void mainLoop(int allowSystemMenu)
 {
 	while(1)
 	{
 		process_events();
+		readKeyboard();
 		input3 = input2;
 		input4 = inputKey;
 		button = input1;
 
 		if(input3)
 		{
+			if(input3 == 0x1C || input3 == 0x17)
+			{
+				if(allowSystemMenu == 0)
+				{
+					break;
+				}
+
+				if(statusScreenAllowed)
+				{
+					makeStatusScreen();
+				}
+			}
 		}
 		else
 		{
@@ -3278,6 +3656,7 @@ int loadSave(int saveNumber)
 			fread(ptr,currentSaveEntrySize,1,fHandle);
 		}
 		var_14++;
+
 	}while(ptr);
 
 	//timerFreeze = 1;
@@ -3458,7 +3837,7 @@ int main(int argc, char** argv)
 						exit(-1);
 					}*/
 
-//					mainSub1();
+//					updateShaking();
 
 					mainVar1 = 2;
 
