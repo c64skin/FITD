@@ -196,6 +196,14 @@ struct objectStruct
 	short int foundWeight;
 };
 
+struct boxStruct
+{
+	short int var0;
+	short int var1;
+	short int var2;
+	short int var3;
+};
+
 extern hqrEntryStruct* hqrUnk;
 
 extern int videoMode;
@@ -292,5 +300,50 @@ extern objectStruct objectTable[300]; // may be less
 extern short int* vars;
 
 extern int varSize;
+
+extern char* messageVar1[5]; // may be bigger
+
+extern int currentMusic;
+extern int found;
+
+extern boxStruct genVar2[15]; // recheckSize
+extern boxStruct genVar4[50];
+extern boxStruct *genVar1;
+extern boxStruct *genVar3;
+
+extern int genVar5;
+extern int genVar6;
+extern int genVar7;
+extern int genVar8;
+extern int genVar9;
+extern int giveUp;
+extern int inHand;
+extern int lightVar1;
+extern int lightVar2;
+extern int numObjInInventory;
+extern int soundVar1;
+extern int soundVar2;
+extern int statusScreenAllowed;
+
+extern char* etageVar0;
+extern char* etageVar1;
+
+extern int changeFloor;
+extern int currentCamera;
+extern int currentEtage;
+extern int needChangeRoom;
+
+extern char* cameraPtr;
+extern int currentDisplayedRoom;
+extern int mainVar1;
+extern int roomVar0;
+extern int roomVar1;
+extern char* roomVar2;
+extern int roomVar3;
+extern char* roomVar4;
+extern char* roomVar5[15];
+extern short int roomVar6[15];
+extern int startGameVar1;
+
 
 #endif

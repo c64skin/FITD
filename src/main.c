@@ -1476,12 +1476,186 @@ void initEngine(void)
 	currentCameraTarget = defines.field_E;
 }
 
+void initVarsSub1(void)
+{
+	int i;
+
+	for(i=0;i<5;i++)
+	{
+		messageVar1[i] = NULL;
+	}
+}
+
+void initVars()
+{
+	giveUp = 0;
+	inHand = -1;
+	numObjInInventory = 0;
+	found = 0;
+
+	genVar1 = genVar2;
+	genVar3 = genVar4;
+
+	genVar5 = 0;
+	genVar6 = 0;
+
+	soundVar2 = -1;
+	genVar7 = -1;
+	soundVar1 = -1;
+	currentMusic = -1;
+	genVar8 = -1;
+
+	lightVar1 = 0;
+	lightVar2 = 0;
+
+	genVar9 = -1;
+	currentCameraTarget = -1;
+
+	statusScreenAllowed = 1;
+
+	initVarsSub1();
+}
+
+void HQR_Reset(hqrEntryStruct* hqrPtr)
+{
+	hqrPtr->sizeFreeData = hqrPtr->maxFreeData;
+	hqrPtr->numUsedEntry = 0;
+}
+
+void loadFloor(int floorNumber)
+{
+	char buffer[256];
+
+	if(etageVar1)
+	{
+		free(etageVar1);
+		free(etageVar0);
+	}
+
+	//stopSounds();
+
+	HQR_Reset(listBody);
+	HQR_Reset(listAnim);
+
+	currentEtage = floorNumber;
+
+	sprintf(buffer,"ETAGE0%d",floorNumber);
+
+	etageVar0 = loadPakSafe(buffer,0);
+	etageVar1 = loadPakSafe(buffer,1);
+
+	currentCamera = 1;
+	needChangeRoom = 1;
+	changeFloor = 0;
+}
+
+void loadRoom(int roomNumber)
+{
+	int i;
+	int cameraVar0;
+	int cameraVar1;
+	int cameraVar2;
+	int cameraVar3;
+
+//	freezeTime();
+
+	if(currentCamera == -1)
+	{
+		cameraVar3 = -1;
+	}
+	else
+	{
+		cameraVar0 = *(short int*)(cameraPtr+4);
+		cameraVar1 = *(short int*)(cameraPtr+6);
+		cameraVar2 = *(short int*)(cameraPtr+8);
+
+		cameraVar3 = *(short int*)(cameraPtr + (currentCamera+6)*2);
+	}
+
+	cameraPtr = etageVar0+*(unsigned int*)(etageVar0 + (roomNumber * 4));
+
+	currentDisplayedRoom = roomNumber;
+
+	roomVar0 = *(short int*)(cameraPtr + 0xA);
+
+	char* var_20 = cameraPtr + *(unsigned short int*)(cameraPtr + 2);
+
+	roomVar1 = *(short int*)var_20;
+	var_20 += 2;
+
+	roomVar2 = var_20;
+
+	var_20 = cameraPtr + *(unsigned short int*)cameraPtr;
+
+	roomVar3 = *(short int*)var_20;
+	var_20 += 2;
+
+	roomVar4 = var_20;
+
+	int var_1A = 0;
+	int var_10 = -1;
+	int var_1C;
+	
+	for(i=0;i<roomVar0;i++) // search ?
+	{
+		int var_22 = *(short int*)(cameraPtr + (i+6)*2);
+
+		if(cameraVar3 == var_22)
+		{
+			var_1A = i;
+			var_10 = var_22;
+		}
+
+		roomVar5[i] = etageVar1 + *(unsigned int*)(etageVar1 + var_22 * 4);
+		var_20 = roomVar5[i];
+		var_22 = *(short int*)var_20;
+		var_20 +=2;
+		int var_24 = 0;
+
+		for(;*(short int*)(var_20+=2)!=currentDisplayedRoom;(var_24++) && (var_20+=0xA))
+		{
+			if(var_24>= var_22)
+			{
+				break;
+			}
+		}
+
+		var_1C = var_24;
+
+		char* var_8 = roomVar5[i] + (var_1C << 3) + (var_1C<<2) + 0x18;
+
+		roomVar6[i] = (*(short int*)var_8)*2;
+	}
+
+	if(cameraVar3 != -1)
+	{
+		int var_E = (*(short int*)(cameraPtr + 4) - cameraVar0) * 10;
+		int var_C = (*(short int*)(cameraPtr + 6) - cameraVar1) * 10;
+		int var_A = (*(short int*)(cameraPtr + 8) - cameraVar2) * 10;
+
+		for(i=0;i<50;i++)
+		{
+			if(actorTable[i].field_0 != -1)
+			{
+				actorTable[i].field_22 -= var_E;
+				actorTable[i].field_24 -= var_C;
+				actorTable[i].field_26 -= var_A;
+			}
+		}
+	}
+
+	startGameVar1 = var_1A;
+	mainVar1 = 1;
+	needChangeRoom = 0;
+//	unfreezeTime();
+}
+
 void startGame(int startupFloor, int startupRoom, int allowSystemMenu)
 {
 	initEngine();
-	/*initVars();
+	initVars();
 
-	loadEtage(startupFloor);
+	loadFloor(startupFloor);
 
 	currentCamera = -1;
 
@@ -1490,9 +1664,9 @@ void startGame(int startupFloor, int startupRoom, int allowSystemMenu)
 	startGameVar1 = 0;
 	mainVar1 = 2;
 
-	setupCamera();
+//	setupCamera();
 
-	mainLoop(allowSystemMenu);
+	/*mainLoop(allowSystemMenu);
 
 	freeScene();
 

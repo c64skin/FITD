@@ -96,3 +96,46 @@ short int* vars;
 
 int varSize;
 
+char* messageVar1[5]; // may be bigger
+
+int currentMusic;
+int found;
+
+boxStruct genVar2[15]; // recheckSize
+boxStruct genVar4[50];
+boxStruct *genVar1;
+boxStruct *genVar3;
+
+int genVar5;
+int genVar6;
+int genVar7;
+int genVar8;
+int genVar9;
+int giveUp;
+int inHand;
+int lightVar1;
+int lightVar2;
+int numObjInInventory;
+int soundVar1;
+int soundVar2;
+int statusScreenAllowed;
+
+char* etageVar0 = NULL;
+char* etageVar1 = NULL;
+
+int changeFloor;
+int currentCamera;
+int currentEtage;
+int needChangeRoom;
+
+char* cameraPtr;
+int currentDisplayedRoom;
+int mainVar1;
+int roomVar0;
+int roomVar1;
+char* roomVar2;
+int roomVar3;
+char* roomVar4;
+char* roomVar5[15];
+short int roomVar6[15];
+int startGameVar1;
