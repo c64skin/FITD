@@ -21,7 +21,7 @@
 
 #include "SDL.h"
 #include "SDL_thread.h"
-#include "SDL_sound.h"
+//#include "SDL_sound.h"
 #include "osystem.h"
 
 int osystem_mouseRight;
@@ -88,7 +88,7 @@ osystem_init()	// that's the constructor of the system dependent
 
     atexit(SDL_Quit);
 
-	Sound_Init();
+//	Sound_Init();
 
 //	atexit(Sound_Quit);
 
@@ -310,7 +310,7 @@ volatile bool deviceStatus = false;
 
 void my_audio_callback(void *userdata, Uint8 *stream, int len)
 {
-	Sound_Sample *sample = (Sound_Sample *)userdata;
+/*	Sound_Sample *sample = (Sound_Sample *)userdata;
 	Uint8* input = (Uint8*)sample->buffer;
 
 	if(posInStream+len < sample->buffer_size)
@@ -323,12 +323,12 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len)
 		len = sample->buffer_size - posInStream;
 		memcpy(stream,input+posInStream,len);
 		posInStream+=len;
-	}
+	}*/
 }
 
 void osystem_playSample(char* sampleName)
 {
-	Sound_Sample *sample;
+/*	Sound_Sample *sample;
 	Sound_AudioInfo info;
 
 	return;
@@ -350,43 +350,43 @@ void osystem_playSample(char* sampleName)
 	posInStream = 0;
 	{
 		SDL_AudioSpec *desired, *obtained;
-		SDL_AudioSpec *hardware_spec;
+		SDL_AudioSpec *hardware_spec;*/
 
 		/* Allocate a desired SDL_AudioSpec */
-		desired = (SDL_AudioSpec*)malloc(sizeof(SDL_AudioSpec));
+		//desired = (SDL_AudioSpec*)malloc(sizeof(SDL_AudioSpec));
 
 		/* Allocate space for the obtained SDL_AudioSpec */
-		obtained = (SDL_AudioSpec*)malloc(sizeof(SDL_AudioSpec));
+		//obtained = (SDL_AudioSpec*)malloc(sizeof(SDL_AudioSpec));
 
 		/* 22050Hz - FM Radio quality */
-		desired->freq=sample->actual.rate;
+		//desired->freq=sample->actual.rate;
 
 		/* 16-bit signed audio */
-		desired->format=sample->actual.format;
+		//desired->format=sample->actual.format;
 
 		/* Mono */
-		desired->channels=sample->actual.channels;
+		//desired->channels=sample->actual.channels;
 
 		/* Large audio buffer reduces risk of dropouts but increases response time */
-		desired->samples=512;
+		//desired->samples=512;
 
 		/* Our callback function */
-		desired->callback=my_audio_callback;
+		//desired->callback=my_audio_callback;
 
-		desired->userdata=(void*)sample;
+		//desired->userdata=(void*)sample;
 
 		/* Open the audio device */
-		if ( SDL_OpenAudio(desired, obtained) < 0 ){
+		/*if ( SDL_OpenAudio(desired, obtained) < 0 ){
 		fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
 		exit(-1);
 		}
 		/* desired spec is no longer needed */
-		free(desired);
+		/*free(desired);
 		hardware_spec=obtained;
 		/* Start playing */
-		SDL_PauseAudio(0);
+		/*SDL_PauseAudio(0);
 		deviceStatus = true;
-	}
+	}*/
 }
 
 void osystem_startBgPoly()

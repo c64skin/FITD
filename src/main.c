@@ -24,6 +24,8 @@ void updateInHand(int objIdx)
 	actorStruct* currentActorPtr;
 	actorStruct* currentActorLifePtr;
 
+  ASSERT((objIdx < NUM_MAX_OBJ) && ((objIdx == -1) || (objIdx>=0)));
+
 	if(objIdx == -1)
 		return;
 
@@ -49,8 +51,8 @@ void updateInHand(int objIdx)
 
 	if(actorIdx==-1)
 	{
-		actorStruct* currentActorEntryPtr = &actorTable[49];
-		int currentActorEntry = 49;
+		actorStruct* currentActorEntryPtr = &actorTable[NUM_MAX_ACTOR-1];
+		int currentActorEntry = NUM_MAX_ACTOR-1;
 
 		while(currentActorEntry>=0)
 		{
@@ -61,10 +63,10 @@ void updateInHand(int objIdx)
 			currentActorEntry--;
 		}
 
-		if(currentActorEntry==-1) // no space, we will have to overwrite actor 49 !
+		if(currentActorEntry==-1) // no space, we will have to overwrite the last actor !
 		{
-			currentActorEntry = 49;
-			currentActorEntryPtr = &actorTable[49];
+			currentActorEntry = NUM_MAX_ACTOR-1;
+			currentActorEntryPtr = &actorTable[NUM_MAX_ACTOR-1];
 		}
 
 		actorIdx = currentActorEntry;
@@ -122,7 +124,9 @@ void allocTextes(void)
 	int stringIndex;
 	char* stringPtr;
 
-	tabTextes = (textEntryStruct*)malloc(250 * sizeof(textEntryStruct)); // 2000 = 250 * 8
+	tabTextes = (textEntryStruct*)malloc(NUM_MAX_TEXT_ENTRY * sizeof(textEntryStruct)); // 2000 = 250 * 8
+
+  ASSERT_PTR(tabTextes);
 
 	if(!tabTextes)
 	{
@@ -131,7 +135,7 @@ void allocTextes(void)
 
 	systemTextes = loadPakSafe(languageNameString, 0); // todo: use real language name
 
-	for(currentIndex=0;currentIndex<250;currentIndex++)
+	for(currentIndex=0;currentIndex<NUM_MAX_TEXT_ENTRY;currentIndex++)
 	{
 		tabTextes[currentIndex].index = -1;
 		tabTextes[currentIndex].textPtr = NULL;
@@ -184,12 +188,19 @@ hqrEntryStruct* HQR_Init(int size,int numEntry)
 	hqrEntryStruct* dest;
 	char* dest2;
 
+  ASSERT(size > 0);
+  ASSERT(numEntry > 0);
+
 	dest = (hqrEntryStruct*)malloc(numEntry*sizeof(hqrSubEntryStruct)+sizeof(hqrEntryStruct));
+
+  ASSERT_PTR(dest);
 
 	if(!dest)
 		return NULL;
 
 	dest2 = (char*)malloc(size);
+
+  ASSERT_PTR(dest2);
 
 	if(!dest2)
 		return NULL;
@@ -335,7 +346,7 @@ textEntryStruct* getTextFromIdx(int index)
 {
 	int currentIndex;
 
-	for(currentIndex = 0; currentIndex < 250; currentIndex++)
+	for(currentIndex = 0; currentIndex < NUM_MAX_TEXT_ENTRY; currentIndex++)
 	{
 		if(tabTextes[currentIndex].index == index)
 		{
@@ -1075,7 +1086,7 @@ void initEngine(void)
 	listBody = HQR_InitRessource(listBodySelect[defines.hero],10000000, 1000); // was calculated from free mem size
 	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],10000000, 1000); // was calculated from free mem size
 
-	for(i=0;i<50;i++)
+	for(i=0;i<NUM_MAX_ACTOR;i++)
 	{
 		actorTable[i].field_0 = -1;
 	}
@@ -1633,7 +1644,7 @@ void updateAllActorAndObjects()
 	actorStruct *currentActor = actorTable;
 	objectStruct* currentObject;
 
-	for(i=0;i<50;i++)
+	for(i=0;i<NUM_MAX_ACTOR;i++)
 	{
 		if(currentActor->field_0 != -1)
 		{
@@ -1816,7 +1827,7 @@ void createActorList()
 
 	actorPtr = actorTable;
 
-	for(i=0;i<50;i++)
+	for(i=0;i<NUM_MAX_ACTOR;i++)
 	{
 		if(actorPtr->field_0 != -1 && actorPtr->bodyNum != -1)
 		{
@@ -2911,7 +2922,7 @@ int processActor1Sub1(int actorIdx, ZVStruct* zvPtr)
 
 	int i;
 
-	for(i=0;i<50;i++)
+	for(i=0;i<NUM_MAX_ACTOR;i++)
 	{
 		if(currentActor->field_0 != -1 && i!=actorIdx)
 		{
@@ -3392,7 +3403,7 @@ int manageFall(int actorIdx, ZVStruct* zvPtr)
 	int i;
 	int room = actorTable[actorIdx].room;
 
-	for(i=0;i<50;i++)
+	for(i=0;i<NUM_MAX_ACTOR;i++)
 	{
 		actorStruct* currentTestedActorPtr = &actorTable[i];
 
@@ -4263,7 +4274,7 @@ int checkLineProjectionWithActors( int actorIdx, int X, int Y, int Z, int beta, 
 
 			int i;
 
-			for(i=0;i<50;i++)
+			for(i=0;i<NUM_MAX_ACTOR;i++)
 			{
 				if(currentActorPtr->field_0 != -1 && i != actorIdx && !(currentActorPtr->flags & 0x20))
 				{

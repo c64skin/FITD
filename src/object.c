@@ -8,7 +8,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	char* bodyPtr;
 	ZVStruct* zvPtr;
 
-	for(i=0;i<50;i++)
+	for(i=0;i<NUM_MAX_ACTOR;i++)
 	{
 		if(actorPtr->field_0 == -1)
 			break;
@@ -16,7 +16,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 		actorPtr++;
 	}
 
-	if(i==50)
+	if(i==NUM_MAX_ACTOR)
 		return -1;
 
 	currentProcessedActorPtr = actorPtr;

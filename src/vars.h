@@ -324,7 +324,7 @@ extern char* screenSm3;
 extern char* screenSm4;
 extern char* screenSm5;
 
-extern actorStruct actorTable[50];
+extern actorStruct actorTable[NUM_MAX_ACTOR];
 
 extern short int currentCameraTarget;
 
@@ -432,7 +432,7 @@ extern short int renderPointList[6400];
 #endif
 
 extern int numActorInList;
-extern int sortedActorTable[50];
+extern int sortedActorTable[NUM_MAX_ACTOR];
 
 extern int angleCompX;
 extern int angleCompZ;

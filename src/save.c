@@ -87,7 +87,7 @@ int loadSave(int saveNumber)
 	fread(actorTable,8000,1,fHandle);
 	fclose(fHandle);
 
-	for(i=0;i<50;i++)
+	for(i=0;i<NUM_MAX_ACTOR;i++)
 	{
 		if(actorTable[i].field_0 != -1 && actorTable[i].bodyNum != -1)
 		{

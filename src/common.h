@@ -24,11 +24,30 @@ typedef unsigned long int u32;
 #define ASSERT(exp)
 #endif
 
-#ifdef USE_GL
-#include <GL/gl.h>			// Header File For The OpenGL32 Library
-#include <GL/glu.h>			// Header File For The GLu32 Library
-//#include <gl\glaux.h>		// Header File For The Glaux Library
+#ifdef _DEBUG
+#define ASSERT_PTR(exp) assert(exp)
+#else
+#define ASSERT_PTR(exp)
 #endif
+
+#ifdef USE_GL
+#include <GL/gl.h>      // Header File For The OpenGL32 Library
+#include <GL/glu.h>     // Header File For The GLu32 Library
+//#include <gl\glaux.h>   // Header File For The Glaux Library
+#endif
+
+//////////////// GAME SPECIFIC DEFINES
+
+#define NUM_MAX_OBJ         300
+#define NUM_MAX_ACTOR       50
+#define NUM_MAX_TEXT        40
+#define NUM_MAX_MESSAGE     5
+#define INVENTORY_SIZE      30
+#define NUM_MAX_TEXT_ENTRY  250
+
+
+///////////////
+
 
 // temp triangulation stuff
 //#include <bool.h>
@@ -106,82 +125,82 @@ typedef signed long S32;
 
 FORCEINLINE uint16 READ_LE_U16(void *ptr)
 {
-	return (((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
+  return (((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
 }
 
 FORCEINLINE int16 READ_LE_S16(void *ptr)
 {
-	return (((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
+  return (((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
 }
 
 FORCEINLINE uint32 READ_LE_U32(void *ptr)
 {
-	return (((byte*)ptr)[3]<<24)|(((byte*)ptr)[2]<<16)|(((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
+  return (((byte*)ptr)[3]<<24)|(((byte*)ptr)[2]<<16)|(((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
 }
 
 FORCEINLINE int32 READ_LE_S32(void *ptr)
 {
-	return (((byte*)ptr)[3]<<24)|(((byte*)ptr)[2]<<16)|(((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
+  return (((byte*)ptr)[3]<<24)|(((byte*)ptr)[2]<<16)|(((byte*)ptr)[1]<<8)|((byte*)ptr)[0];
 }
 
 FORCEINLINE void WRITE_LE_U16(void *ptr, uint16 value)
 {
-	unsigned char val0;
-	unsigned char val1;
+  unsigned char val0;
+  unsigned char val1;
 
-	val1 = (unsigned char)((value>>8)&0xFF);
-	val0 = (unsigned char)((value)&0xFF);
+  val1 = (unsigned char)((value>>8)&0xFF);
+  val0 = (unsigned char)((value)&0xFF);
 
-	((byte*)ptr)[0] = val0;
-	((byte*)ptr)[1] = val1;
+  ((byte*)ptr)[0] = val0;
+  ((byte*)ptr)[1] = val1;
 }
 
 FORCEINLINE void WRITE_LE_S16(void *ptr, int16 value)
 {
-	unsigned char val0;
-	unsigned char val1;
+  unsigned char val0;
+  unsigned char val1;
 
-	val1 = (unsigned char)((value>>8)&0xFF);
-	val0 = (unsigned char)((value)&0xFF);
+  val1 = (unsigned char)((value>>8)&0xFF);
+  val0 = (unsigned char)((value)&0xFF);
 
-	((byte*)ptr)[0] = val0;
-	((byte*)ptr)[1] = val1;
+  ((byte*)ptr)[0] = val0;
+  ((byte*)ptr)[1] = val1;
 }
 
 FORCEINLINE void WRITE_LE_U32(void *ptr, uint32 value)
 {
-	unsigned char val0;
-	unsigned char val1;
-	unsigned char val2;
-	unsigned char val3;
+  unsigned char val0;
+  unsigned char val1;
+  unsigned char val2;
+  unsigned char val3;
 
-	val3 = (unsigned char)((value>>24)&0xFF);
-	val2 = (unsigned char)((value>>16)&0xFF);
-	val1 = (unsigned char)((value>>8)&0xFF);
-	val0 = (unsigned char)((value)&0xFF);
+  val3 = (unsigned char)((value>>24)&0xFF);
+  val2 = (unsigned char)((value>>16)&0xFF);
+  val1 = (unsigned char)((value>>8)&0xFF);
+  val0 = (unsigned char)((value)&0xFF);
 
-	((byte*)ptr)[0] = val0;
-	((byte*)ptr)[1] = val1;
-	((byte*)ptr)[2] = val2;
-	((byte*)ptr)[3] = val3;
+  ((byte*)ptr)[0] = val0;
+  ((byte*)ptr)[1] = val1;
+  ((byte*)ptr)[2] = val2;
+  ((byte*)ptr)[3] = val3;
 }
 
 FORCEINLINE void WRITE_LE_S32(void *ptr, int32 value)
 {
-	unsigned char val0;
-	unsigned char val1;
-	unsigned char val2;
-	unsigned char val3;
+  unsigned char val0;
+  unsigned char val1;
+  unsigned char val2;
+  unsigned char val3;
 
-	val3 = (unsigned char)((value>>24)&0xFF);
-	val2 = (unsigned char)((value>>16)&0xFF);
-	val1 = (unsigned char)((value>>8)&0xFF);
-	val0 = (unsigned char)((value)&0xFF);
+  val3 = (unsigned char)((value>>24)&0xFF);
+  val2 = (unsigned char)((value>>16)&0xFF);
+  val1 = (unsigned char)((value>>8)&0xFF);
+  val0 = (unsigned char)((value)&0xFF);
 
-	((byte*)ptr)[0] = val0;
-	((byte*)ptr)[1] = val1;
-	((byte*)ptr)[2] = val2;
-	((byte*)ptr)[3] = val3;
+  ((byte*)ptr)[0] = val0;
+  ((byte*)ptr)[1] = val1;
+  ((byte*)ptr)[2] = val2;
+  ((byte*)ptr)[3] = val3;
 }
 
 #endif

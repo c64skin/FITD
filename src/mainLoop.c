@@ -57,7 +57,7 @@ void mainLoop(int allowSystemMenu)
 
 			currentProcessedActorPtr = actorTable;
 
-			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < 50; currentProcessedActorIdx++)
+			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < NUM_MAX_ACTOR; currentProcessedActorIdx++)
 			{
 				if(currentProcessedActorPtr->field_0 >= 0)
 				{
@@ -72,7 +72,7 @@ void mainLoop(int allowSystemMenu)
 			}
 
 			currentProcessedActorPtr = actorTable;
-			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < 50; currentProcessedActorIdx++)
+			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < NUM_MAX_ACTOR; currentProcessedActorIdx++)
 			{
 				if(currentProcessedActorPtr->field_0 >= 0)
 				{
@@ -98,7 +98,7 @@ void mainLoop(int allowSystemMenu)
 			}
 
 			currentProcessedActorPtr = actorTable;
-			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < 50; currentProcessedActorIdx++)
+			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < NUM_MAX_ACTOR; currentProcessedActorIdx++)
 			{
 				if(currentProcessedActorPtr->field_0 >= 0)
 				{

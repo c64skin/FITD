@@ -54,13 +54,13 @@ int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, i
 
 	currentActorPtr = actorTable;
 
-	for(i=0;i<50;i++) // count the number of active actors
+	for(i=0;i<NUM_MAX_ACTOR;i++) // count the number of active actors
 	{
 		if(currentActorPtr->field_0 == -1)
 			break;
 	}
 
-	if(i==50) // no free actor entry, abort
+	if(i==NUM_MAX_ACTOR) // no free actor entry, abort
 	{
 		return(-1);
 	}

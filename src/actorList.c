@@ -14,8 +14,8 @@ int sortCompareFunction(const void* param1, const void* param2)
 	int y1;
 	int y2;
 
-	ASSERT(*(int*)param1 >=0 && *(int*)param1 < 50);
-	ASSERT(*(int*)param2 >=0 && *(int*)param2 < 50);
+	ASSERT(*(int*)param1 >=0 && *(int*)param1 < NUM_MAX_ACTOR);
+	ASSERT(*(int*)param2 >=0 && *(int*)param2 < NUM_MAX_ACTOR);
 
 	actor1Ptr = &actorTable[*(int*)param1];
 	actor2Ptr = &actorTable[*(int*)param2];

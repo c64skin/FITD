@@ -93,7 +93,7 @@ void loadRoom(int roomNumber)
 		int var_C = (*(short int*)(cameraPtr + 6) - cameraVar1) * 10;
 		int var_A = (*(short int*)(cameraPtr + 8) - cameraVar2) * 10;
 
-		for(i=0;i<50;i++)
+		for(i=0;i<NUM_MAX_ACTOR;i++)
 		{
 			if(actorTable[i].field_0 != -1)
 			{

@@ -53,9 +53,10 @@ char input3;
 char input4;
 char button;
 
+//char languageNameString[] = "FRANCAIS";
 char languageNameString[] = "FRANCAIS";
 
-regularTextEntryStruct textTable[40];
+regularTextEntryStruct textTable[NUM_MAX_TEXT];
 
 int readVar;
 
@@ -67,7 +68,7 @@ char* screenSm3;
 char* screenSm4;
 char* screenSm5;
 
-actorStruct actorTable[50];
+actorStruct actorTable[NUM_MAX_ACTOR];
 
 short int currentCameraTarget;
 
@@ -80,13 +81,13 @@ hqrEntryStruct* listTrack;
 
 short int maxObjects;
 
-objectStruct objectTable[300]; // may be less
+objectStruct objectTable[NUM_MAX_OBJ];
 
 short int* vars;
 
 int varSize;
 
-messageStruct messageTable[5];
+messageStruct messageTable[NUM_MAX_MESSAGE];
 
 short int currentMusic;
 int action;
@@ -175,7 +176,7 @@ short int renderPointList[6400];
 #endif
 
 int numActorInList;
-int sortedActorTable[50];
+int sortedActorTable[NUM_MAX_ACTOR];
 
 int angleCompX;
 int angleCompZ;
@@ -215,7 +216,7 @@ int bgOverlayVar1;
 
 short int newRoom;
 
-short int inventory[30];
+short int inventory[INVENTORY_SIZE];
 
 short int shakeVar1;
 short int shakingAmplitude;
