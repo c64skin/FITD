@@ -16,12 +16,14 @@ unsigned short int unV14;
 unsigned short int unV17;
 unsigned short int unV8;
 char* si;
+unsigned short int sizeOfCurrentUnpackedChunk;
+unsigned short int unV5;
 
 unsigned long int decompPos;
 
 char* unpackSub0(int param, char** outputInputPtr)
 {
-  unsigned short int bx;
+  short int bx;
   unsigned char cl;
   unsigned char ax;
   unsigned char di;
@@ -50,14 +52,14 @@ char* unpackSub0(int param, char** outputInputPtr)
     ax >>=4;
     ax++;
 
-    for(i=0;i<ax;i++)
+    do
     {
       outputPtr[di+3] = cl;
       outputPtr[di+2] = dx&0xFF;
       dx++;
       di+=4;
-    }
-  }while(!((--bx)&0x80));
+    }while(--ax);
+  }while((--bx)>=0);
 
   backupSource = si;
 
@@ -71,52 +73,56 @@ char* unpackSub0(int param, char** outputInputPtr)
 
     do // sort loop
     {
-      unsigned char dh = 0;
-      unsigned short int ax = 0;
-
-      sortFinished = true;
-
-      ax = cx&0xFF;
-      ax -= si;
-
-      unV7 = ax & 0xFF;
-
-      while(dh<unV7)
+      do 
       {
-        unsigned short int backupSi;
-        unsigned char bl;
-        unsigned char bh;
+        unsigned char dh = 0;
+        unsigned short int ax = 0;
 
-        ax = dh & 0xFF;
+        sortFinished = true;
 
-        di = ax / 4;
+        ax = cx&0xFF;
+        ax -= si;
 
-        backupSi = si;
+        unV7 = ax & 0xFF;
 
-        si += dh;
-
-        si *= 4;
-
-        if( ( outputPtr[ax + 3] >  outputPtr[si + 3] ) || (( outputPtr[ax + 3] >  outputPtr[si + 3] ) && ( outputPtr[ax + 2] >  outputPtr[si + 2] ))) // TODO: recheck
+        while(dh<=unV7)
         {
-          unsigned short int temp;
+          unsigned short int backupSi;
+          unsigned char bl;
+          unsigned char bh;
 
-          temp = *((unsigned short int*)&(outputPtr[ax]));
-          *((unsigned short int*)&(outputPtr[ax])) = *((unsigned short int*)&(outputPtr[si]));
-          *((unsigned short int*)&(outputPtr[si])) = temp;
+          ax = dh & 0xFF;
 
-          temp = *((unsigned short int*)&(outputPtr[ax+2]));
-          *((unsigned short int*)&(outputPtr[ax+2])) = *((unsigned short int*)&(outputPtr[si+2]));
-          *((unsigned short int*)&(outputPtr[si+2])) = temp;
+          di = ax * 4;
 
-          sortFinished = false;
+          backupSi = si;
+
+          si += dh;
+
+          si *= 4;
+
+          if( ( outputPtr[di + 3] >  outputPtr[si + 3] ) || (( outputPtr[di + 3] >  outputPtr[si + 3] ) && ( outputPtr[di + 2] >  outputPtr[si + 2] ))) // TODO: recheck
+          {
+            unsigned short int temp;
+
+            temp = *((unsigned short int*)&(outputPtr[di]));
+            *((unsigned short int*)&(outputPtr[di])) = *((unsigned short int*)&(outputPtr[si]));
+            *((unsigned short int*)&(outputPtr[si])) = temp;
+
+            temp = *((unsigned short int*)&(outputPtr[di+2]));
+            *((unsigned short int*)&(outputPtr[di+2])) = *((unsigned short int*)&(outputPtr[si+2]));
+            *((unsigned short int*)&(outputPtr[si+2])) = temp;
+
+            sortFinished = false;
+          }
+
+          si = backupSi;
+
+          dh++;
         }
-
-        si = backupSi;
-
-        dh++;
-      }
-    }while(!sortFinished || (si/=2));
+      }while(!sortFinished);
+      si/=2;
+    }while(si);
 
     {
       unsigned short int di = param;
@@ -251,6 +257,13 @@ char* unpackSub0(int param, char** outputInputPtr)
   return inputPtr;
 }
 
+int unpackSub1(int param)
+{
+  unsigned short int di = 0;
+
+  return 0;
+}
+
 void unpack(short int param, char* source, char* dest, int uncompressedSize, char* ptr)
 {
   unsigned char direction = 1;
@@ -290,5 +303,110 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
 
   decompPos = 0;
 
+  {
+    unsigned short int dx = *(unsigned short int*)si;
+    char ch = 8;
+    unsigned char *di = dest;
+
+    si+=2;
+
+    do
+    {
+      // here segment update code
+
+      if(dx&1)
+      {
+        dx >>= 1;
+        ch --;
+
+        if(ch<0) // reload mask
+        {
+          ch = 8;
+          dx |= (*(unsigned short int*)si)<<8;
+          si++;
+        }
+
+        if(compressParam&4)
+        {
+          *(di++) = unpackSub1(unV3);
+
+          decompPos++;
+        }
+        else
+        {
+          decompPos++;
+
+          *(di++) = dx&0xFF;
+
+          dx >>= 8;
+          ch -= 8;
+
+          if(ch<0)
+          {
+            ch += 8;
+            dx |= (*(unsigned short int*)si)<<ch;
+            si++;
+          }
+          else
+          {
+            dx |= (*(unsigned short int*)si)<<8;
+            si++;
+          }
+        }
+      }
+      else
+      {
+        unsigned short int bx;
+        unsigned short int ax;
+        dx >>= 1;
+        ch --;
+
+        if(ch<0) // reload mask
+        {
+          ch = 8;
+          dx |= (*(unsigned short int*)si)<<8;
+          si++;
+        }
+
+        bx = (dx&0xFF)&mask;
+
+        dx >>= numBitInMask;
+        ch -= numBitInMask;
+
+        if(ch<0) // reload mask
+        {
+          ch += 8;
+          dx |= (*(unsigned short int*)si)<<ch;
+          si++;
+        }
+
+        bx |= unpackSub1(unV1)<<numBitInMask;
+        bx++;
+
+        unV5 = bx;
+
+        ax = unpackSub1(unV2) + unV4;
+
+        if(ax == unV4+0x3F)
+        {
+          ax+=dx;
+          dx >>= 8;
+          ch -= 8;
+
+          if(ch<0)
+          {
+            ch += 8;
+            dx |= (*(unsigned short int*)si)<<ch;
+            si++;
+          }
+        }
+
+        sizeOfCurrentUnpackedChunk = ax;
+
+        // TODO: finish
+
+      }
+    }while(uncompressedSize - decompPos);
+  }
   
 }
