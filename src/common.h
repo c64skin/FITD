@@ -8,10 +8,12 @@
 #include <search.h>
 
 #ifdef USE_GL
+#ifndef UNIX
 #include <windows.h>		// Header File For Windows
-#include <gl\gl.h>			// Header File For The OpenGL32 Library
-#include <gl\glu.h>			// Header File For The GLu32 Library
-#include <gl\glaux.h>		// Header File For The Glaux Library
+#endif
+#include <GL/gl.h>			// Header File For The OpenGL32 Library
+#include <GL/glu.h>			// Header File For The GLu32 Library
+//#include <gl\glaux.h>		// Header File For The Glaux Library
 #endif
 
 #include "vars.h"
@@ -56,7 +58,11 @@ typedef signed char S8;
 typedef signed short S16;
 typedef signed long S32;
 
+#ifdef UNIX
+#define FORCEINLINE inline
+#else
 #define FORCEINLINE __forceinline
+#endif
 
 FORCEINLINE uint16 READ_LE_U16(void *ptr)
 {
