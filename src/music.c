@@ -544,7 +544,7 @@ void setupChannelFrequency(int channelIdx, int cl, int dx,int bp)
 
   if(!(dx&0x40))
   {
-    frequencyHigh |= 0x20; 
+    frequencyHigh |= 0x20;
   }
 
   sendAdlib(0xB0+channelIdx,frequencyHigh);
