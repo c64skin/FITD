@@ -22,6 +22,6 @@ int threadTimer(void *test)	// AITD time is 50 frames per seconds ie,  a frame e
 
 void startThreadTimer()
 {
-    SDL_CreateThread(threadTimer, NULL);
+ //   SDL_CreateThread(threadTimer, NULL);
  //   SDL_CreateThread(musicThread, NULL);
 }

@@ -1428,6 +1428,7 @@ processOpcode:
 						process_events();
 						readKeyboard();
 						
+            timeGlobal++;
 						timer = timeGlobal;
 
 						time = evalChrono(&chrono);

@@ -17,14 +17,7 @@ s32 q=0;                     /* Dummy */
     frames++;
     t_start=SDL_GetTicks();
 
-    callMusicUpdate();
-
-    mainLoopSwitch++;
-
-    if(mainLoopSwitch == 1)
-    {
-      timeGlobal++;
-      mainLoopSwitch = 0;
+    timeGlobal++;
 
 		timer = timeGlobal;
 		process_events();
@@ -196,7 +189,6 @@ s32 q=0;                     /* Dummy */
     }else{
        // printf("CPU to slow by %d ticks/round\n",-t_left);
     };
-    }
 	}
 
 //	mainLoopVar1 = 0;

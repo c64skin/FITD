@@ -10,6 +10,8 @@ char OPLinitialized = 0;
 
 #define OPL_INTERNAL_FREQ    3579545
 
+void callMusicUpdate(void);
+
 struct channelTable2Element
 {
   u16 index;
@@ -486,11 +488,39 @@ void sendAdlib(int regIdx, int value)
   OPLWriteReg(virtualOpl,regIdx,value);
 }
 
+#define musicSync 1500
+int musicTimer = 0;
+int nextUpdateTimer = musicSync;
+
 int musicUpdate(void *udata, uint8 *stream, int len)
 {
   if(OPLinitialized)
   {
-    YM3812UpdateOne(virtualOpl,stream,len/2,0);
+    int fillStatus = 0;
+
+    while(fillStatus < len)
+    {
+      int timeBeforNextUpdate = nextUpdateTimer - musicTimer;
+
+      if(timeBeforNextUpdate > (len - fillStatus))
+      {
+        timeBeforNextUpdate = len-fillStatus;
+      }
+
+      if(timeBeforNextUpdate) // generate
+      {
+        YM3812UpdateOne(virtualOpl,stream+fillStatus,(timeBeforNextUpdate)/2,0);
+        fillStatus+=timeBeforNextUpdate;
+        musicTimer+=timeBeforNextUpdate;
+      }
+
+      if(musicTimer == nextUpdateTimer)
+      {
+        callMusicUpdate();
+
+        nextUpdateTimer += musicSync;
+      }
+    }
   }
 }
 
