@@ -11,7 +11,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
   for(i=0;i<NUM_MAX_ACTOR;i++)
   {
     if(actorPtr->field_0 == -1)
-      break;
+    break;
 
     actorPtr++;
   }
@@ -32,9 +32,11 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 
   if(room != currentDisplayedRoom)
   {
-    actorPtr->worldX -= ((*(short int*)(cameraPtr+4)) - roomDataTable[actorPtr->room].worldX) * 10;
-    actorPtr->worldY += ((*(short int*)(cameraPtr+6)) - roomDataTable[actorPtr->room].worldY) * 10;
-    actorPtr->worldZ += ((*(short int*)(cameraPtr+8)) - roomDataTable[actorPtr->room].worldZ) * 10;
+    char* roomPtr = (char*)getRoomData(actorPtr->room);
+
+    actorPtr->worldX -= ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
+    actorPtr->worldY += ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;
+    actorPtr->worldZ += ((*(short int*)(cameraPtr+8)) - (*(short int*)(roomPtr+8))) * 10;
   }
 
   actorPtr->alpha = alpha;
@@ -42,7 +44,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
   actorPtr->gamma = gamma;
 
   actorPtr->dynFlags = 1;
-  
+
   actorPtr->ANIM = var2;
   actorPtr->FRAME = var3;
 
@@ -103,7 +105,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
       actorPtr->END_ANIM = 0;
       actorPtr->flags |= 1;
 
-//      computeScreenBox(actorPtr->field_22 + actorPtr->field_5A, actorPtr->field_24 + actorPtr->field_5C, actorPtr->field_26 + actorPtr->field_5E, actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
+      //			computeScreenBox(actorPtr->field_22 + actorPtr->field_5A, actorPtr->field_24 + actorPtr->field_5C, actorPtr->field_26 + actorPtr->field_5E, actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
 
       if(BBox3D1<0)
         BBox3D1 = 0;
@@ -138,7 +140,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 
   switch(var1)
   {
-  case 0:
+    case 0:
     {
       if(flag2!=-1)
       {
@@ -150,7 +152,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
       }
       break;
     }
-  case 1:
+    case 1:
     {
       if(flag2!=-1)
       {
@@ -162,7 +164,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
       }
       break;
     }
-  case 2:
+    case 2:
     {
       if(flag2!=-1)
       {
@@ -174,7 +176,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
       }
       break;
     }
-  case 3:
+    case 3:
     {
       if(flag2!=-1)
       {
@@ -186,59 +188,69 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
       }
       break;
     }
-  case 4:
+    case 4:
     {
+      char* roomDataPtr = (char*)getRoomData(room);
       int numElements;
       int j;
 
-      for(j=0;j<roomDataTable[room].numHardCol;j++)
+      roomDataPtr += *(short int*)roomDataPtr;
+
+      numElements = *(short int*)roomDataPtr;
+      roomDataPtr+=2;
+
+      for(j=0;j<numElements;j++)
       {
-        if(roomDataTable[room].hardColTable->type == 9)
+        if(*(short int*)(roomDataPtr+0xE) == 9)
         {
-          if(roomDataTable[room].hardColTable->type == foundName)
+          if(*(short int*)(roomDataPtr+0xC) == foundName)
           {
             int tempX;
             int tempY;
             int tempZ;
-            
-            copyZv(&roomDataTable[room].hardColTable->zv,zvPtr);
+
+            copyZv((ZVStruct*)roomDataPtr,zvPtr);
 
             x = 0;
             y = 0;
             z = 0;
 
-            tempX = (roomDataTable[room].hardColTable->zv.ZVX1 + roomDataTable[room].hardColTable->zv.ZVX2)/2;
+            tempX = ((*(short int*)roomDataPtr) + (*(short int*)(roomDataPtr+2)))/2;
             actorPtr->worldX = tempX;
             actorPtr->roomX = tempX;
 
-            tempY = (roomDataTable[room].hardColTable->zv.ZVY1 + roomDataTable[room].hardColTable->zv.ZVY2)/2;
+            tempY = ((*(short int*)(roomDataPtr+4)) + (*(short int*)(roomDataPtr+6)))/2;
             actorPtr->worldY = tempY;
             actorPtr->roomY = tempY;
 
-            tempZ = (roomDataTable[room].hardColTable->zv.ZVZ1 + roomDataTable[room].hardColTable->zv.ZVZ2)/2;
+            tempZ = ((*(short int*)(roomDataPtr+8)) + (*(short int*)(roomDataPtr+0xA)))/2;
             actorPtr->worldZ = tempZ;
             actorPtr->roomZ = tempZ;
 
             if(room != currentDisplayedRoom)
             {
-              actorPtr->worldX = (roomDataTable[room].hardColTable->zv.ZVX1 - roomDataTable[currentDisplayedRoom].hardColTable->zv.ZVX2) * 10;
-              actorPtr->worldY = (roomDataTable[room].hardColTable->zv.ZVY1 - roomDataTable[currentDisplayedRoom].hardColTable->zv.ZVY2) * 10;
-              actorPtr->worldZ = (roomDataTable[room].hardColTable->zv.ZVZ1 - roomDataTable[currentDisplayedRoom].hardColTable->zv.ZVZ2) * 10;
+              char* roomPtr = (char*)getRoomData(room);
+
+              actorPtr->worldX = ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
+              actorPtr->worldY = ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;
+              actorPtr->worldZ = ((*(short int*)(cameraPtr+8)) - (*(short int*)(roomPtr+8))) * 10;
             }
 
             break;
           }
         }
+
+        roomDataPtr+=0x10;
       }
 
-      if(j==roomDataTable[room].numHardCol)
+      if(j==numElements)
       {
         makeDefaultZV(zvPtr);
       }
 
       break;
     }
-  default:
+    default:
     {
       printf("Unsupported ZV type in copyObjectToActor\n");
       exit(1);
