@@ -228,8 +228,9 @@ char* loadPak(char* name, int index)
       ASSERT(pakInfo.offset<256);
 
       fread(nameBuffer,pakInfo.offset,1,fileHandle);
-
+#ifdef INTERNAL_DEBUGGER
       printf("Loading %s/%s\n", name,nameBuffer+2);
+#endif
     }
     else
     {

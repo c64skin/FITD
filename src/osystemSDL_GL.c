@@ -665,6 +665,7 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len)
   }*/
 }
 
+#ifdef USE_UNPACKED_DATA
 void osystem_playSampleFromName(char* sampleName)
 {
   
@@ -674,14 +675,16 @@ void osystem_playSampleFromName(char* sampleName)
 
   if(!sample)
   {
+#ifdef INTERNAL_DEBUGGER
     printf("Mix_LoadWAV_RW: %s\n", Mix_GetError());
+#endif
   }
   else
   {
     Mix_PlayChannel(-1, sample, 0);
   }
 }
-
+#else
 void osystem_playSample(char* samplePtr,int size)
 {
   
@@ -691,14 +694,16 @@ void osystem_playSample(char* samplePtr,int size)
 
   if(!sample)
   {
+#ifdef INTERNAL_DEBUGGER
     printf("Mix_LoadWAV_RW: %s\n", Mix_GetError());
+#endif
   }
   else
   {
     Mix_PlayChannel(-1, sample, 0);
   }
 }
-
+#endif
 
 int tesselatePosition = 0;
 

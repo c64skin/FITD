@@ -56,8 +56,17 @@ char input3;
 char input4;
 char button;
 
-//char languageNameString[] = "FRANCAIS";
-char languageNameString[] = "FRANCAIS";
+char* languageNameTable[] =
+{
+  "FRANCAIS",
+  "ITALIANO",
+  "ENGLISH",
+  "ESPAGNOL",
+  "DEUTSCH",
+  NULL,
+};
+
+char languageNameString[20] = "";
 
 regularTextEntryStruct textTable[NUM_MAX_TEXT];
 

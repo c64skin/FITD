@@ -1938,7 +1938,7 @@ processOpcode:
           fadeOut = *(unsigned short int*)(currentLifePtr);
           currentLifePtr+=2;
 
-          //playSequence(sequenceIdx,fadeEntry,fadeOut);
+          playSequence(sequenceIdx,fadeEntry,fadeOut);
 
           unfreezeTime();
 

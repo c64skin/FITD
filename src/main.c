@@ -300,10 +300,38 @@ void allocTextes(void)
     theEnd(1,"TabTextes");
   }
 
+  // setup languageNameString
   if(gameId == AITD3)
   {
     strcpy(languageNameString,"TEXTES");
   }
+  else
+  {
+    int i = 0;
+    
+    while(languageNameTable[i])
+    {
+      char tempString[20];
+
+      strcpy(tempString,languageNameTable[i]);
+      strcat(tempString,".PAK");
+
+      if(fileExists(tempString))
+      {
+        strcpy(languageNameString,languageNameTable[i]);
+        break;
+      }
+      
+      i++;
+    }
+  }
+
+  if(!languageNameString[0])
+  {
+    printf("Unable to detect language file..\n");
+    exit(1);
+  }
+
   systemTextes = loadPakSafe(languageNameString, 0); // todo: use real language name
   textLength = getPakSize(languageNameString, 0);
 
@@ -2576,6 +2604,7 @@ void deleteObject(int objIdx)
   removeObjFromInventory(objIdx);
 }
 
+#ifdef INTERNAL_DEBUGGER
 void line(int x1, int y1, int x2, int y2, char c);
 
 #ifdef USE_GL
@@ -2684,7 +2713,9 @@ void drawZv(actorStruct* actorPtr)
 
 
 }
+#endif
 
+#ifdef INTERNAL_DEBUGGER
 void drawConverZone(cameraZoneEntryStruct* zonePtr)
 {
   int i;
@@ -2699,7 +2730,9 @@ void drawConverZone(cameraZoneEntryStruct* zonePtr)
   i = zonePtr->numPoints-1;
   drawProjectedLine(zonePtr->pointTable[0].x*10,0,zonePtr->pointTable[0].y*10,zonePtr->pointTable[i].x*10,0,zonePtr->pointTable[i].y*10,20);
 }
+#endif
 
+#ifdef INTERNAL_DEBUGGER
 void drawConverZones()
 {
   int i;
@@ -2720,11 +2753,13 @@ void drawConverZones()
     }
   }
 }
+#endif
 
 #ifdef USE_GL
 
 #define DEPTH_THRESHOLD 1000
 
+#ifdef INTERNAL_DEBUGGER
 void drawProjectedQuad(float x1,float x2, float x3, float x4, float y1,float y2, float y3, float y4, float z1,float z2, float z3, float z4, int color, int transprency)
 {
   float transformedX1;
@@ -2779,7 +2814,9 @@ void drawProjectedQuad(float x1,float x2, float x3, float x4, float y1,float y2,
 
     //osystem_draw3dQuad(x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4, color);
 }
+#endif
 
+#ifdef INTERNAL_DEBUGGER
 void drawProjectedBox(int x1,int x2,int y1,int y2,int z1,int z2, int color, int transprency)
 {
   //bottom
@@ -2796,7 +2833,9 @@ void drawProjectedBox(int x1,int x2,int y1,int y2,int z1,int z2, int color, int 
   drawProjectedQuad((float)x1,(float)x2,(float)x2,(float)x1,(float)y1,(float)y1,(float)y2,(float)y2,(float)z2,(float)z2,(float)z2,(float)z2,color,transprency);
 }
 #endif
+#endif
 
+#ifdef INTERNAL_DEBUGGER
 void drawRoomZv(ZVStruct* zoneData, int color, int transparency)
 {
   ZVStruct cameraZv = {-100,100,-100,100,-100,100};
@@ -2834,7 +2873,9 @@ void drawRoomZv(ZVStruct* zoneData, int color, int transparency)
   drawProjectedLine(x2,y1,z1,x2,y2,z1,color);
 #endif
 }
+#endif
 
+#ifdef INTERNAL_DEBUGGER
 void drawRoomZvLine(ZVStruct* zoneData, int color)
 {
   ZVStruct cameraZv = {-100,100,-100,100,-100,100};
@@ -2868,7 +2909,9 @@ void drawRoomZvLine(ZVStruct* zoneData, int color)
   drawProjectedLine(zoneData->ZVX2,zoneData->ZVY1,zoneData->ZVZ2,zoneData->ZVX2,zoneData->ZVY2,zoneData->ZVZ2,color);
   drawProjectedLine(zoneData->ZVX2,zoneData->ZVY1,zoneData->ZVZ1,zoneData->ZVX2,zoneData->ZVY2,zoneData->ZVZ1,color);
 }
+#endif
 
+#ifdef INTERNAL_DEBUGGER
 void drawZone(char* zoneData,int color)
 {
   int x1;
@@ -2935,7 +2978,9 @@ void drawZone(char* zoneData,int color)
   drawProjectedLine(x2,y1,z1,x2,y2,z1,type);
 #endif
 }
+#endif
 
+#ifdef INTERNAL_DEBUGGER
 void drawOverlayZone(char* zoneData,int color)
 {
   int x1;
@@ -2974,7 +3019,9 @@ void drawOverlayZone(char* zoneData,int color)
   drawProjectedLine(x2,y1,z1,x2,y2,z1,color);
 #endif
 }
+#endif
 
+#ifdef INTERNAL_DEBUGGER
 void drawSceZone(int roomNumber)
 {
   u32 i;
@@ -2995,7 +3042,9 @@ void drawSceZone(int roomNumber)
     }
   }
 }
+#endif
 
+#ifdef INTERNAL_DEBUGGER
 void drawHardCol(int roomNumber)
 {
   u32 i;
@@ -3028,6 +3077,7 @@ void drawHardCol(int roomNumber)
     
   }
 }
+#endif
 
 
 int isBgOverlayRequired( int X1, int X2, int Z1, int Z2, char* data, int param )

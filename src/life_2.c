@@ -1,5 +1,7 @@
 #include "common.h"
 
+#if 0
+
 void processLife2(int lifeNum)
 {
   int exitLife = 0;
@@ -1308,3 +1310,5 @@ processOpcode:
 
   currentLifeNum = -1;
 }
+
+#endif

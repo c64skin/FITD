@@ -451,10 +451,12 @@ void processAnimAction(void)
       }
       break;
     }
+#ifdef INTERNAL_DEBUGGER
   default:
     {
       printf("Unsupported processAnimAction type %d\n",currentProcessedActorPtr->animActionType);
       break;
     }
+#endif
   }
 }

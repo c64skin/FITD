@@ -210,10 +210,12 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain.lib sdl.lib winmm.lib dxguid.lib opengl32.lib glaux.lib glu32.lib SDL_mixer.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain_NOSTDIO.lib sdl.lib winmm.lib dxguid.lib opengl32.lib glaux.lib glu32.lib SDL_mixer.lib"
 				IgnoreDefaultLibraryNames="LIBCMTD"
 				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
-				SubSystem="2"/>
+				SubSystem="2"
+				OptimizeReferences="2"
+				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -255,13 +257,13 @@
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="common.h"
-				DebugInformationFormat="0"/>
+				DebugInformationFormat="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain.lib sdl.lib winmm.lib dxguid.lib opengl32.lib glaux.lib glu32.lib  SDL_mixer.lib"
-				GenerateDebugInformation="FALSE"
+				GenerateDebugInformation="TRUE"
 				SubSystem="1"/>
 			<Tool
 				Name="VCMIDLTool"/>
@@ -465,6 +467,11 @@
 					</File>
 					<File
 						RelativePath="..\..\src\life_2.c">
+						<FileConfiguration
+							Name="ReleaseGL|Win32">
+							<Tool
+								Name="VCCLCompilerTool"/>
+						</FileConfiguration>
 					</File>
 					<File
 						RelativePath="..\..\src\track.c">

@@ -319,6 +319,7 @@ extern char input4;
 extern char button;
 
 extern char languageNameString[];
+extern char* languageNameTable[];
 
 extern regularTextEntryStruct textTable[40];
 
