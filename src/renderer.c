@@ -716,11 +716,11 @@ void primType1(int primType, char** ptr, char** out) // poly
 
 		int prod = prod2 - prod1;
 
-		if(prod<0)
+/*		if(prod<0)
 		{
 			*out = primVar1; // do not add the prim
 		}
-		else
+		else*/
 		{
 			numOfPolyToRender++;
 
@@ -1039,7 +1039,38 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 
 	// TODO: poly sorting by depth
 
-	char* source = renderBuffer;
+	char sortedBuffer[32000];
+
+	char* inBuffer = renderBuffer;
+	char* outBuffer = sortedBuffer;
+
+	for(i=0;i<numOfPolyToRender;i++)
+	{
+		int j;
+		int bestIdx;
+		int bestDepth = -32000;
+		char* readBuffer = renderBuffer;
+
+		for(j=0;j<numOfPolyToRender;j++)
+		{
+			int depth = *(short int*)(readBuffer);
+
+			if(depth>bestDepth)
+			{
+				bestIdx = j;
+				bestDepth = depth;
+			}
+
+			readBuffer+=10;
+		}
+
+		memcpy(outBuffer,renderBuffer+10*bestIdx,10);
+		*(short int*)(renderBuffer+10*bestIdx) = -32000;
+		outBuffer+=10;
+	}
+
+
+	char* source = sortedBuffer;
 
 	if(!numOfPolyToRender)
 	{
