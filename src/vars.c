@@ -210,7 +210,19 @@ short int newFloor;
 
 int paletteVar;
 
-char cameraBuffer[512];
+char cameraBuffer[256];
+char cameraBuffer2[256];
+char cameraBuffer3[400];
+char cameraBuffer4[400];
+
+char* cameraBufferPtr = cameraBuffer;
+char* cameraBuffer2Ptr = cameraBuffer2;
+char* cameraBuffer3Ptr = cameraBuffer3;
+
+int overlaySize1;
+int overlaySize2;
+
+int bgOverlayVar1;
 
 short int newRoom;
 
@@ -264,3 +276,13 @@ saveEntry saveTable[] = {
 	{ &currentMusic, 2},
 	{ NULL, 0 },
 };
+
+int hqrVar1 = 0;
+int mainVar3 = 4000;
+int mainVar2 = -2000;
+
+int clipLeft = 0;
+int clipTop = 0;
+int clipRight = 319;
+int clipBottom = 119;
+

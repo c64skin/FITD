@@ -97,7 +97,7 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 	if(foundEntry)
 	{
 		foundEntry->lastTimeUsed = timer;
-//		hqrVar1 = 0;
+		hqrVar1 = 0;
 
 		return(hqrPtr->dataPtr + foundEntry->offset);
 	}
@@ -140,7 +140,7 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 			theEnd(1,hqrPtr->string);
 		}
 
-//		hqrVar1 = 1;
+		hqrVar1 = 1;
 
 		foundEntry[hqrPtr->numUsedEntry].key = index;
 		foundEntry[hqrPtr->numUsedEntry].lastTimeUsed = timer;

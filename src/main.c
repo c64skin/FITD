@@ -445,7 +445,7 @@ void drawAITDBox(int x, int y, int width, int height)
 	int halfWidth;
 	int halfHeight;
 
-	//	setClipSize(0,0,319,199);
+	setClipSize(0,0,319,199);
 
 	halfWidth = width/2;
 	currentLeftPosition = left = x - halfWidth;
@@ -516,7 +516,7 @@ void drawAITDBox(int x, int y, int width, int height)
 	currentMenuBottom = bottom - 9;
 
 	fillBox(currentMenuLeft,currentMenuTop,currentMenuRight,currentMenuBottom,0);
-//	setClipSize(currentMenuLeft,currentMenuTop,currentMenuRight,currentMenuBottom);
+	setClipSize(currentMenuLeft,currentMenuTop,currentMenuRight,currentMenuBottom);
 
 }
 
@@ -983,7 +983,7 @@ int selectHero(void)
 		case 0:
 			{
 				copyToScreen(unkScreenVar,screen);
-//				setClipSize(0,0,319,199);
+				setClipSize(0,0,319,199);
 				loadPakToPtr("ITD_RESS",14,aux);
 				selectHeroSub1(160,0,319,199);
 				copyToScreen(screen,aux);
@@ -994,7 +994,7 @@ int selectHero(void)
 		case 1:
 			{
 				copyToScreen(unkScreenVar,screen);
-//				setClipSize(0,0,319,199);
+				setClipSize(0,0,319,199);
 				loadPakToPtr("ITD_RESS",14,aux);
 				selectHeroSub1(0,0,159,199);
 				copyToScreen(screen,aux);
@@ -1068,7 +1068,7 @@ int printText(int index, int left, int top, int right, int bottom, int mode, int
 	{
 		copyToScreen(aux,screen);
 		process_events();
-		//setClipSize(left,top,right,bottom);
+		setClipSize(left,top,right,bottom);
 
 		char* var_1C2 = localTextTable[currentPage];
 
@@ -3243,6 +3243,45 @@ void drawZone(char* zoneData,int color)
 #endif
 }
 
+void drawOverlayZone(char* zoneData,int color)
+{
+	int x1;
+	int x2;
+
+	int y1;
+	int y2;
+
+	int z1;
+	int z2;
+
+	x1 = *( short int*)(zoneData+0x0) * 10;
+	z1 = *( short int*)(zoneData+0x2) * 10;
+	x2 = *( short int*)(zoneData+0x4) * 10;
+	z2 = *( short int*)(zoneData+0x6) * 10;
+
+	y1=0;
+	y2=0;
+
+#ifdef USE_GL
+	drawProjectedBox(x1,x2,y1,y2,z1,z2,color);
+#else
+	drawProjectedLine(x1,y1,z1,x1,y1,z2,color);
+	drawProjectedLine(x1,y1,z2,x2,y1,z2,color);
+	drawProjectedLine(x2,y1,z2,x2,y1,z1,color);
+	drawProjectedLine(x2,y1,z1,x1,y1,z1,color);
+
+	drawProjectedLine(x1,y2,z1,x1,y2,z2,color);
+	drawProjectedLine(x1,y2,z2,x2,y2,z2,color);
+	drawProjectedLine(x2,y2,z2,x2,y2,z1,color);
+	drawProjectedLine(x2,y2,z1,x1,y2,z1,color);
+
+	drawProjectedLine(x1,y1,z1,x1,y2,z1,color);
+	drawProjectedLine(x1,y1,z2,x1,y2,z2,color);
+	drawProjectedLine(x2,y1,z2,x2,y2,z2,color);
+	drawProjectedLine(x2,y1,z1,x2,y2,z1,color);
+#endif
+}
+
 void drawHardCol()
 {
 	char* data = etageVar0 + *(unsigned int*)(etageVar0 + actorTable[genVar9].room * 4);
@@ -3296,11 +3335,282 @@ void drawOverlayZones()
 
 }
 
+int isBgOverlayRequired( int X1, int X2, int Z1, int Z2, char* data, int param )
+{
+	int i;
+	for(i=0;i<param;i++)
+	{
+////////////////////////////////////// DEBUG
+	//	drawOverlayZone(data, 80);
+/////////////////////////////////////
+
+		int zoneX1 = *(short int*)(data);
+		int zoneZ1 = *(short int*)(data+2);
+		int zoneX2 = *(short int*)(data+4);
+		int zoneZ2 = *(short int*)(data+6);
+
+		if(X1 >= zoneX1 && Z1 >= zoneZ1 && X2 <= zoneX2 && Z2 <= zoneZ2)
+		{
+			return(1);
+		}
+
+		data+=0x8;
+	}
+
+	return(0);
+}
+
+void drawBgOverlaySub2(int size)
+{
+	overlaySize1 = size;
+	overlaySize2 = size;
+
+	bgOverlayVar1 = 0;
+
+	int bx = 32767;
+	int bp = 32767;
+	int cx = -32768;
+	int dx = -32768;
+
+	int i;
+
+	short int* data = (short int*)cameraBuffer;
+
+	for(i=0;i<size;i++)
+	{
+		int temp = data[0];
+
+		if(temp<bx)
+			bx = temp;
+		if(temp>dx)
+			dx = temp;
+	
+		temp = data[1];
+
+		if(temp<bp)
+			bp = temp;
+		if(temp>cx)
+			cx = temp;
+
+		data += 2;
+	}
+
+	short int* out = data;
+	data = (short int*)cameraBuffer;
+
+	out[0] = data[0];
+	out[1] = data[1];
+
+	out+=4;
+	data+=4;
+
+	int tempBxPtr;
+	int tempCxPtr;
+
+	char* si;
+
+	if(cx == bp)
+	{
+		return;
+	}
+
+	cameraBufferPtr = cameraBuffer;
+	cameraBuffer2Ptr = cameraBuffer2;
+	cameraBuffer3Ptr = cameraBuffer3;
+
+	si = cameraBufferPtr;
+	tempBxPtr = *(short int*)si;
+	si += 2;
+	tempCxPtr = *(short int*)si;
+	si += 2;
+
+	int saveDx;
+	int saveAx;
+
+	char* tempBufferSE = cameraBuffer4;
+
+	int direction = 1;
+
+	osystem.startBgPoly();
+
+	do
+	{
+		saveDx = *(short int*)si;
+		si += 2;
+		saveAx = *(short int*)si;
+		si += 2;
+
+		//osystem.draw3dLine(tempBxPtr, tempCxPtr, 0, saveDx,saveAx, 0, 130);
+		osystem.addBgPolyPoint(tempBxPtr, tempCxPtr);
+
+		int dx = saveDx;
+		int ax = saveAx;
+
+		if(ax != tempCxPtr)
+		{
+			if(tempCxPtr == bp || tempCxPtr == cx)
+			{
+				char* temp = cameraBuffer3Ptr;
+				cameraBuffer3Ptr = tempBufferSE;
+				tempBufferSE = temp;
+			}
+
+			if(tempBxPtr>=dx)
+			{
+				int temp;
+				temp = tempBxPtr;
+				tempBxPtr = dx;
+				dx = temp;
+
+				temp = tempCxPtr;
+				tempCxPtr = ax;
+				ax = temp;
+			}
+
+			char* ptr1 = tempBufferSE+tempCxPtr*2;
+
+			if(tempCxPtr > ax)
+			{
+				direction = -1;
+				int temp;
+
+				temp = tempCxPtr;
+				tempCxPtr = ax;
+				ax = temp;
+			}
+
+			{ // stupid, need optimisation
+				int temp;
+
+				temp = tempCxPtr;
+				tempCxPtr = ax;
+				ax = temp;
+			}
+
+			tempCxPtr -= ax;
+
+			*(short int*)ptr1 = tempBxPtr;
+			ptr1+=2*direction;
+
+			ax = tempBxPtr;
+
+			dx -= tempBxPtr;
+			tempBxPtr = dx;
+			dx = tempCxPtr;
+			bp = tempCxPtr / 2;
+
+			do
+			{
+				bp += tempBxPtr;
+
+				do
+				{
+					if(bp<dx)
+						break;
+
+					bp -= dx;
+					ax ++;
+				}while(1);
+
+				*(short int*)ptr1 = ax;
+				ptr1+=2*direction;
+			}while(--tempCxPtr);
+
+			direction = 1;
+		}
+
+		tempCxPtr = saveAx;
+		tempBxPtr = saveDx;
+	}while(--overlaySize1);
+
+	osystem.endBgPoly();
+}
+
+void drawBgOverlay(actorStruct* actorPtr)
+{
+	actorPtr->field_14 = BBox3D1;
+	actorPtr->field_16 = BBox3D2;
+	actorPtr->field_18 = BBox3D3;
+	actorPtr->field_1A = BBox3D4;
+
+	setClipSize(BBox3D1, BBox3D2, BBox3D3, BBox3D4);
+
+	char* data = roomVar5[currentCamera] + 0x12;
+	int numEntry = *(short int*)(data);
+	data+=2;
+
+	int i;
+
+	while(numEntry>0)
+	{
+		if(actorPtr->room == *(short int*)(data))
+		{
+			break;
+		}
+		data+=12;
+		numEntry--;
+	}
+
+	if(numEntry == 0)
+		return;
+
+	data+=2;
+
+	char* data2 = roomVar5[currentCamera] + *(unsigned short int*)(data);
+	data = data2;
+	data+=2;
+
+	int numOverlayZone = *(short int*)(data2);
+
+	for(i=0;i<numOverlayZone;i++)
+	{
+		int numOverlay;
+		char* src = data2 + *(unsigned short int*)(data+2);
+
+		if(isBgOverlayRequired(	actorPtr->zv.ZVX1 / 10, actorPtr->zv.ZVX2 / 10,
+								actorPtr->zv.ZVZ1 / 10, actorPtr->zv.ZVZ2 / 10,
+								data+4,
+								*(short int*)(data) ))
+		{
+			numOverlay = *(short int*)src;
+			src += 2;
+
+			int j;
+
+			for(j=0;j<numOverlay;j++)
+			{
+				int param = *(short int*)(src);
+				src+=2;
+
+				memcpy(cameraBuffer, src, param*4);
+
+				src+=param*4;
+
+				drawBgOverlaySub2(param);
+			}
+
+//			blitOverlay(src);
+		}
+
+		numOverlay = *(short int*)(data);
+		data+=2;
+		data+=((numOverlay*4)+1)*2;
+	}
+
+	setClipSize(0,0,319,199);
+}
+
+void mainDrawSub2(int actorIdx) // draw flow
+{
+	actorStruct* actorPtr = &actorTable[actorIdx];
+
+	char* data = printTextSub2(hqrUnk, actorPtr->FRAME);
+
+	// TODO: finish
+}
+
 void mainDraw(int mode)
 {
-//	if(mode == 0)
-//		mode = 1; // DEBUG
-
 #ifdef USE_GL
 	if(mode == 2)
 		osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
@@ -3315,24 +3625,25 @@ void mainDraw(int mode)
 	{
 		genVar5 = 0;
 		copyToScreen(aux2,screen);
-		//memset(screen,0,320*200);
 	}
 
 #ifdef USE_GL
 	osystem.startFrame();
 #endif
 
-//	setClipSize(0,0,319,199);
+	setClipSize(0,0,319,199);
 	genVar6 = 0;
 
 	int i;
 
 	//drawHardCol();
+#ifdef USE_GL
 	osystem.cleanScreenKeepZBuffer();
+#endif
 
-	drawConverZones();
-	drawZones();
-	drawOverlayZones();
+	//drawConverZones();
+	//drawZones();
+	//drawOverlayZones();
 	
 
 #ifdef USE_GL
@@ -3346,24 +3657,63 @@ void mainDraw(int mode)
 
 		actorPtr = &actorTable[currentDrawActor];
 
-//		if(actorPtr->flags & 0x25)
+		if(actorPtr->flags & 0x25)
 		{
 			actorPtr->flags &= 0xFFFB;
 			
-/*			if(actorPtr->flags & 0x20)
+			if(actorPtr->flags & 0x20)
 			{
+				mainDrawSub2(currentDrawActor);
 			}
-			else */
+			else
 			{
 				char* bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
 
-//				if(actorPtr->field_0 == 1)
-//					printf("pos: %d %d %d\n",actorPtr->worldX, actorPtr->worldY, actorPtr->worldZ); 
+				if(hqrVar1)
+				{
+					initAnimInBody(actorPtr->FRAME, HQR_Get(listAnim, actorPtr->ANIM), bodyPtr);
+				}
+
 				renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
 							actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
 
-				drawZv(actorPtr);
+				if(actorPtr->animActionType && actorPtr->field_98 != -1)
+				{
+					//TODO: implement special
+//					mainDrawSub3(actorPtr->field_98, bodyPtr, &actorPtr->field_9A);
+				}
 
+///////////////////////////////////// DEBUG
+		//		drawZv(actorPtr);
+/////////////////////////////////////
+			}
+
+			if(BBox3D1 < 0)
+				BBox3D1 = 0;
+			if(BBox3D3 > 319)
+				BBox3D3 = 319;
+			if(BBox3D2 < 0)
+				BBox3D2 = 0;
+			if(BBox3D4 > 199)
+				BBox3D4 = 199;
+
+			if(BBox3D1<=319 && BBox3D2<=199 && BBox3D3>=0 && BBox3D4>=0) // is the character on screen ?
+			{
+				if(actorPtr->field_0 == defines.field_1A)
+				{
+					mainVar3 = (BBox3D3 + BBox3D1) / 2;
+					mainVar2 = (BBox3D4 + BBox3D2) / 2;
+				}
+
+				drawBgOverlay(actorPtr);
+				//addToRedrawBox();
+			}
+			else
+			{
+				actorPtr->field_1A = -1;
+				actorPtr->field_18 = -1;
+				actorPtr->field_16 = -1;
+				actorPtr->field_14 = -1;
 			}
 		}
 	}
@@ -4814,7 +5164,7 @@ void menuWaitVSync()
 
 void renderInventoryObject(int arg)
 {
-//	setClipSize(statusLeft,statusTop,statusRight,statusBottom);
+	setClipSize(statusLeft,statusTop,statusRight,statusBottom);
 	fillBox(statusLeft,statusTop,statusRight,statusBottom,0);
 
 	statusVar1 -= 8;
@@ -6663,4 +7013,12 @@ void hit(int animNumber,int arg_2,int arg_4,int arg_6,int hitForce,int arg_A)
 		currentProcessedActorPtr->field_98 = arg_4;
 		currentProcessedActorPtr->hitForce = hitForce;
 	}
+}
+
+void setClipSize(int left, int top, int right, int bottom)
+{
+	clipLeft = left;
+	clipTop = top;
+	clipRight = right;
+	clipBottom = bottom;
 }

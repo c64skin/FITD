@@ -7,10 +7,18 @@
 #include <string.h>
 #include <search.h>
 
-#ifdef USE_GL
-#ifndef UNIX
-#include <windows.h>		// Header File For Windows
+#ifdef _WIN32
+#include <windows.h>
+#include <assert.h>
 #endif
+
+#ifdef _DEBUG
+#define ASSERT(exp) assert(exp)
+#else
+#define ASSERT(exp)
+#endif
+
+#ifdef USE_GL
 #include <GL/gl.h>			// Header File For The OpenGL32 Library
 #include <GL/glu.h>			// Header File For The GLu32 Library
 //#include <gl\glaux.h>		// Header File For The Glaux Library

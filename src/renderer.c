@@ -859,14 +859,14 @@ void primType1(int primType, char** ptr, char** out) // poly
 		int prod = prod2 - prod1;
 
 #ifdef USE_GL
-		prod = -1;
+		prod = 1;
 #endif
 
-		if(prod>0)
+		if(prod<0)
 		{
 			*out = primVar1; // do not add the prim
 		}
-		else
+		else 
 		{
 			numOfPolyToRender++;
 

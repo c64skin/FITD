@@ -392,6 +392,28 @@ void OSystem::playSample(char* sampleName)
 	}
 }
 
+void OSystem::startBgPoly()
+{
+	glDisable(GL_DEPTH_TEST);
+	glBindTexture(GL_TEXTURE_2D, backTexture);
+	glBegin(GL_POLYGON);
+}
+
+void OSystem::endBgPoly()
+{
+	glEnd();
+	glEnable(GL_DEPTH_TEST);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void OSystem::addBgPolyPoint(int x, int y)
+{
+	glColor4ub(255,255,255,255);
+	glTexCoord2f(x/(float)1024,y/(float)512);
+	glVertex3f(x,y,-100);
+}
+
+
 void OSystem::stopFrame()
 {
 }

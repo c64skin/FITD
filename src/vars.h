@@ -442,7 +442,19 @@ extern short int newFloor;
 
 extern int paletteVar;
 
-extern char cameraBuffer[512];
+extern char cameraBuffer[256];
+extern char cameraBuffer2[256];
+extern char cameraBuffer3[400];
+extern char cameraBuffer4[400];
+
+extern char* cameraBufferPtr;
+extern char* cameraBuffer2Ptr;
+extern char* cameraBuffer3Ptr;
+
+extern int overlaySize1;
+extern int overlaySize2;
+
+extern int bgOverlayVar1;
 
 extern short int newRoom;
 
@@ -468,5 +480,14 @@ extern short int hardClipZ1;
 extern short int hardClipZ2;
 
 extern saveEntry saveTable[];
+
+extern int hqrVar1;
+extern int mainVar3;
+extern int mainVar2;
+
+extern int clipLeft;
+extern int clipTop;
+extern int clipRight;
+extern int clipBottom;
 
 #endif
