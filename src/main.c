@@ -3472,7 +3472,7 @@ int processActor1Sub2(rotateStruct* data)
     return data->newAngle;
   }
 
-  return ((((data->newAngle - data->oldAngle)*(data->timeOfRotate - timer))/data->param)+data->oldAngle);
+  return ((((data->newAngle - data->oldAngle)*(timer - data->timeOfRotate))/data->param)+data->oldAngle);
 }
 
 void processActor1(void)

@@ -331,76 +331,76 @@ void processAnimAction(void)
 
         if(collision)
         {
-           int collision2 = collision;
-           int i;
+          int collision2 = collision;
+          int i;
 
           currentProcessedActorPtr->hotPoint.x = 0;
           currentProcessedActorPtr->hotPoint.y = 0;
           currentProcessedActorPtr->hotPoint.z = 0;
 
-           for(i=0;i<collision;i++)
-           {
-             int currentActorCol = currentProcessedActorPtr->COL[i];
+          for(i=0;i<collision;i++)
+          {
+            int currentActorCol = currentProcessedActorPtr->COL[i];
 
-             if(actorTable[currentActorCol].field_0 == objPtr->alpha)
-             {
-               collision2--;
-               objPtr->x = xtemp;
-               objPtr->y = ytemp;
-               objPtr->z = ztemp;
+            if(actorTable[currentActorCol].field_0 == objPtr->alpha)
+            {
+              collision2--;
+              objPtr->x = xtemp;
+              objPtr->y = ytemp;
+              objPtr->z = ztemp;
 
-               return;
-             }
+              return;
+            }
 
-             if(actorTable[currentActorCol].field_0 == defines.field_16)
-             {
-               objPtr->alpha = defines.field_16;
-               currentProcessedActorPtr->beta += 0x200;
-               xtemp = x3;
-               ztemp = z3;
+            if(actorTable[currentActorCol].field_0 == defines.field_16)
+            {
+              objPtr->alpha = defines.field_16;
+              currentProcessedActorPtr->beta += 0x200;
+              xtemp = x3;
+              ztemp = z3;
 
-               currentProcessedActorPtr->worldX = currentProcessedActorPtr->roomX = x3;
-               currentProcessedActorPtr->worldY = currentProcessedActorPtr->roomY = y1;
-               currentProcessedActorPtr->worldZ = currentProcessedActorPtr->roomZ = z3;
+              currentProcessedActorPtr->worldX = currentProcessedActorPtr->roomX = x3;
+              currentProcessedActorPtr->worldY = currentProcessedActorPtr->roomY = y1;
+              currentProcessedActorPtr->worldZ = currentProcessedActorPtr->roomZ = z3;
 
-               currentProcessedActorPtr->modX = 0;
-               currentProcessedActorPtr->modZ = 0;
+              currentProcessedActorPtr->modX = 0;
+              currentProcessedActorPtr->modZ = 0;
 
-               copyZv(&rangeZv2, &rangeZv);
+              copyZv(&rangeZv2, &rangeZv);
 
-               rangeZv.ZVX1 += x3;
-               rangeZv.ZVX2 += x3;
-               rangeZv.ZVY1 += y1;
-               rangeZv.ZVY2 += y1;
-               rangeZv.ZVZ1 += z3;
-               rangeZv.ZVZ2 += z3;
+              rangeZv.ZVX1 += x3;
+              rangeZv.ZVX2 += x3;
+              rangeZv.ZVY1 += y1;
+              rangeZv.ZVY2 += y1;
+              rangeZv.ZVZ1 += z3;
+              rangeZv.ZVZ2 += z3;
 
-               copyZv(&rangeZv, &currentProcessedActorPtr->zv);
+              copyZv(&rangeZv, &currentProcessedActorPtr->zv);
 
-               objPtr->x = xtemp;
-               objPtr->y = ytemp;
-               objPtr->z = ztemp;
+              objPtr->x = xtemp;
+              objPtr->y = ytemp;
+              objPtr->z = ztemp;
 
-               return;
+              return;
 
-             }
-             else
-             {
-               actorStruct* actorPtr;
-               
-               currentProcessedActorPtr->HIT = currentActorCol;
-               actorPtr = &actorTable[currentActorCol];
-               actorPtr->HIT_BY = currentProcessedActorIdx;
-               actorPtr->hitForce = currentProcessedActorPtr->hitForce;
-             }
-           }
+            }
+            else
+            {
+              actorStruct* actorPtr;
+              
+              currentProcessedActorPtr->HIT = currentActorCol;
+              actorPtr = &actorTable[currentActorCol];
+              actorPtr->HIT_BY = currentProcessedActorIdx;
+              actorPtr->hitForce = currentProcessedActorPtr->hitForce;
+            }
+          }
 
-           if(collision2)
-           {
-             playSound(defines.field_12);
-             objectHitActor(x3,z3);
-             return;
-           }
+          if(collision2)
+          {
+            playSound(defines.field_12);
+            objectHitActor(x3,z3);
+            return;
+          }
         }
 
         ptr = processActor2Sub(x2,y2,z2, &roomDataTable[currentProcessedActorPtr->room]);

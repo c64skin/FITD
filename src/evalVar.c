@@ -127,7 +127,7 @@ int testZvEndAnim(actorStruct* actorPtr,char* animPtr, int param)
   localZv.ZVZ1 += animMoveY;
   localZv.ZVZ2 += animMoveY;
 
-  if(!checkForHardCol(&localZv, &roomDataTable[actorPtr->room]))
+  if(checkForHardCol(&localZv, &roomDataTable[actorPtr->room]))
   {
     return(0);
   }
@@ -135,7 +135,7 @@ int testZvEndAnim(actorStruct* actorPtr,char* animPtr, int param)
   localZv.ZVY1 += 100;
   localZv.ZVY2 += 100;
 
-  if(!checkForHardCol(&localZv, &roomDataTable[actorPtr->room]))
+  if(checkForHardCol(&localZv, &roomDataTable[actorPtr->room]))
   {
     return(1);
   }
@@ -423,6 +423,11 @@ int evalVar(void)
       case 0x1A:
         {
           return(actorPtr->hitForce);
+          break;
+        }
+      case 0x1B:
+        {
+          return(*(u16*)(((currentCamera+6)*2)+cameraPtr));
           break;
         }
       case 0x1C:

@@ -24,6 +24,29 @@ void throwObj(int animThrow, int frameThrow, int arg_4, int objToThrowIdx, int t
   }
 }
 
+int put(int x,int y,int z,int room,int stage,int alpha,int beta,int gamma,int idx)
+{
+  objectStruct* objPtr = &objectTable[idx];
+
+  objPtr->x = x;
+  objPtr->y = y;
+  objPtr->z = z;
+
+  objPtr->room = room;
+  objPtr->stage = stage;
+
+  objPtr->alpha = alpha;
+  objPtr->beta = beta;
+  objPtr->gamma = gamma;
+
+  removeObjFromInventory(idx);
+
+  objPtr->flags2 |= 0x4000;
+
+/*  objModifFlag1 = 1;
+  objModifFlag2 = 1; */
+}
+
 void fire(int fireAnim, int X, int Y, int Z, int hitForce, int nextAnim)
 {
   if(anim(fireAnim,2,nextAnim))
@@ -1323,6 +1346,49 @@ processOpcode:
 
           break;
         }
+      case 0x3B:
+        {
+          int x;
+          int y;
+          int z;
+          int room;
+          int stage;
+          int alpha;
+          int beta;
+          int gamma;
+          int idx;
+
+          idx = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          x = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          y = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          z = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          room = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          stage = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          alpha = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          beta = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          gamma = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          put(x,y,z,room,stage,alpha,beta,gamma,idx);
+
+          break;
+        }
       case 0x3C:
         {
           lifeTempVar1 = *(short int*)(currentLifePtr);
@@ -1390,6 +1456,11 @@ processOpcode:
           objectTable[currentProcessedActorPtr->field_0].positionInTrack = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
+          break;
+        }
+      case 0x44: // UP_COOR_Y
+        {
+          startActorRotation(0,-2000,-1,&currentProcessedActorPtr->field_60);
           break;
         }
       case 0x47: // DEF_ZV
@@ -1569,6 +1640,12 @@ processOpcode:
             currentProcessedActorPtr->field_98 = -1;
           }
 
+          break;
+        }
+      case 0x53:
+        {
+          // TODO !
+          currentLifePtr+=2;
           break;
         }
       default:
