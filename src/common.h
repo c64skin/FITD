@@ -7,8 +7,6 @@
 #include <string.h>
 #include <search.h>
 
-#include "stdafx.h"
-
 #include "vars.h"
 
 #include "main.h"

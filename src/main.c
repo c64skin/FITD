@@ -1470,19 +1470,19 @@ void initEngine(void)
 
 	defines.hero = i;
 
-	listLife = HQR_InitRessource("ListLife", 10000, 100);
-	listTrack = HQR_InitRessource("ListTrak", 1000, 10);
+	listLife = HQR_InitRessource("LISTLIFE", 10000, 100);
+	listTrack = HQR_InitRessource("LISTTRAK", 1000, 10);
 
 	// TODO: missing dos memory check here
 
 	char* listBodySelect[] = {
-		"ListBody",
-		"ListBod2",
+		"LISTBODY",
+		"LISTBOD2",
 	};
 
 	char* listAnimSelect[] = {
-		"ListAnim",
-		"ListAni2",
+		"LISTANIM",
+		"LISTANI2",
 	};
 
 	listBody = HQR_InitRessource(listBodySelect[defines.hero],100000, 50); // was calculated from free mem size
