@@ -4,6 +4,146 @@
 
 #include "common.h"
 
+void initFont(char* fontData, int color)
+{
+	short int tempDx;
+	short int tempAxFlip;
+
+	fontVar1 = fontData;
+
+	tempDx = *(short int*)fontData; // alignement
+	fontData+=2;
+
+	fontSm1 = *(fontData++);
+	fontSm2 = *(fontData++);
+
+	if(!fontSm2)
+	{
+		fontSm2 = *(short int*)(fontData);
+	}
+	
+	fontData+=2;
+
+	tempAxFlip = *(short int*)fontData;
+	fontData+=2;
+
+	tempAxFlip = ((tempAxFlip & 0xFF) << 8 ) | ((tempAxFlip &0xFF00) >> 8);
+
+	fontVar4 = fontData;
+
+	fontVar5 = fontVar1 + tempAxFlip - tempDx*2;
+
+	currentFontColor = color;
+
+	fontSm3 = color;
+}
+
+void initFont2(int var1, int var2)
+{
+	fontSm4 = var1;
+	fontSm5 = var2;
+}
+
+int computeStringWidth(char* string)
+{
+	int width = 0;
+	char character;
+
+	while(character = *(string++))
+	{
+		char* dataPtr;
+		unsigned short int data;
+
+		dataPtr = fontVar5 + character*2;
+		data = *(short int*)dataPtr;
+	
+		data = ((data & 0xFF)<<8)| ((data&0xFF00)>>8);
+
+		int i;
+		for(i=0;i<4;i++)
+		{
+			data = ((data<<1)&0xFFFE) | ((data & 0x7FFF)>>14);
+		}
+
+		data &= 0xF;
+
+		if(!data)
+		{
+			width += fontSm4;
+		}
+
+		width += fontSm5;
+		width += data;
+	}
+
+	return(width);
+}
+
+void allocTextes(void)
+{
+	int currentIndex;
+	char* currentPosInTextes;
+	int textCounter;
+	int stringIndex;
+	char* stringPtr;
+
+	tabTextes = (textEntryStruct*)malloc(250 * sizeof(textEntryStruct)); // 2000 = 250 * 8
+
+	if(!tabTextes)
+	{
+		theEnd(1,"TabTextes");
+	}
+
+	systemTextes = loadPakSafe("FRANCAIS", 0); // todo: use real language name
+
+	for(currentIndex=0;currentIndex<250;currentIndex++)
+	{
+		tabTextes[currentIndex].index = -1;
+		tabTextes[currentIndex].textPtr = NULL;
+		tabTextes[currentIndex].width = 0;
+	}
+
+	currentPosInTextes = systemTextes;
+
+	textCounter = 0;
+
+	while((currentIndex = *(currentPosInTextes++)) != 26)
+	{
+		if(currentIndex == '@') // start of string marker
+		{
+			stringIndex = 0;
+
+			while((currentIndex = *(currentPosInTextes++)) >= '0' && currentIndex <= '9') // parse string number
+			{
+				stringIndex = stringIndex * 10 + currentIndex - 48;
+			}
+
+			if(currentIndex == ':') // start of string
+			{
+				stringPtr = currentPosInTextes;
+
+				do
+				{
+					currentPosInTextes ++;
+				}while((unsigned char)*(currentPosInTextes-1) >= ' '); // detect the end of the string
+
+				*(currentPosInTextes-1) = 0; // add the end of string
+
+				tabTextes[textCounter].index = stringIndex;
+				tabTextes[textCounter].textPtr = stringPtr;
+				tabTextes[textCounter].width = computeStringWidth(stringPtr);
+
+				textCounter++;
+			}
+
+			if(currentIndex == 26)
+			{
+				return;
+			}
+		}
+	}
+}
+
 void sysInit(void)
 {
 	int i;
@@ -55,8 +195,8 @@ void sysInit(void)
 
 	fontData = loadPakSafe("itd_ress",5);
 
-/*	sysInitSub4(fontData);
-	sysInitSub5(2,0);*/
+	initFont(fontData, 14);
+	initFont2(2,0);
 
 	aitdBoxGfx = loadPakSafe("itd_ress",4);
 
@@ -71,9 +211,9 @@ void sysInit(void)
 	fread(&defines,45,2,fHandle);
 	fclose(fHandle);
 
-/*	allocTextes();
+	allocTextes();
 
-	if(musicConfigured)
+/*	if(musicConfigured)
 	{
 		listMus = HQR_InitRessource("ListMus",11000,2);
 	}
@@ -258,6 +398,124 @@ void drawAITDBox(int x, int y, int width, int height)
 
 }
 
+char flagTable[]= {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
+
+void renderText(int x, int y, char* surface, char* string)
+{
+	char character;
+
+	fontVar6 = x;
+	fontSm7 = y;
+
+	while(character = *(string++))
+	{
+		char* dataPtr;
+		unsigned short int data;
+		unsigned short int dx;
+
+		dataPtr = fontVar5 + character*2;
+		data = *(short int*)dataPtr;
+	
+		data = ((data & 0xFF)<<8)| ((data&0xFF00)>>8);
+
+		dx = data;
+
+		data >>= 4;
+
+		if(data&0xF) // real character (width != 0)
+		{
+			char* characterPtr;
+
+			dx &= 0xFFF;
+
+			characterPtr = (dx >>3) + fontVar4;
+
+			fontSm9 = flagTable[dx & 7];
+
+			int bp = fontSm7;
+
+			fontSm8 = fontVar6;
+
+			int ch = fontSm1;
+
+			for(ch = fontSm1; ch>0; ch--)
+			{
+				char* outPtr = screen + bp*320 + fontSm8;
+				bp++;
+
+				int dh = fontSm9;
+				int cl = data&0xF;
+
+				int al = *characterPtr;
+
+				int bx;
+
+				for(bx = 0; cl>0; cl--)
+				{
+					if(dh & al)
+					{
+						*(outPtr) = fontSm3;
+					}
+
+					outPtr++;
+
+					dh = ((dh<<1) & 0xFE) | ((dh&0x7F)>>7);
+
+					if(dh&0x80)
+					{
+						bx++;
+						al = *(characterPtr + bx);
+					}
+				}
+
+				characterPtr += fontSm2;
+			}
+
+			fontVar6 += data&0xF;
+		}
+		else // space character
+		{
+			fontVar6 += fontSm4;
+		}
+
+		fontVar6 += fontSm5;
+	}
+}
+
+textEntryStruct* getTextFromIdx(int index)
+{
+	int currentIndex;
+
+	for(currentIndex = 0; currentIndex < 250; currentIndex++)
+	{
+		if(tabTextes[currentIndex].index == index)
+		{
+			return(&tabTextes[currentIndex]);
+		}
+	}
+
+	return(NULL);
+}
+
+void drawText(int x, int y, int index, int color)
+{
+	textEntryStruct* entryPtr;
+	char* textPtr;
+
+	entryPtr = getTextFromIdx(index);
+
+	if(!entryPtr)
+		return;
+
+	x -= (entryPtr->width/2); // center
+
+	textPtr = entryPtr->textPtr;
+
+	initFont(fontData,color);
+
+	renderText(x,y+1,screen,textPtr);
+}
+
 void drawStartupMenu(int selectedEntry)
 {
 	int currentY = 76;
@@ -274,7 +532,7 @@ void drawStartupMenu(int selectedEntry)
 		}
 		else
 		{
-//			drawText(160,currentY,currentTextNum+11,4);
+			drawText(160,currentY,currentTextNum+11,4);
 		}
 
 		currentY+=16; // next line
@@ -305,6 +563,19 @@ void flipScreen()
 	fclose(fileHandle);
 }
 
+void flushScreen(void)
+{
+	int i;
+	int j;
+
+	for(i=0;i<200;i++)
+	{
+		for(j=0;j<320;j++)
+		{
+			*(screen+i*320+j) = 0;
+		}
+	}
+}
 
 int processStartupMenu(void)
 {
@@ -312,7 +583,7 @@ int processStartupMenu(void)
 	unsigned int chrono;
 	int selectedEntry = -1;
 
-//	flushScreen();
+	flushScreen();
 
 	drawStartupMenu(0);
 	flipScreen();
