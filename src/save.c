@@ -64,7 +64,7 @@ int loadSave(int saveNumber)
 	loadRoom(currentDisplayedRoom);
 	var_16 = currentMusic;
 	currentMusic = -1;
-//	changeMusic(var_16);
+	playMusic(var_16);
 
 	fseek(fHandle,12,SEEK_SET);
 	fread(&offsetToVars,4,1,fHandle);

@@ -271,7 +271,7 @@ void sysInit(void)
 
 //	if(musicConfigured)
 	{
-		listMus = HQR_InitRessource("ListMus",11000,2);
+		listMus = HQR_InitRessource("ListMus",110000,40);
 	}
 
 	listSamp = HQR_InitRessource("ListSamp",64000,30);
@@ -1088,7 +1088,7 @@ void initVars()
 	genVar7 = -1;
 	soundVar1 = -1;
 	currentMusic = -1;
-	genVar8 = -1;
+	nextMusic = -1;
 
 	lightVar1 = 0;
 	lightVar2 = 0;

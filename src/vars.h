@@ -111,6 +111,7 @@ struct hqrSubEntryStruct
 	short int offset;
 	short int size;
 	unsigned int lastTimeUsed;
+  char* ptr;
 };
 
 typedef struct hqrSubEntryStruct hqrSubEntryStruct;
@@ -359,7 +360,7 @@ extern boxStruct *genVar3;
 extern int genVar5;
 extern int genVar6;
 extern int genVar7;
-extern int genVar8;
+extern int nextMusic;
 extern short int genVar9;
 extern short int giveUp;
 extern short int inHand;

@@ -126,14 +126,19 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 
 	if(foundEntry)
 	{
+/*		foundEntry->lastTimeUsed = timer;
+		hqrVar1 = 0;
+
+		return(hqrPtr->dataPtr + foundEntry->offset);*/
+
 		foundEntry->lastTimeUsed = timer;
 		hqrVar1 = 0;
 
-		return(hqrPtr->dataPtr + foundEntry->offset);
+		return(foundEntry->ptr);
 	}
 	else
 	{
-		int size;
+/*		int size;
 		unsigned int time;
 		char* ptr;
 		
@@ -183,6 +188,39 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 
 		hqrPtr->numUsedEntry++;
 		hqrPtr->sizeFreeData -= size;
+
+		unfreezeTime();*/
+
+		int size;
+		unsigned int time;
+		char* ptr;
+		
+		freezeTime();
+		size = getPakSize(hqrPtr->string,index);
+
+		if(size>=hqrPtr->maxFreeData)
+		{
+			theEnd(1,hqrPtr->string);
+		}
+
+		time = timer;
+
+		foundEntry = hqrSubPtr;
+
+		hqrVar1 = 1;
+
+		foundEntry[hqrPtr->numUsedEntry].key = index;
+		foundEntry[hqrPtr->numUsedEntry].lastTimeUsed = timer;
+		//foundEntry[hqrPtr->numUsedEntry].offset = hqrPtr->maxFreeData - hqrPtr->sizeFreeData;
+		foundEntry[hqrPtr->numUsedEntry].size = size;
+    foundEntry[hqrPtr->numUsedEntry].ptr = malloc(size);
+
+    ptr = foundEntry[hqrPtr->numUsedEntry].ptr;
+
+    loadPakToPtr(hqrPtr->string,index,foundEntry[hqrPtr->numUsedEntry].ptr);
+
+		hqrPtr->numUsedEntry++;
+		//hqrPtr->sizeFreeData -= size;
 
 		unfreezeTime();
 

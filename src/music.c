@@ -2,6 +2,8 @@
 
 int musicVolume = 0x7F;
 
+unsigned int musicChrono;
+
 typedef int(*musicDrvFunctionType)(void * ptr);
 
 FM_OPL* virtualOpl;
@@ -558,7 +560,7 @@ void setupChannelFrequency(int channelIdx, int cl, int dx,int bp)
 
   if(bp & 0x80)
   {
-    exit(1);
+   // exit(1);
   }
 
   if(cl & 0x80)
@@ -1096,7 +1098,7 @@ int musicFade(void * param)
 
   bp = si;
 
-  si = 0xFFFF;
+  si = -1;
 
   if(!bp)
     bp = 0x7FF;
@@ -1145,7 +1147,7 @@ int musicFade(void * param)
 
         if(dx & 0x8000)
         {
-          exit(1);
+          channelTable2[i].var1A = param;
         }
 
         if(dx & 0x1000)
@@ -1153,13 +1155,29 @@ int musicFade(void * param)
           exit(1);
         }
 
-        if(dx & 0x10)
+        if(dx & 0x10) // still running ?
         {
-          exit(1);
+          if(!(dx & 0x2000))
+          {
+            if(!(channelTable2[i].var4 & 0x40))
+            {
+              if(si < channelTable2[i].var18)
+                si = channelTable2[i].var18;
+            }
+          }
+          else
+          {
+            if(channelTable2[i].var1D != param)
+            {
+              si = 0;
+            }
+          }
         }
       }
     }
   }
+
+  return si;
 }
 
 musicDrvFunctionType musicDrvFunc[14]=
@@ -1211,7 +1229,7 @@ int fadeMusic(int param1, int param2, int param3)
   fadeParam[1] = param2;
   fadeParam[2] = param3;
 
-  callMusicDrv(5,&fadeParam);
+  return callMusicDrv(5,&fadeParam);
 }
 
 void playMusic(int musicNumber)
@@ -1224,13 +1242,16 @@ void playMusic(int musicNumber)
 
       currentMusic = musicNumber;
 
-      fadeMusic(0,0,0x40);
+      if(musicNumber>=0)
+      {
+        fadeMusic(0,0,0x40);
 
-      musicPtr = HQR_Get(listMus,musicNumber);
+        musicPtr = HQR_Get(listMus,musicNumber);
 
-      loadMusic(0,musicPtr);
+        loadMusic(0,musicPtr);
 
-      fadeMusic(musicVolume,0,0x80);
+        fadeMusic(musicVolume,0,0x80);
+      }
     }
   }
 /*  else

@@ -1061,9 +1061,12 @@ processOpcode:
 					currentLifePtr+=2;
 					break;
 				}
-			case 0x2C: // TODO
+			case 0x2C: // MUSIC
 				{
-					currentLifePtr+=2;
+					int newMusicIdx = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          playMusic(newMusicIdx);
 					break;
 				}
 			case 0x2D:
@@ -1445,7 +1448,18 @@ processOpcode:
 				}
 			case 0x50: // TODO
 				{
+          int musicIdx = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
+
+          if(currentMusic == -1)
+          {
+            playMusic(musicIdx);
+          }
+          else
+          {
+            nextMusic = musicIdx;
+          }
+
 					break;
 				}
 			case 0x51: // ? fade out music and play another music ?
@@ -1453,14 +1467,14 @@ processOpcode:
 					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
-				/*	if(currentMusic!=-1)
+					if(currentMusic!=-1)
 					{
-						soundFunc1(0,0,0x8000);    // fade out music
+            fadeMusic(0,0,0x8000);    // fade out music
 						startChrono(&musicChrono); // fade out music timer
 						currentMusic = -2;         // waiting next music
-						genVar8 = lifeTempVar1;    // next music to play
+						nextMusic = lifeTempVar1;    // next music to play
 					}
-					else*/
+					else
 					{
 						playMusic(lifeTempVar1);
 					}

@@ -145,6 +145,8 @@ typedef struct fm_opl_f {
 	int IRQParam;						/* IRQ parameter  */
 	OPL_UPDATEHANDLER UpdateHandler;	/* stream update handler   */
 	int UpdateParam;					/* stream update parameter */
+
+  FILE* fHandle;
 } FM_OPL;
 
 /* ---------- Generic interface section ---------- */

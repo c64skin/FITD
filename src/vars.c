@@ -100,7 +100,7 @@ boxStruct *genVar3;
 int genVar5;
 int genVar6;
 int genVar7;
-int genVar8;
+int nextMusic;
 short int genVar9;
 short int giveUp;
 short int inHand;

@@ -2,6 +2,35 @@
 
 int mainLoopSwitch = 0;
 
+void updatePendingEvents(void)
+{
+  // TODO: miss pending events here
+
+  if(currentMusic!=-1)
+  {
+    if(currentMusic==-2)
+    {
+      if(evalChrono(&musicChrono)>180)
+      {
+        playMusic(nextMusic);
+      }
+    }
+    else
+    {
+      if(fadeMusic(0,0,0x10)==-1)
+      {
+        currentMusic = -1;
+
+        if(nextMusic != -1)
+        {
+          playMusic(nextMusic);
+          nextMusic = -1;
+        }
+      }
+    }
+  }
+}
+
 void mainLoop(int allowSystemMenu)
 {
 #define SPEED 15              /* Ticks per Frame */
@@ -177,7 +206,7 @@ s32 q=0;                     /* Dummy */
 
 		//osystem_delay(100);
 
-//		updateSound2();
+		updatePendingEvents();
 
     t_end=t_start+SPEED;
     t_left=t_start-SDL_GetTicks()+SPEED;

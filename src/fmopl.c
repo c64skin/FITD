@@ -728,6 +728,11 @@ void OPLWriteReg(FM_OPL *OPL, int r, int v) {
 	int slot;
 	uint32 block_fnum;
 
+  if(OPL->fHandle)
+  {
+    fprintf(OPL->fHandle,"reg[%X] = %X\n",r,v);
+  }
+
 	switch(r & 0xe0) {
 	case 0x00: /* 00-1f:controll */
 		switch(r & 0x1f) {
@@ -1066,12 +1071,16 @@ FM_OPL *OPLCreate(int type, int clock, int rate) {
 
 	/* reset chip */
 	OPLResetChip(OPL);
+
+  OPL->fHandle = fopen("log.txt","w+");
+
 	return OPL;
 }
 
 /* ----------  Destroy one of vietual YM3812 ----------       */
 void OPLDestroy(FM_OPL *OPL) {
 	OPL_UnLockTable();
+  fclose(OPL->fHandle);
 	free(OPL);
 }
 
