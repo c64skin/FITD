@@ -38,11 +38,11 @@ void readKeyboard(void)
 			    break;
 
 			case SDLK_RIGHT:
-			    inputKey |= 4;
+			    inputKey |= 8;
 			    break;
 
 			case SDLK_LEFT:
-			    inputKey |= 8;
+			    inputKey |= 4;
 			    break;
 			}
 		}

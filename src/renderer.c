@@ -240,7 +240,12 @@ void computeTranslation2(int transX,int transY,int transZ,char* ptr)
 }
 
 int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, char* ptr)
- {
+{
+
+	// TODO: remove this!
+	// fix angle...
+	beta = 0x3FF - beta - 256;
+
 	renderX = x - translateX;
 	renderY = y;
 	renderZ = z - translateZ;

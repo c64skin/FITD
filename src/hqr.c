@@ -94,7 +94,7 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 
 		while(size>hqrPtr->sizeFreeData || hqrPtr->numUsedEntry>= hqrPtr->numMaxEntry)
 		{
-			printf("Unimplemented code int HQR_Get\n");
+			printf("Unimplemented code in HQR_Get\n");
 			exit(1);
 		}
 

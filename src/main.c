@@ -1401,6 +1401,25 @@ void initEngine(void)
 		fprintf(fHandle,"\n");
 	}
 	fclose(fHandle);
+
+/*	fHandle = fopen("objNames.txt","w+");
+	for(i=0;i<maxObjects;i++)
+	{
+		fprintf(fHandle,"obj%03d ",i);
+		if(objectTable[i].foundName == -1)
+		{
+			fprintf(fHandle,"-1\n");
+		}
+		else
+		{
+			textEntryStruct* name = getTextFromIdx(objectTable[i].foundName);
+			if(name)
+				fprintf(fHandle,"%s\n",name->textPtr);
+			else
+				fprintf(fHandle,"?\n");
+		}
+	}
+	fclose(fHandle);*/
 //
 
 	vars = (short int*)loadFromItd("VARS.ITD");
@@ -1433,13 +1452,19 @@ void initEngine(void)
 
 	defines.hero = i;
 
-	listLife = HQR_InitRessource("LISTLIFE", 10000, 100);
-	listTrack = HQR_InitRessource("LISTTRAK", 1000, 10);
+	/*listLife = HQR_InitRessource("LISTLIFE", 10000, 100);
+	listTrack = HQR_InitRessource("LISTTRAK", 1000, 10);*/
+
+	listLife = HQR_InitRessource("LISTLIFE", 1000000, 1000);
+	listTrack = HQR_InitRessource("LISTTRAK", 100000, 1000);
 
 	// TODO: missing dos memory check here
 
-	listBody = HQR_InitRessource(listBodySelect[defines.hero],100000, 50); // was calculated from free mem size
-	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],100000, 50); // was calculated from free mem size
+	/*listBody = HQR_InitRessource(listBodySelect[defines.hero],100000, 50); // was calculated from free mem size
+	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],100000, 50); // was calculated from free mem size*/
+
+	listBody = HQR_InitRessource(listBodySelect[defines.hero],10000000, 500); // was calculated from free mem size
+	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],10000000, 500); // was calculated from free mem size
 
 	for(i=0;i<50;i++)
 	{
@@ -1517,7 +1542,7 @@ void loadFloor(int floorNumber)
 	etageVar0 = loadPakSafe(buffer,0);
 	etageVar1 = loadPakSafe(buffer,1);
 
-	currentCamera = 1;
+	currentCamera = -1;
 	needChangeRoom = 1;
 	changeFloor = 0;
 }
@@ -1618,8 +1643,8 @@ void loadRoom(int roomNumber)
 			if(actorTable[i].field_0 != -1)
 			{
 				actorTable[i].worldX -= var_E;
-				actorTable[i].worldY -= var_C;
-				actorTable[i].worldZ -= var_A;
+				actorTable[i].worldY += var_C;
+				actorTable[i].worldZ += var_A;
 			}
 		}
 	}
@@ -1895,6 +1920,203 @@ void makeDefaultZV(ZVStruct* zvPtr)
 	zvPtr->ZVZ2 = 100;
 }
 
+void getZvMax(char* bodyPtr, ZVStruct* zvPtr)
+{
+	getZvNormal(bodyPtr,zvPtr);
+
+	int x1 = zvPtr->ZVX1;
+	int x2 = zvPtr->ZVX2;
+
+	int z1 = zvPtr->ZVZ1;
+	int z2 = zvPtr->ZVZ2;
+
+	x2 = - x1 + x2;
+	z2 = - z1 + z2;
+
+	if(x2 < z2)
+	{
+		x2 = z2;
+	}
+
+	x2 /= 2;
+
+	zvPtr->ZVX1 = -x2;
+	zvPtr->ZVX2 = x2;
+
+	zvPtr->ZVZ1 = -x2;
+	zvPtr->ZVZ2 = x2;
+}
+
+bool pointRotateEnable = true;
+
+int pointRotateCosX;
+int pointRotateSinX;
+int pointRotateCosY;
+int pointRotateSinY;
+int pointRotateCosZ;
+int pointRotateSinZ;
+
+void setupPointRotate(int alpha, int beta, int gamma)
+{
+	pointRotateEnable = true;
+
+	pointRotateCosX = cosTable[alpha&0x3FF];
+	pointRotateSinX = cosTable[((alpha&0x3FF) + 0x200) & 0x7FE];
+
+	pointRotateCosY = cosTable[beta&0x3FF];
+	pointRotateSinY = cosTable[((beta&0x3FF) + 0x200) & 0x7FE];
+
+	pointRotateCosZ = cosTable[gamma&0x3FF];
+	pointRotateSinZ = cosTable[((gamma&0x3FF) + 0x200) & 0x7FE];
+}
+
+void pointRotate(int x, int y, int z, int* destX, int* destY, int* destZ)
+{
+	if(pointRotateEnable)
+	{
+		{
+			int tempX = x;
+			int tempY = y;
+			x = ((((tempX * pointRotateSinZ) - ( tempY * pointRotateCosZ)))>>16)<<1;
+			y = ((((tempX * pointRotateCosZ) + ( tempY * pointRotateSinZ)))>>16)<<1;
+		}
+
+		{
+			int tempX = x;
+			int tempZ = z;
+
+			x = ((((tempX * pointRotateSinY) - (tempZ * pointRotateCosY)))>>16)<<1;
+			z = ((((tempX * pointRotateCosY) + (tempZ * pointRotateSinY)))>>16)<<1;
+		}
+
+		{
+			int tempY = y;
+			int tempZ = z;
+			y = ((((tempY * pointRotateSinX ) - (tempZ * pointRotateCosX)))>>16)<<1;
+			z = ((((tempY * pointRotateCosX ) + (tempZ * pointRotateSinX)))>>16)<<1;
+		}
+
+		*destX = x;
+		*destY = y;
+		*destZ = z;
+	}
+}
+
+void zvRotSub(int X, int Y, int Z, int alpha, int beta, int gamma)
+{
+	if( alpha || beta || gamma )
+	{
+		setupPointRotate(alpha,beta,gamma);
+		pointRotate(X, Y, Z, &animMoveX,&animMoveY,&animMoveZ);
+	}
+	else
+	{
+		animMoveX = X;
+		animMoveY = Y;
+		animMoveZ = Z;
+	}
+}
+
+void getZvRot(char* bodyPtr, ZVStruct* zvPtr, int alpha, int beta, int gamma)
+{
+	int X1 = 32000;
+	int Y1 = 32000;
+	int Z1 = 32000;
+
+	int X2 = -32000;
+	int Y2 = -32000;
+	int Z2 = -32000;
+
+	getZvNormal(bodyPtr, zvPtr);
+
+	int i;
+	int tempX;
+	int tempY;
+	int tempZ;
+
+	for(i=0;i<8;i++)
+	{
+		switch(i)
+		{
+		case 0:
+			{
+				tempX = zvPtr->ZVX1;
+				tempY = zvPtr->ZVY1;
+				tempZ = zvPtr->ZVZ1;
+				break;
+			}
+		case 1:
+			{
+				tempZ = zvPtr->ZVZ2;
+				break;
+			}
+		case 2:
+			{
+				tempX = zvPtr->ZVX2;
+				break;
+			}
+		case 3:
+			{
+				tempZ = zvPtr->ZVZ1;
+				break;
+			}
+		case 4:
+			{
+				tempY = zvPtr->ZVY2;
+				break;
+			}
+		case 5:
+			{
+				tempX = zvPtr->ZVX1;
+				break;
+			}
+		case 6:
+			{
+				tempZ = zvPtr->ZVZ2;
+				break;
+			}
+		case 7:
+			{
+				tempX = zvPtr->ZVX2;
+				break;
+			}
+		}
+
+		zvRotSub(tempX, tempY, tempZ, alpha, beta, gamma);
+
+		if(animMoveX<X1)
+			X1 = animMoveX;
+
+		if(animMoveX>X2)
+			X2 = animMoveX;
+
+		if(animMoveY<Y1)
+			Y1 = animMoveY;
+
+		if(animMoveY>Y2)
+			Y2 = animMoveY;
+
+		if(animMoveZ<Z1)
+			Z1 = animMoveZ;
+
+		if(animMoveZ>Z2)
+			Z2 = animMoveZ;
+
+	}
+
+	zvPtr->ZVX1 = X1;
+	zvPtr->ZVX2 = X2;
+	zvPtr->ZVY1 = Y1;
+	zvPtr->ZVY2 = Y2;
+	zvPtr->ZVZ1 = Z1;
+	zvPtr->ZVZ2 = Z2;
+}
+
+void copyZv(ZVStruct* source, ZVStruct* dest)
+{
+	memcpy(dest,source,sizeof(ZVStruct));
+}
+
 int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y, int z, int stage, int room, int alpha, int beta, int gamma, int var2, int var3, int var4, int var5)
 {
 	int i;
@@ -2035,6 +2257,30 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 
 	switch(var1)
 	{
+	case 0:
+		{
+			if(flag2!=-1)
+			{
+				getZvMax(bodyPtr,zvPtr);
+			}
+			else
+			{
+				makeDefaultZV(zvPtr);
+			}
+			break;
+		}
+	case 1:
+		{
+			if(flag2!=-1)
+			{
+				getZvNormal(bodyPtr,zvPtr);
+			}
+			else
+			{
+				makeDefaultZV(zvPtr);
+			}
+			break;
+		}
 	case 2:
 		{
 			if(flag2!=-1)
@@ -2047,18 +2293,80 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 			}
 			break;
 		}
-	default:
+	case 3:
 		{
-			printf("Unsupported ZV type in copyObjectToActor\n");
 			if(flag2!=-1)
 			{
-				getZvNormal(bodyPtr,zvPtr);
+				getZvRot(bodyPtr,zvPtr,alpha,beta,gamma);
 			}
 			else
 			{
 				makeDefaultZV(zvPtr);
 			}
-		//	exit(1);
+			break;
+		}
+	case 4:
+		{
+			char* roomDataPtr = etageVar0 + *(unsigned int*)(etageVar0 + room*4);
+
+			roomDataPtr += *(short int*)roomDataPtr;
+
+			int numElements = *(short int*)roomDataPtr;
+			roomDataPtr+=2;
+
+			int j;
+
+			for(j=0;j<numElements;j++)
+			{
+				if(*(short int*)(roomDataPtr+0xE) == 9)
+				{
+					if(*(short int*)(roomDataPtr+0xC) == foundName)
+					{
+						copyZv((ZVStruct*)roomDataPtr,zvPtr);
+
+						x = 0;
+						y = 0;
+						z = 0;
+
+						int tempX = ((*(short int*)roomDataPtr) + (*(short int*)(roomDataPtr+2)))/2;
+						actorPtr->worldX = tempX;
+						actorPtr->roomX = tempX;
+
+						int tempY = ((*(short int*)(roomDataPtr+4)) + (*(short int*)(roomDataPtr+6)))/2;
+						actorPtr->worldY = tempY;
+						actorPtr->roomY = tempY;
+
+						int tempZ = ((*(short int*)(roomDataPtr+8)) + (*(short int*)(roomDataPtr+0xA)))/2;
+						actorPtr->worldZ = tempZ;
+						actorPtr->roomZ = tempZ;
+
+						if(room != currentDisplayedRoom)
+						{
+							char* roomPtr = etageVar0+room*4;
+
+							actorPtr->worldX = ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
+							actorPtr->worldY = ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;
+							actorPtr->worldZ = ((*(short int*)(cameraPtr+8)) - (*(short int*)(roomPtr+8))) * 10;
+						}
+
+						break;
+					}
+				}
+
+				roomDataPtr+=0x10;
+			}
+
+			if(j==numElements)
+			{
+				makeDefaultZV(zvPtr);
+			}
+
+			break;
+		}
+	default:
+		{
+			printf("Unsupported ZV type in copyObjectToActor\n");
+			exit(1);
 			break;
 		}
 	}
@@ -2262,7 +2570,7 @@ int checkActorInRoom(int room)
 {
 	int i;
 
-	char* ptr = roomVar5[currentCamera];
+	char* ptr = roomVar5[currentCamera] + 18;
 
 	int var2 = *(short int*)ptr;
 	ptr+=2;
@@ -2328,8 +2636,11 @@ void setupCamera()
 	ptr+=2;
 	int z = (((*(short int*)(cameraPtr+8)) - (*(short int*)(ptr))) << 3) + (((*(short int*)(cameraPtr+8)) - (*(short int*)(ptr))) << 1);
 	ptr+=2;
-
+//
+	//setupSelfModifyingCode(x-5000,y,z-5000); // debug intro
+//
 	setupSelfModifyingCode(x,y,z);
+
 	setupSMCode(160,100,*(short int*)(ptr),*(short int*)(ptr+2),*(short int*)(ptr+4));
 	ptr+=6;
 
@@ -2654,6 +2965,64 @@ void drawConverZones()
 	}
 }
 
+void drawZone(char* zoneData)
+{
+	int x1;
+	int x2;
+
+	int y1;
+	int y2;
+
+	int z1;
+	int z2;
+
+	int type;
+
+	type = *(short int*)(zoneData+0xE);
+
+	x1 = *( short int*)(zoneData+0x0);
+	x2 = *( short int*)(zoneData+0x2);
+	y1 = *( short int*)(zoneData+0x4);
+	y2 = *( short int*)(zoneData+0x6);
+	z1 = *( short int*)(zoneData+0x8);
+	z2 = *( short int*)(zoneData+0xA);
+
+	int color = 40;
+
+	drawProjectedLine(x1,y1,z1,x1,y1,z2,color);
+	drawProjectedLine(x1,y1,z2,x2,y1,z2,color);
+	drawProjectedLine(x2,y1,z2,x2,y1,z1,color);
+	drawProjectedLine(x2,y1,z1,x1,y1,z1,color);
+
+	drawProjectedLine(x1,y2,z1,x1,y2,z2,color);
+	drawProjectedLine(x1,y2,z2,x2,y2,z2,color);
+	drawProjectedLine(x2,y2,z2,x2,y2,z1,color);
+	drawProjectedLine(x2,y2,z1,x1,y2,z1,color);
+
+	drawProjectedLine(x1,y1,z1,x1,y2,z1,color);
+	drawProjectedLine(x1,y1,z2,x1,y2,z2,color);
+	drawProjectedLine(x2,y1,z2,x2,y2,z2,color);
+	drawProjectedLine(x2,y1,z1,x2,y2,z1,color);
+
+}
+
+void drawZones()
+{
+	int i;
+
+	char* zoneData = etageVar0 + *(unsigned int*)(etageVar0 + actorTable[genVar9].room *4);
+	zoneData += *(short int*)(zoneData+2);
+
+	int numZones = *(short int*)zoneData;
+	zoneData+=2;
+
+	for(i=0;i<numZones;i++)
+	{
+		drawZone(zoneData);
+		zoneData+=16;
+	}
+}
+
 void mainDraw(int mode)
 {
 	if(mode == 0)
@@ -2667,6 +3036,7 @@ void mainDraw(int mode)
 	{
 		genVar5 = 0;
 		copyToScreen(aux2,screen);
+		//memset(screen,0,320*200);
 	}
 
 //	setClipSize(0,0,319,199);
@@ -2675,6 +3045,7 @@ void mainDraw(int mode)
 	int i;
 
 	drawConverZones();
+	drawZones();
 
 	for(i=0;i<numActorInList;i++)
 	{
@@ -2700,7 +3071,7 @@ void mainDraw(int mode)
 				}
 
 				if(actorPtr->field_0 == 1)
-					printf("Beta: %X\n",actorPtr->beta);
+					printf("pos: %d %d %d\n",actorPtr->worldX, actorPtr->worldY, actorPtr->worldZ); 
 
 				renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
 							actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
@@ -3015,11 +3386,6 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 void walkStep(int angle1, int angle2, int angle3)
 {
 	makeRotationMtx(angle3,angle1,angle2,&animMoveY,&animMoveX);
-}
-
-void copyZv(ZVStruct* source, ZVStruct* dest)
-{
-	memcpy(dest,source,sizeof(ZVStruct));
 }
 
 void stopAnim(int actorIdx)
@@ -3819,22 +4185,111 @@ void checkIfCameraChangeIsRequired(void)
 
 }
 
+char* processActor2Sub(int x, int y, int z, char* zoneData)
+{
+	zoneData += *(short int*)(zoneData+2);
+	int numOfZones = *(short int*)zoneData;
+	zoneData+=2;
 
-// TODO
+	int i;
+
+	for(i=0;i<numOfZones;i++)
+	{
+		if(*(short int*)(zoneData) <= x && *(short int*)(zoneData+2) >= x)
+		{
+			if(*(short int*)(zoneData+4) <= y && *(short int*)(zoneData+6) >= y)
+			{
+				if(*(short int*)(zoneData+8) <= z && *(short int*)(zoneData+10) >= z)
+				{
+					return(zoneData);
+				}
+			}
+		}
+
+		zoneData += 16;
+	}
+
+	return(NULL);
+
+}
+
 void processActor2()
 {
-	/*char * ptr;
+	char * ptr;
 
-	ptr =processActor2Sub(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+	ptr = processActor2Sub(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 							currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY,
 							currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
-							etageVar0 + currentProcessedActorPtr->room*4 + etageVar0 );
+							etageVar0 + *(unsigned int*)(currentProcessedActorPtr->room*4 + etageVar0) );
 
 
 	if(!ptr)
 	{
 		return;
-	}*/
+	}
+
+	int type = *(short int*) (ptr + 0xE);
+
+	switch(type)
+	{
+	case 0:
+		{
+			char* ptr2 = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room*4);
+
+			currentProcessedActorPtr->room = *(short int*) (ptr + 0xC);
+
+			char* ptr3 = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room*4);
+
+			int x = (*(short int*)(ptr3+4) - *(short int*)(ptr2+4)) * 10;
+			int y = (*(short int*)(ptr3+6) - *(short int*)(ptr2+6)) * 10;
+			int z = (*(short int*)(ptr3+8) - *(short int*)(ptr2+8)) * 10;
+	
+			currentProcessedActorPtr->roomX -= x;
+			currentProcessedActorPtr->roomY += y;
+			currentProcessedActorPtr->roomZ += z;
+
+			currentProcessedActorPtr->zv.ZVX1 -= x;
+			currentProcessedActorPtr->zv.ZVX2 -= x;
+
+			currentProcessedActorPtr->zv.ZVY1 += y;
+			currentProcessedActorPtr->zv.ZVY2 += y;
+
+			currentProcessedActorPtr->zv.ZVZ1 += z;
+			currentProcessedActorPtr->zv.ZVZ2 += z;
+
+			if(currentProcessedActorIdx == genVar9)
+			{
+				needChangeRoom = 1;
+				newRoom = *(short int*) (ptr + 0xC);
+			}
+			else
+			{
+				actorTurnedToObj = 1;
+			}
+
+			startChrono(&currentProcessedActorPtr->ROOM_CHRONO);
+
+
+			break;
+		}
+	case 9:
+		{
+			currentProcessedActorPtr->HARD_DEC = *(short int*) (ptr + 0xC);
+			break;
+		}
+	case 10:
+		{
+			int life = objectTable[currentProcessedActorPtr->field_0].field_24;
+
+			if(!life)
+				return;
+
+			currentProcessedActorPtr->life = life;
+
+			currentProcessedActorPtr->HARD_DEC = *(short int*) (ptr + 0xC);
+			break;
+		}
+	}
 
 
 }
@@ -3933,7 +4388,7 @@ void mainLoop(int allowSystemMenu)
 				}
 
 				currentProcessedActorPtr++;
-				}
+			}
 
 			currentProcessedActorPtr = actorTable;
 			for(currentProcessedActorIdx = 0; currentProcessedActorIdx < 50; currentProcessedActorIdx++)
@@ -3960,7 +4415,7 @@ void mainLoop(int allowSystemMenu)
 
 		if(changeFloor)
 		{
-			//loadFloor(newFloor);
+			loadFloor(newFloor);
 		}
 
 		if(needChangeRoom)

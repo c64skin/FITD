@@ -436,6 +436,8 @@ extern char* animVar1;
 extern char* animVar3;
 extern char* animVar4;
 
+extern short int newFloor;
+
 extern int paletteVar;
 
 extern char cameraBuffer[512];

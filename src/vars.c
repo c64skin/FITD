@@ -201,6 +201,8 @@ char* animVar1;
 char* animVar3;
 char* animVar4;
 
+short int newFloor;
+
 int paletteVar;
 
 char cameraBuffer[512];

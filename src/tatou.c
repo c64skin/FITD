@@ -307,8 +307,8 @@ void makeRotationMtx(unsigned int x, unsigned int y, unsigned int z, int* xOut, 
 		int var1 = (((cosTable[(x+0x100)&0x3FF] * y) << 1) &0xFFFF0000) -  (((cosTable[x&0x3FF] *z) <<1) & 0xFFFF0000);
 		int var2 = (((cosTable[x&0x3FF] * y) << 1) & 0xFFFF0000) + (((cosTable[(x+0x100)&0x3FF] *z) <<1) & 0xFFFF0000);
 
-		*xOut = var1>>16;
-		*yOut = var2>>16;
+		*yOut = var1>>16;
+		*xOut = var2>>16;
 	}
 	else
 	{
@@ -324,8 +324,8 @@ void rotateModel(int x,int y,int z,int alpha,int beta,int gamma,int time)
 	int x2;
 	int y2;
 
-	makeRotationMtx(alpha+0x200,-time,0,&y1,&x1);
-	makeRotationMtx(beta+0x200,y1,0,&y2,&x2);
+	makeRotationMtx(alpha+0x200,-time,0,&x1,&y1);
+	makeRotationMtx(beta+0x200,y1,0,&x2,&y2);
 
 	setupSelfModifyingCode(x2+x,-x1+y,y2+z);
 	setupPointTransformSM(alpha,beta,gamma);
