@@ -78,7 +78,7 @@ int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, i
 
 	if(currentDisplayedRoom != room)
 	{
-		char* etagePtr = etageVar0 + *(unsigned int*)(etageVar0 + 4*room);
+		char* etagePtr = getRoomData(room);
 
 		currentActorPtr->worldX -= ((short int*)(cameraPtr+4) - (short int*)(etagePtr+4))*10;
 		currentActorPtr->worldY += ((short int*)(cameraPtr+6) - (short int*)(etagePtr+6))*10;
@@ -168,7 +168,7 @@ int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, i
 void getHardClip()
 {
 	ZVStruct* zvPtr = &currentProcessedActorPtr->zv;
-	char* etageData = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4);
+	char* etageData = getRoomData(currentProcessedActorPtr->room);
 	short int numEntry;
 	int i;
 
@@ -293,7 +293,7 @@ void setStage(int newStage, int newRoomLocal, int X, int Y, int Z)
 	{
 		if(currentDisplayedRoom != newRoomLocal)
 		{
-			char* etagePtr = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4);
+			char* etagePtr = getRoomData(currentProcessedActorPtr->room);
 
 			currentProcessedActorPtr->worldX -= ((short int*)(cameraPtr+4) - (short int*)(etagePtr+4))*10;
 			currentProcessedActorPtr->worldY += ((short int*)(cameraPtr+6) - (short int*)(etagePtr+6))*10;

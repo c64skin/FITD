@@ -101,7 +101,7 @@ char* unpackSub0(int param, char** outputInputPtr)
 
           si *= 4;
 
-          if( ( outputPtr[di + 3] >  outputPtr[si + 3] ) || (( outputPtr[di + 3] >  outputPtr[si + 3] ) && ( outputPtr[di + 2] >  outputPtr[si + 2] ))) // TODO: recheck
+          if( ( outputPtr[di + 3] >  outputPtr[si + 3] ) || (( outputPtr[di + 3] ==  outputPtr[si + 3] ) && ( outputPtr[di + 2] >  outputPtr[si + 2] ))) // TODO: recheck
           {
             unsigned short int temp;
 
@@ -125,7 +125,7 @@ char* unpackSub0(int param, char** outputInputPtr)
     }while(si);
 
     {
-      unsigned short int di = param;
+      short int di = param;
       unsigned short int cx = 0;
       unsigned short int dx = 0;
       unsigned short int bx = 0;
@@ -159,7 +159,7 @@ char* unpackSub0(int param, char** outputInputPtr)
         *(unsigned short int*)(&outputPtr[di]) = ax;
 
         di -= 4;
-      }while(!(di&0x8000));
+      }while(di>=0);
 
       inputPtr[2] = 0;
       inputPtr[1] = 0;
@@ -168,7 +168,7 @@ char* unpackSub0(int param, char** outputInputPtr)
       unV17 = 1;
       {
         unsigned short int di =0;
-        unsigned short int dx = unv13;
+        short int dx = unv13;
         unsigned char cl;
         unsigned short int ax;
         unsigned short int si;
@@ -246,7 +246,7 @@ char* unpackSub0(int param, char** outputInputPtr)
           }
 
           di += 4;
-        }while(!((--dx)&0x8000));
+        }while((--dx)>0);
 
         *(outputInputPtr) = inputPtr + (unV17*3);
       }
@@ -257,9 +257,62 @@ char* unpackSub0(int param, char** outputInputPtr)
   return inputPtr;
 }
 
-int unpackSub1(int param)
+unsigned short int dx;
+char ch;
+unsigned char *di;
+
+// param = bx;
+int unpackSub1(char* param)
 {
   unsigned short int di = 0;
+
+  do
+  {
+    if(dx&1)
+    {
+      unsigned char tempAl;
+      dx >>= 1;
+      ch --;
+
+      if(ch<0) // reload mask
+      {
+        ch += 8;
+        dx |= (*(unsigned char*)si)<<ch;
+        si++;
+      }
+
+      tempAl = param[di];
+
+      if(param[di+2] & 1)
+      {
+        return tempAl;
+      }
+
+      di+=tempAl*3;
+    }
+    else
+    {
+      unsigned char tempAl;
+      dx >>= 1;
+      ch --;
+
+      if(ch<0) // reload mask
+      {
+        ch += 8;
+        dx |= (*(unsigned char*)si)<<ch;
+        si++;
+      }
+
+      tempAl = param[di+1];
+
+      if(param[di+2] & 2)
+      {
+        return tempAl;
+      }
+
+      di+=tempAl*3;
+    }
+  }while(1);
 
   return 0;
 }
@@ -271,8 +324,8 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
 
   si = source;
 
-  inputPtr = ptr;
-  outputPtr = dest;
+  inputPtr = ptr + 0x10;
+  outputPtr = dest + 0x10;
 
   unV4 = 2;
   numBitInMask = 6;
@@ -304,9 +357,9 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
   decompPos = 0;
 
   {
-    unsigned short int dx = *(unsigned short int*)si;
-    char ch = 8;
-    unsigned char *di = dest;
+    dx = *(unsigned short int*)si;
+    ch = 8;
+    di = dest;
 
     si+=2;
 
@@ -321,8 +374,8 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
 
         if(ch<0) // reload mask
         {
-          ch = 8;
-          dx |= (*(unsigned short int*)si)<<8;
+          ch += 8;
+          dx |= (*(unsigned char*)si)<<ch;
           si++;
         }
 
@@ -344,12 +397,12 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
           if(ch<0)
           {
             ch += 8;
-            dx |= (*(unsigned short int*)si)<<ch;
+            dx |= (*(unsigned char*)si)<<ch;
             si++;
           }
           else
           {
-            dx |= (*(unsigned short int*)si)<<8;
+            dx |= (*(unsigned char*)si)<<8;
             si++;
           }
         }
@@ -363,8 +416,8 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
 
         if(ch<0) // reload mask
         {
-          ch = 8;
-          dx |= (*(unsigned short int*)si)<<8;
+          ch += 8;
+          dx |= (*(unsigned char*)si)<<ch;
           si++;
         }
 
@@ -376,7 +429,7 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
         if(ch<0) // reload mask
         {
           ch += 8;
-          dx |= (*(unsigned short int*)si)<<ch;
+          dx |= (*(unsigned char*)si)<<ch;
           si++;
         }
 
@@ -396,13 +449,51 @@ void unpack(short int param, char* source, char* dest, int uncompressedSize, cha
           if(ch<0)
           {
             ch += 8;
-            dx |= (*(unsigned short int*)si)<<ch;
+            dx |= (*(unsigned char*)si)<<ch;
             si++;
           }
         }
 
         sizeOfCurrentUnpackedChunk = ax;
 
+        if(decompPos < unV5)
+        {
+          int cx = unV5 - decompPos ;
+
+          if((uncompressedSize - decompPos) < (cx))
+          {
+            sizeOfCurrentUnpackedChunk = 0;
+          }
+          else
+          {
+            sizeOfCurrentUnpackedChunk -= cx;
+          }
+
+          decompPos += cx;
+
+          {
+            int i;
+
+            for(i=0;i<cx;i++)
+            {
+              *(di++) = 0;
+            }
+          }
+        }
+
+        {
+          unsigned char* si;
+          int i;
+
+          si = (di) - (unV5);
+
+          for(i=0;i<sizeOfCurrentUnpackedChunk;i++)
+          {
+            *(di++) = (*si++);
+          }
+        }
+
+        decompPos += sizeOfCurrentUnpackedChunk;
         // TODO: finish
 
       }

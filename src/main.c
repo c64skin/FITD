@@ -1230,9 +1230,8 @@ void setupCameraSub1()
 	int var_12;
 
 	char* dataTabPos = cameraDataTab;
-	short int* ptr = (short int*)(etageVar0 + currentDisplayedRoom*4);
+	short int* ptr = (short int*)getRoomData(currentDisplayedRoom);
 
-	ptr+= (unsigned short int)*(ptr+1);
 	*dataTabPos = -1;
 
 	var_6 = *(ptr++);
@@ -2251,7 +2250,7 @@ void drawOverlayZone(char* zoneData,int color)
 
 void drawHardCol()
 {
-	char* data = etageVar0 + *(unsigned int*)(etageVar0 + actorTable[genVar9].room * 4);
+	char* data = getRoomData(actorTable[genVar9].room);
 	short int numHardCol;
 	int i;
 	
@@ -2262,7 +2261,7 @@ void drawHardCol()
 
 	for(i=0;i<numHardCol;i++)
 	{
-		drawZone(data,100);
+	//	drawZone(data,100);
 		data+=0x10;
 	}
 }
@@ -2272,7 +2271,7 @@ void drawZones()
 	int i;
 	int numZones;
 	
-	char* zoneData = etageVar0 + *(unsigned int*)(etageVar0 + actorTable[genVar9].room *4);
+	char* zoneData = getRoomData(actorTable[genVar9].room);
 	zoneData += *(short int*)(zoneData+2);
 
 	numZones = *(short int*)zoneData;
@@ -2287,7 +2286,7 @@ void drawZones()
 
 void drawOverlayZones()
 {
-	char* etageData = etageVar0 + *(unsigned int*)(etageVar0 + actorTable[genVar9].room * 4);
+	char* etageData = getRoomData(actorTable[genVar9].room);
 	short int numEntry;
 	int i;
 	
@@ -2785,8 +2784,8 @@ int checkZvCollision(ZVStruct* zvPtr1,ZVStruct* zvPtr2)
 
 void getZvRelativePosition(ZVStruct* zvPtr, int startRoom, int destRoom)
 {
-	char* startRoomData = etageVar0 + *(unsigned int*)(etageVar0+startRoom*4);
-	char* destRoomData = etageVar0 + *(unsigned int*)(etageVar0+destRoom*4);
+	char* startRoomData = getRoomData(startRoom);
+	char* destRoomData = getRoomData(destRoom);
 
 	int Xdif = 10*(*(short int*)(destRoomData+4) - *(short int*)(startRoomData+4));
 	int Ydif = 10*(*(short int*)(destRoomData+6) - *(short int*)(startRoomData+6));
@@ -3491,7 +3490,7 @@ void processActor1(void)
 		{
 			int i;
 
-			var_42 = checkForHardCol(&zvLocal, etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4));
+			var_42 = checkForHardCol(&zvLocal, getRoomData(currentProcessedActorPtr->room));
 
 			for(i=0;i<var_42;i++)
 			{
@@ -3526,7 +3525,7 @@ void processActor1(void)
 		}
 		else // no hard collision -> just update the flag without performing the position update
 		{
-			if(checkForHardCol(&zvLocal,etageVar0+*(unsigned int*)(etageVar0+currentProcessedActorPtr->room*4)))
+			if(checkForHardCol(&zvLocal,getRoomData(currentProcessedActorPtr->room)))
 			{
 				currentProcessedActorPtr->HARD_COL = 1;
 			}
@@ -3574,7 +3573,7 @@ void processActor1(void)
 					localZv2.ZVZ1 += var_50;
 					localZv2.ZVZ2 += var_50;
 
-					if(!checkForHardCol(&localZv2, etageVar0 + *(unsigned int*)(etageVar0 + actorTouchedPtr->room * 4)))
+					if(!checkForHardCol(&localZv2, getRoomData(actorTouchedPtr->room)))
 					{
 						if(processActor1Sub1(var_56, &localZv2))
 						{
@@ -3704,7 +3703,7 @@ void processActor1(void)
 
 			zvLocal.ZVY2 += 100;
 
-			if(currentProcessedActorPtr->roomY < -10 && !checkForHardCol(&zvLocal,etageVar0+*(unsigned int*)(etageVar0 + currentProcessedActorPtr->room*4)) && !manageFall(currentProcessedActorIdx,&zvLocal))
+			if(currentProcessedActorPtr->roomY < -10 && !checkForHardCol(&zvLocal,getRoomData(currentProcessedActorPtr->room)) && !manageFall(currentProcessedActorIdx,&zvLocal))
 			{
 				startActorRotation(0, 2000, 40, &currentProcessedActorPtr->field_60);
 			}
@@ -4033,7 +4032,7 @@ void processActor2()
 	ptr = processActor2Sub(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 							currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY,
 							currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
-							etageVar0 + *(unsigned int*)(currentProcessedActorPtr->room*4 + etageVar0) );
+							getRoomData(currentProcessedActorPtr->room) );
 
 
 	if(!ptr)
@@ -4047,7 +4046,7 @@ void processActor2()
 	{
 	case 0:
 		{
-			char* ptr2 = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room*4);
+			char* ptr2 = getRoomData(currentProcessedActorPtr->room);
 			char* ptr3;
 			int x;
 			int y;
@@ -4055,7 +4054,7 @@ void processActor2()
 
 			currentProcessedActorPtr->room = *(short int*) (ptr + 0xC);
 
-			ptr3 = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room*4);
+			ptr3 = getRoomData(currentProcessedActorPtr->room);
 
 			x = (*(short int*)(ptr3+4) - *(short int*)(ptr2+4)) * 10;
 			y = (*(short int*)(ptr3+6) - *(short int*)(ptr2+6)) * 10;
@@ -4098,8 +4097,8 @@ void processActor2()
 		{
 			int life;
 // FIXME: fix the stairs zone in green room
-			if(*(short int*) (ptr + 0xC) == 1/* && currentProcessedActorPtr->zv.ZVZ1 >= -1600*/)
-				break;
+//			if(*(short int*) (ptr + 0xC) == 1/* && currentProcessedActorPtr->zv.ZVZ1 >= -1600*/)
+//				break;
 
 			life = objectTable[currentProcessedActorPtr->field_0].field_24;
 
@@ -4150,7 +4149,7 @@ int checkLineProjectionWithActors( int actorIdx, int X, int Y, int Z, int beta, 
 			break;
 		}
 
-		if(checkForHardCol(&localZv, etageVar0 + *(unsigned int*)(etageVar0 + room *4)) <= 0)
+		if(checkForHardCol(&localZv, getRoomData(room)) <= 0)
 		{
 			foundFlag = -1;
 		}

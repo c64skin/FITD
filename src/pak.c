@@ -11,7 +11,7 @@ typedef struct  // warning: allignement unsafe
 	short int offset;
 }pakInfoStruct;
 
-//#define USE_UNPACKED_DATA
+#define USE_UNPACKED_DATA
 
 int loadPakToPtr(char* name, int index, char* ptr)
 {
@@ -99,7 +99,7 @@ char* loadPak(char* name, int index)
 
 	if(fileHandle) // a bit stupid, should return NULL right away
 	{
-		fseek(fileHandle,(index+1)*2,SEEK_SET);
+		fseek(fileHandle,(index+1)*4,SEEK_SET);
 
 		fread(&fileOffset,4,1,fileHandle);
 

@@ -1,5 +1,10 @@
 #include "common.h"
 
+roomDefStruct* getRoomData(int roomNumber)
+{
+  return (roomDefStruct*)(etageVar0 + *(unsigned int*)(etageVar0 + roomNumber * 4));
+}
+
 void loadRoom(int roomNumber)
 {
 	int i;
@@ -29,8 +34,8 @@ void loadRoom(int roomNumber)
 		currentCameraIdx = *(short int*)(cameraPtr + (currentCamera+6)*2);
 	}
 
-	cameraPtr = etageVar0+*(unsigned int*)(etageVar0 + (roomNumber * 4));
-	roomDataPtr = (roomDefStruct*)(etageVar0+*(unsigned int*)(etageVar0 + (roomNumber * 4)));
+	cameraPtr = getRoomData(roomNumber);
+	roomDataPtr = getRoomData(roomNumber);
 
 	currentDisplayedRoom = roomNumber;
 

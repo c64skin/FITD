@@ -127,7 +127,7 @@ int testZvEndAnim(actorStruct* actorPtr,char* animPtr, int param)
 	localZv.ZVZ1 += animMoveY;
 	localZv.ZVZ2 += animMoveY;
 
-	if(!checkForHardCol(&localZv, etageVar0 + *(unsigned int*)(etageVar0 + actorPtr->room * 4)))
+	if(!checkForHardCol(&localZv, getRoomData(actorPtr->room)))
 	{
 		return(0);
 	}
@@ -135,7 +135,7 @@ int testZvEndAnim(actorStruct* actorPtr,char* animPtr, int param)
 	localZv.ZVY1 += 100;
 	localZv.ZVY2 += 100;
 
-	if(!checkForHardCol(&localZv, etageVar0 + *(unsigned int*)(etageVar0 + actorPtr->room * 4)))
+	if(!checkForHardCol(&localZv, getRoomData(actorPtr->room)))
 	{
 		return(1);
 	}

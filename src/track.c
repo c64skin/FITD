@@ -252,6 +252,36 @@ void manualRot(int param)
 
 unsigned int lastTimeForward = 0;
 
+char* getRoomLink(unsigned int room1, unsigned int room2)
+{
+  int i;
+  short int numOfZones;
+  char* zoneData = getRoomData(room1);  
+  char* bestZone;
+
+	zoneData += *(short int*)(zoneData);
+	numOfZones = *(short int*)zoneData;
+	zoneData+=2;
+
+  bestZone = zoneData;
+
+  for(i=0;i<numOfZones;i++)
+  {
+    if(*(short int*)(zoneData+14) == 4)
+    {
+      bestZone = zoneData;
+
+      if(*(short int*)(zoneData+12) == room2)
+      {
+        return bestZone;
+      }
+    }
+
+    zoneData += 16;
+  }
+
+  return bestZone;
+}
 
 void processTrack(void)
 {
@@ -310,15 +340,19 @@ void processTrack(void)
 			{
 				actorStruct* followedActorPtr = &actorTable[followedActorIdx];
 
-				int roomNumbfer = followedActorPtr->room;
+				int roomNumber = followedActorPtr->room;
 				int x = followedActorPtr->roomX;
 				int y = followedActorPtr->roomY;
 				int z = followedActorPtr->roomZ;
 				int angleModif;
 
-				if(currentProcessedActorPtr->room != roomNumbfer)
+				if(currentProcessedActorPtr->room != roomNumber)
 				{
-					printf("Following actor in another room !\n");
+					char* link = getRoomLink(currentProcessedActorPtr->room,roomNumber);
+
+          x = *(short int*)(link)+(((*(short int*)(link+2))-(*(short int *)(link))) / 2);
+          y = *(short int*)(link+4)+(((*(short int*)(link+6))-(*(short int *)(link+4))) / 2);
+          z = *(short int*)(link+8)+(((*(short int*)(link+10))-(*(short int *)(link+8))) / 2);
 				}
 
 				angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
@@ -391,7 +425,7 @@ void processTrack(void)
 					currentProcessedActorPtr->worldZ = currentProcessedActorPtr->roomZ = *(short int*)(trackPtr);
 					trackPtr += 2;
 
-					ptr = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4);
+					ptr = getRoomData(currentProcessedActorPtr->room);
 
 					currentProcessedActorPtr->worldX -= (*(short int*)(cameraPtr+4) - *(short int*)(ptr+4)) * 10;
 					currentProcessedActorPtr->worldY += (*(short int*)(cameraPtr+6) - *(short int*)(ptr+6)) * 10;
@@ -429,8 +463,8 @@ void processTrack(void)
 		
 					if(roomNumber != currentProcessedActorPtr->room)
 					{
-						char* roomDestDataPtr = etageVar0 + *(unsigned int*)(etageVar0+roomNumber*4);
-						char* roomSourceDataPtr = etageVar0 + *(unsigned int*)(etageVar0+currentProcessedActorPtr->room*4);
+						char* roomDestDataPtr = getRoomData(roomNumber);
+						char* roomSourceDataPtr = getRoomData(currentProcessedActorPtr->room);
 
 						x -= ((*(short int*)(roomSourceDataPtr+4)) - (*(short int*)(roomDestDataPtr+4))) * 10;
 						z -= ((*(short int*)(roomSourceDataPtr+8)) - (*(short int*)(roomDestDataPtr+8))) * 10;

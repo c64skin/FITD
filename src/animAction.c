@@ -157,7 +157,7 @@ void processAnimAction(void)
 				rangeZv.ZVZ1 += z;
 				rangeZv.ZVZ2 += z;
 
-				if(checkForHardCol(&rangeZv, etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4)))
+				if(checkForHardCol(&rangeZv, getRoomData(currentProcessedActorPtr->room)))
 				{
 					currentProcessedActorPtr->animActionType = 0;
 					putAt(objIdx, currentProcessedActorPtr->field_0);
@@ -403,7 +403,7 @@ void processAnimAction(void)
 					 }
 				}
 
-				ptr = processActor2Sub(x2,y2,z2, etageVar0 + *(unsigned int*)(etageVar0+currentProcessedActorPtr->room *4));
+				ptr = processActor2Sub(x2,y2,z2, getRoomData(currentProcessedActorPtr->room));
 
 				if(ptr)
 				{
@@ -415,7 +415,7 @@ void processAnimAction(void)
 					}
 				}
 
-				if(checkForHardCol(&rangeZv, etageVar0 + *(unsigned int*)(etageVar0+currentProcessedActorPtr->room *4)))
+				if(checkForHardCol(&rangeZv, getRoomData(currentProcessedActorPtr->room)))
 				{
 					currentProcessedActorPtr->field_9A = 0;
 					currentProcessedActorPtr->field_9C = 0;
