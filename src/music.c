@@ -881,6 +881,7 @@ void applyDirectFrequency(int index, int param1, int param2, int param3)
 
 unsigned char smallData2[] =
 {
+  0,
   1, 
   2, 
 0xFF,
@@ -951,7 +952,7 @@ void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement*
   u8 operator1;
   u8 operator2;
 
-  if((element2->var4 & 0x40) == element->var2)
+  if((element2->var4 & 0x40) != element->var2)
   {
     element->var2 = element2->var4 & 0x40;
 
@@ -1053,10 +1054,10 @@ int update(void* dummy)
 
   channelTable2Element* si;
 
-  /*if(generalVolume != 0xFF)
+  if(generalVolume & 0xFF)
   {
     return 0;
-  }*/
+  }
 
   for(i=0;i<11;i++)
   {
@@ -1102,7 +1103,7 @@ int musicFade(void * param)
 
   for(i=0;i<11;i++)
   {
-    if((bp&i))
+  //  if((bp&i))
     {
       if(channelTable2[i].dataPtr)
       {
