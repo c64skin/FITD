@@ -930,6 +930,8 @@ parseSpe:	while(*var_1C2 == '#')
 					}
 				case 'C':
 					{
+						var_1AA &= 0xFFFE;
+						var_1AA |= 8;
 						break;
 					}
 				case 'G':
