@@ -125,7 +125,7 @@ void fillpoly(short int * datas, int n, ColorP c) {
     for (i = 0; i < SCREENHEIGHT; i++) {
 	if (counters[i]) {
 //	    printf("%i dots on line %i\n", counters[i], i);
-    	    for (j = 0; j < counters[i]; j += 2) {
+    	    for (j = 0; j < counters[i] - 1; j += 2) {
 //		printf("Drawing line (%i, %i)-%i\n", dots[i][j], dots[i][j + 1], i);
 		hline(dots[i][j], dots[i][j + 1], i, c);
 #ifdef DEBUGGING_POLYS

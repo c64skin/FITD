@@ -3,6 +3,8 @@
 
 #include "osystem.h"
 
+#pragma pack(1)
+
 struct definesStruct // warning ! Used to read data from a file. Alignement check required
 {
 	short int field_0;
@@ -175,7 +177,7 @@ struct actorStruct // used to read data from file too
 	short int field_98;
 	short int field_9A;
 	short int field_9C;
-//	short int field_9E;
+	short int field_9E;
 };
 
 struct objectStruct

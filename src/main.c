@@ -2523,42 +2523,40 @@ short int getAnimType(char** bodyPtr)
 
 void processAnimRotation(char** bodyPtr, int bp, int bx)
 {
-	short int cx = *(short int*)animVar4;
+	short int oldRotation = *(short int*)animVar4;
 	animVar4+=2;
 
-	short int dx = *(short int*)animVar1;
+	short int newRotation = *(short int*)animVar1;
 	animVar1+=2;
 
-	short int ax = dx;
+	short int diff = newRotation - oldRotation;
 
-	ax -= cx;
-
-	if(cx == dx)
+	if(diff == 0)
 	{
-		*(short int*)(*bodyPtr) = cx;
+		*(short int*)(*bodyPtr) = newRotation;
 	}
 	else
 	{
-		if(ax <= 0x200)
+		if(diff <= 0x200)
 		{
-			if(ax >= -0x200)
+			if(diff >= -0x200)
 			{
-				*(short int*)(*bodyPtr) = ((ax/bp)*bx) + cx;
+				*(short int*)(*bodyPtr) = ((diff*bp)/bx) + oldRotation;
 			}
 			else
 			{
-				dx += 0x400;
-				dx -= cx;
+				newRotation += 0x400;
+				newRotation -= oldRotation;
 
-				*(short int*)(*bodyPtr) = ((dx/bp)*bx) + cx;
+				*(short int*)(*bodyPtr) = ((newRotation*bp)/bx) + oldRotation;
 			}
 		}
 		else
 		{
-			cx += 0x400;
-			dx -= cx;
+			oldRotation += 0x400;
+			newRotation -= oldRotation;
 
-			*(short int*)(*bodyPtr) = ((dx/bp)*bx) + cx;
+			*(short int*)(*bodyPtr) = ((newRotation*bp)/bx) + oldRotation;
 		}
 	}
 
@@ -2579,7 +2577,7 @@ void processAnimTranslation(char** bodyPtr, int bp, int bx)
 	}
 	else
 	{
-		*(short int*)(*bodyPtr) = (((ax - cx)/bp)*bx) + cx;
+		*(short int*)(*bodyPtr) = (((ax - cx)*bp)/bx) + cx;
 	}
 
 	(*bodyPtr)+=2;
@@ -2587,19 +2585,15 @@ void processAnimTranslation(char** bodyPtr, int bp, int bx)
 
 short int processAnim(int frame, char* animPtr, char* bodyPtr)
 {
-	short int ax = *(short int*)(animPtr+2);
+	int numOfBonesInAnim = *(short int*)(animPtr+2);
 	animPtr+=4;
 
-	short int cx = ax;
-
-	ax = ((ax+1)*8)*frame; // seek to keyframe
-
-	animPtr += ax;
+	animPtr += ((numOfBonesInAnim+1)*8)*frame; // seek to keyframe
 
 	// animVar1 = ptr to the current keyFrame
 	animVar1 = animPtr;
 
-	unsigned short int dx = *(unsigned short int*)animPtr; // keyframe length
+	unsigned short int keyframeLength = *(unsigned short int*)animPtr; // keyframe length
 
 	if(!((*(short int*)bodyPtr) & 2)) // do not anim if the model can't be animated
 	{
@@ -2610,20 +2604,21 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 
 	animVar3 = bodyPtr;
 
-	unsigned short int bp = *(unsigned short int*)(bodyPtr+4); // time of start of keyframe
+	unsigned short int timeOfKeyframeStart = *(unsigned short int*)(bodyPtr+4); // time of start of keyframe
 	
-	char* tempPtr = *(char**)(bodyPtr);
+	char* animBufferPtr = *(char**)(bodyPtr);
 
-	if(!tempPtr)
+	if(!animBufferPtr)
 	{
-		tempPtr = animVar1;
+		animBufferPtr = animVar1;
 	}
 
-	animVar4 = tempPtr;
+	// animVar4 = ptr to previous key frame
+	animVar4 = animBufferPtr;
 
 	bodyPtr+= *(short int*)(bodyPtr-2);
 
-	ax = *(short int*)bodyPtr;
+	int ax = *(short int*)bodyPtr;
 	ax = (ax*6)+2;
 	bodyPtr+=ax; // skip the points data
 
@@ -2631,19 +2626,19 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 	unsigned short int bx = ax;
 	bodyPtr+=bx*2; // skip bones idx table
 
-	if(cx > ax)
+	if(numOfBonesInAnim > ax)
 	{
-		cx = ax;
+		numOfBonesInAnim = ax;
 	}
 
 	bodyPtr+=10; // skip bone 0
 
-	unsigned short int time = (unsigned short int)timer - bp;
+	unsigned short int time = (unsigned short int)timer - timeOfKeyframeStart;
 
-	bx = dx;
-	bp = ax;
+	bx = keyframeLength;
+	int bp = time;
 
-	if(time<dx) // interpole keyframe
+	if(time<keyframeLength) // interpole keyframe
 	{
 		char* animVar1Backup = animVar1;
 		// skip bone 0 anim
@@ -2673,7 +2668,7 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 
 			bodyPtr+=8;
 		}
-		while(--cx);
+		while(--numOfBonesInAnim);
 
 		animVar1 = animVar1Backup;
 
@@ -2705,11 +2700,11 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 			*(short int*)(bodyPtr+6) = *(short int*)(si+6);
 
 			bodyPtr+=8;
-			si+=6;
+			si+=8;
 
 			bodyPtr+=8;
 
-		}while(--cx);
+		}while(--numOfBonesInAnim);
 
 		*(char**)animVar3 = animVar1;
 
@@ -2968,7 +2963,7 @@ void processActor1(void)
 	}
 	else // not the end of anim
 	{
-		//if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->speedChange.param == 0))
+	//	if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->speedChange.param == 0))
 		{
 			currentProcessedActorPtr->worldX += currentProcessedActorPtr->modX;
 			currentProcessedActorPtr->roomX += currentProcessedActorPtr->modX;
@@ -3500,6 +3495,8 @@ void mainLoop(int allowSystemMenu)
 //		mainLoopSub1();
 
 		mainDraw(setupCameraVar1);
+
+		//osystem.delay(100);
 
 //		updateSound2();
 	}

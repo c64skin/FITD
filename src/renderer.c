@@ -150,42 +150,9 @@ void computeBoneRotation(short int* pointPtr, int numOfPoint)
 
 	for(i=0;i<numOfPoint;i++)
 	{
-		int ax = *(short int*)pointPtr;
-		int bx = *(short int*)(pointPtr+2);
-		int cx = *(short int*)(pointPtr+4);
-
-		int x;
-		int y;
-		int z;
-
-		if(boneRotateY)
-		{
-			x = (((((ax) * boneRotateYSin) - ((cx) * boneRotateYCos)))>>16)<<1;
-			z = (((((ax) * boneRotateYCos) + ((cx) * boneRotateYSin)))>>16)<<1;
-		}
-		else
-		{
-			x = (ax);
-			z = (cx);
-		}
-
-		//si = x
-		//ax = z
-
-		if(boneRotateX)
-		{
-			int tempY = (bx);
-			int tempZ = z;
-			y = ((((tempY * boneRotateXSin ) - (tempZ * boneRotateXCos)))>>16)<<1;
-			z = ((((tempY * boneRotateXCos ) + (tempZ * boneRotateXSin)))>>16)<<1;
-		}
-		else
-		{
-			y = (bx);
-		}
-
-		// cx = y
-		// bx = z
+		int x = *(short int*)pointPtr;
+		int y = *(short int*)(pointPtr+1);
+		int z = *(short int*)(pointPtr+2);
 
 		if(boneRotateZ)
 		{
@@ -195,11 +162,28 @@ void computeBoneRotation(short int* pointPtr, int numOfPoint)
 			y = ((((tempX * boneRotateZCos) + ( tempY * boneRotateZSin)))>>16)<<1;
 		}
 
-		*(short int*)(pointPtr) = x;
-		*(short int*)(pointPtr+2) = y;
-		*(short int*)(pointPtr+4) = z;
+		if(boneRotateY)
+		{
+			int tempX = x;
+			int tempZ = z;
 
-		pointPtr+=6;
+			x = ((((tempX * boneRotateYSin) - (tempZ * boneRotateYCos)))>>16)<<1;
+			z = ((((tempX * boneRotateYCos) + (tempZ * boneRotateYSin)))>>16)<<1;
+		}
+
+		if(boneRotateX)
+		{
+			int tempY = y;
+			int tempZ = z;
+			y = ((((tempY * boneRotateXSin ) - (tempZ * boneRotateXCos)))>>16)<<1;
+			z = ((((tempY * boneRotateXCos ) + (tempZ * boneRotateXSin)))>>16)<<1;
+		}
+
+		*(short int*)(pointPtr) = x;
+		*(short int*)(pointPtr+1) = y;
+		*(short int*)(pointPtr+2) = z;
+
+		pointPtr+=3;
 	}
 }
 
@@ -214,11 +198,13 @@ void computeRotationMatrix(char* ptr)
 
 	int temp2 = numOfBones - temp;
 
+	int i;
+
 	do
 	{
-		if(*((ptr)+6) == temp)
+		if(*((ptr)+6) == temp) // is it a child of me ?
 		{
-			computeRotationMatrix(ptr);
+			computeRotationMatrix(ptr); // yes, so apply the transformation to him
 		}
 
 		(ptr)+=0x10;
@@ -293,14 +279,6 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 		transY = *(short int*)(boneDataPtr+0xC);
 		transZ = *(short int*)(boneDataPtr+0xE);
 
-	/////////////////////////
-	// DEBUG
-		transX = 0;
-		transY = 0;
-		transZ = 0;
-
-	/////////////////////////
-
 		if(transX || transY || transZ)
 		{
 			int type = *(short int*)(boneDataPtr+0x8);
@@ -313,7 +291,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 					computeRotationMatrix(boneDataPtr);
 					break;
 				}
-			case 1:
+		/*	case 1:
 				{
 					computeTranslation1(transX,transY,transZ,boneDataPtr);
 					break;
@@ -322,7 +300,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 				{
 					computeTranslation2(transX,transY,transZ,boneDataPtr);
 					break;
-				}
+				} */
 			}
 		}
 	}
