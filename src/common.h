@@ -27,8 +27,8 @@
 #endif
 
 // temp triangulation stuff
-#include <bool.h>
-#include <geometry.h>
+//#include <bool.h>
+//#include <geometry.h>
 int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*triangles)[3]);
 #include "vars.h"
 
@@ -74,7 +74,7 @@ typedef signed short S16;
 typedef signed long S32;
 
 #ifdef UNIX
-#define FORCEINLINE inline
+#define FORCEINLINE static inline
 #else
 #ifdef WIN32
 #define FORCEINLINE __forceinline

@@ -99,14 +99,18 @@ void osystem_updateImage()
     mouseRight = 0;
 }*/
 
+#ifdef WIN32
 #define CALLBACK __stdcall
+#else
+#define CALLBACK
+#endif
 
 void CALLBACK combineCallback(GLdouble coords[3], GLdouble *vertex_data[4],GLfloat weight[4], GLdouble **dataOut)
 {
 	int i;
 	GLdouble *vertex;
 
-	ASSERT(true);.
+	ASSERT(true);
 
 	vertex = (GLdouble *) malloc(6 * sizeof(GLdouble));
 	vertex[0] = coords[0];
