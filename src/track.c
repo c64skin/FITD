@@ -284,7 +284,50 @@ void processTrack(void)
 		}
 	case 2: // follow
 		{
-			printf("unsupported move mode 2: follow\n");
+			int followedActorIdx = objectTable[currentProcessedActorPtr->trackNumber].ownerIdx;
+
+			if(followedActorIdx == -1)
+			{
+				currentProcessedActorPtr->field_72 = 0;
+				currentProcessedActorPtr->speed = 0;
+			}
+			else
+			{
+				actorStruct* followedActorPtr = &actorTable[followedActorIdx];
+
+				int roomNumbfer = followedActorPtr->room;
+				int x = followedActorPtr->roomX;
+				int y = followedActorPtr->roomY;
+				int z = followedActorPtr->roomZ;
+
+				if(currentProcessedActorPtr->room != roomNumbfer)
+				{
+					printf("Following actor in another room !\n");
+				}
+
+				int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+																	currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
+																	currentProcessedActorPtr->beta, x, z );
+
+				if( currentProcessedActorPtr->rotate.param == 0 || currentProcessedActorPtr->field_72 != angleModif )
+				{
+					startActorRotation( currentProcessedActorPtr->beta, currentProcessedActorPtr->beta - (angleModif << 8), 60, &currentProcessedActorPtr->rotate);
+				}
+
+				currentProcessedActorPtr->field_72 = angleModif;
+
+				if( currentProcessedActorPtr->field_72 == 0 )
+				{
+					currentProcessedActorPtr->rotate.param = 0;
+				}
+				else
+				{
+					currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
+				}
+
+				currentProcessedActorPtr->speed = 4;
+
+			}
 			break;
 		}
 	case 3: // track
@@ -296,7 +339,7 @@ void processTrack(void)
 			short int trackMacro = *(short int*)trackPtr;
 			trackPtr += 2;
 
-			printf("Track macro %X\n",trackMacro);
+			//printf("Track macro %X\n",trackMacro);
 
 			switch(trackMacro)
 			{

@@ -167,10 +167,13 @@ OSystem::OSystem()	// that's the constructor of the system dependent
     mouseRight = 0;
 
 	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
 	glEnable (GL_BLEND);
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
 
 	glClearColor(0.0f, 0.0f, 0.0f, 0.5f);				// Black Background
 	glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
@@ -225,6 +228,17 @@ void OSystem::flip(unsigned char *videoBuffer)
 		glVertex3f(quadTable[bestIdx].x3,quadTable[bestIdx].y3,-quadTable[bestIdx].z3/1000.f);
 		glVertex3f(quadTable[bestIdx].x4,quadTable[bestIdx].y4,-quadTable[bestIdx].z4/1000.f);
 		glEnd();
+
+	//	glDisable(GL_DEPTH_TEST);
+		int color = quadTable[bestIdx].color+3;
+		glColor3ub(palette[color*3],palette[color*3+1],palette[color*3+2]);
+		glBegin(GL_LINE_LOOP);
+		glVertex3f(quadTable[bestIdx].x1,quadTable[bestIdx].y1,-quadTable[bestIdx].z1/1000.f);
+		glVertex3f(quadTable[bestIdx].x2,quadTable[bestIdx].y2,-quadTable[bestIdx].z2/1000.f);
+		glVertex3f(quadTable[bestIdx].x3,quadTable[bestIdx].y3,-quadTable[bestIdx].z3/1000.f);
+		glVertex3f(quadTable[bestIdx].x4,quadTable[bestIdx].y4,-quadTable[bestIdx].z4/1000.f);
+		glEnd();
+	//	glEnable(GL_DEPTH_TEST);
 
 		quadTable[bestIdx].sorted = true;
 	}
@@ -475,17 +489,6 @@ void OSystem::draw3dQuad(float x1, float y1, float z1, float x2, float y2, float
 		quadTable[positionInQuadTable].depth = z4;
 
 	positionInQuadTable++;
-
-	glDisable(GL_DEPTH_TEST);
-	color+=3;
-	glColor3ub(palette[color*3],palette[color*3+1],palette[color*3+2]);
-	glBegin(GL_LINE_LOOP);
-	glVertex3f(x1,y1,-z1/1000.f);
-	glVertex3f(x2,y2,-z2/1000.f);
-	glVertex3f(x3,y3,-z3/1000.f);
-	glVertex3f(x4,y4,-z4/1000.f);
-	glEnd();
-	glEnable(GL_DEPTH_TEST);
 }
 
 #endif

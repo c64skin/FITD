@@ -234,12 +234,12 @@ int evalVar(void)
 				}
 			case 0xC: // CHRONO
 				{
-					return(evalChrono(&actorPtr->CHRONO) / 0x3C0000); // recheck
+					return(evalChrono(&actorPtr->CHRONO) /60); // recheck
 					break;
 				}
 			case 0xD:
 				{
-					return(evalChrono(&actorPtr->ROOM_CHRONO) / 0x3C0000); // recheck
+					return(evalChrono(&actorPtr->ROOM_CHRONO) / 60); // recheck
 					break;
 				}
 			case 0xE: // DIST
@@ -281,6 +281,11 @@ int evalVar(void)
 						return(0);
 					}
 
+					break;
+				}
+			case 0x11:
+				{
+					return action;
 					break;
 				}
 			case 0x12: // POSREL
@@ -329,6 +334,13 @@ int evalVar(void)
 			case 0x19:
 				{
 					return(inHand);
+					break;
+				}
+			case 0x1C:
+				{
+					int temp = *(short int*)currentLifePtr;
+					currentLifePtr+=2;
+					return(rand()%temp);
 					break;
 				}
 			case 0x1E:

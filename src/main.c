@@ -2179,11 +2179,11 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 
 	if(room != currentDisplayedRoom)
 	{
-		char* roomPtr = etageVar0+room*4;
+		char* roomPtr = etageVar0 + *(unsigned int*)(etageVar0+actorPtr->room*4);
 
-		actorPtr->worldX = ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
-		actorPtr->worldY = ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;
-		actorPtr->worldZ = ((*(short int*)(cameraPtr+8)) - (*(short int*)(roomPtr+8))) * 10;
+		actorPtr->worldX -= ((*(short int*)(cameraPtr+4)) - (*(short int*)(roomPtr+4))) * 10;
+		actorPtr->worldY += ((*(short int*)(cameraPtr+6)) - (*(short int*)(roomPtr+6))) * 10;
+		actorPtr->worldZ += ((*(short int*)(cameraPtr+8)) - (*(short int*)(roomPtr+8))) * 10;
 	}
 
 	actorPtr->alpha = alpha;
@@ -5201,8 +5201,18 @@ void processActor2()
 			break;
 		}
 	}
+}
 
-
+void processActor3(void)
+{
+	switch(currentProcessedActorPtr->field_8E)
+	{
+	default:
+		{
+			printf("Unsupported processActor3 %d\n",currentProcessedActorPtr->field_8E);
+			break;
+		}
+	}
 }
 
 void mainLoop(int allowSystemMenu)
@@ -5294,7 +5304,7 @@ void mainLoop(int allowSystemMenu)
 
 					if(currentProcessedActorPtr->field_8E)
 					{
-//						processActor3();
+						processActor3();
 					}
 				}
 
