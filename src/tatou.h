@@ -12,6 +12,7 @@ void startChrono(unsigned int* chrono);
 int evalChrono(unsigned int* chrono);
 void process_events( void );
 void copyPalette(char* source, char* dest);
+void copyToScreen(char* source, char* dest);
 
 //////////////
 #endif

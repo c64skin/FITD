@@ -1,5 +1,7 @@
 #include "common.h"
 
+hqrEntryStruct* hqrUnk;
+
 int videoMode;
 int musicConfigured;
 int initAllVar2;
@@ -55,3 +57,16 @@ textEntryStruct* tabTextes;
 char* systemTextes;
 
 char inputKey = 0;
+char input1 = 0;
+char input2 = 0;
+char input3;
+char input4;
+char joy;
+
+char languageNameString[] = "FRANCAIS";
+
+regularTextEntryStruct textTable[40];
+
+int readVar;
+
+int hqrKeyGen = 0;

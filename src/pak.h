@@ -2,6 +2,7 @@
 #define _PAK_
 
 char* loadPak(char* name, int index);
-void loadPakToPtr(char* name, int index, char* ptr);
+int loadPakToPtr(char* name, int index, char* ptr);
+int getPakSize(char* name, int index);
 
 #endif

@@ -59,6 +59,33 @@ struct textEntryStruct
 	short int width;
 };
 
+struct regularTextEntryStruct
+{
+	char* textPtr;
+	short int width;
+};
+
+struct hqrEntryStruct
+{
+	char string[10];
+	short int maxFreeData;
+	short int sizeFreeData;
+	short int numMaxEntry;
+	short int numUsedEntry;
+	char* dataPtr;
+};
+
+struct hqrSubEntryStruct
+{
+	short int key;
+	short int offset;
+	short int size;
+	short int field_6;
+	short int field_8;
+};
+
+extern hqrEntryStruct* hqrUnk;
+
 extern int videoMode;
 extern int musicConfigured;
 extern int initAllVar2;
@@ -115,5 +142,18 @@ extern textEntryStruct* tabTextes;
 extern char* systemTextes;
 
 extern char inputKey;
+extern char input1;
+extern char input2;
+extern char input3;
+extern char input4;
+extern char joy;
+
+extern char languageNameString[];
+
+extern regularTextEntryStruct textTable[40];
+
+extern int readVar;
+
+extern int hqrKeyGen;
 
 #endif

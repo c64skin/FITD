@@ -88,7 +88,7 @@ void allocTextes(void)
 		theEnd(1,"TabTextes");
 	}
 
-	systemTextes = loadPakSafe("FRANCAIS", 0); // todo: use real language name
+	systemTextes = loadPakSafe(languageNameString, 0); // todo: use real language name
 
 	for(currentIndex=0;currentIndex<250;currentIndex++)
 	{
@@ -136,6 +136,32 @@ void allocTextes(void)
 			}
 		}
 	}
+}
+
+hqrEntryStruct* HQR_Init(int numEntry, int size)
+{
+	hqrEntryStruct* dest;
+	char* dest2;
+
+	dest = (hqrEntryStruct*)malloc(numEntry*sizeof(hqrSubEntryStruct)+sizeof(hqrEntryStruct));
+
+	if(!dest)
+		return NULL;
+
+	dest2 = (char*)malloc(size);
+
+	if(!dest2)
+		return NULL;
+
+	strcpy(dest->string,"_MEMORY_");
+
+	dest->sizeFreeData = size;
+	dest->maxFreeData = size;
+	dest->numMaxEntry = numEntry;
+	dest->numUsedEntry = 0;
+	dest->dataPtr = dest2;
+
+	return(dest);
 }
 
 void sysInit(void)
@@ -202,8 +228,21 @@ void sysInit(void)
 		theEnd(0,"DEFINES.ITD");
 	}
 
-	fread(&defines,45,2,fHandle);
-	fclose(fHandle);
+///////////////////////////////////////////////
+	{
+		short int table[45];
+
+		fread(table,45,2,fHandle);
+		fclose(fHandle);
+		
+		for(i=0;i<45;i++)
+		{
+			table[i] = ((table[i]&0xFF)<<8) | ((table[i]&0xFF00)>>8);
+		}
+
+		memcpy(&defines,table,45*2);
+	}
+//////////////////////////////////////////////
 
 	allocTextes();
 
@@ -212,9 +251,9 @@ void sysInit(void)
 		listMus = HQR_InitRessource("ListMus",11000,2);
 	}
 
-	listSamp = HQR_InitRessource("ListSamp",64000,30);
+	listSamp = HQR_InitRessource("ListSamp",64000,30); */
 
-	hqrUnk = HQR_Init(10000,50); */
+	hqrUnk = HQR_Init(10000,50);
 }
 
 void freeAll(void)
@@ -594,10 +633,10 @@ void flipScreen()
 	osystem.setPalette(paletteRGBA);
 	osystem.Flip((unsigned char*)unkScreenVar);
 
-	FILE* fileHandle;
+/*	FILE* fileHandle;
 	fileHandle = fopen("dump.raw","wb+");
 	fwrite(screen,320,200,fileHandle);
-	fclose(fileHandle);
+	fclose(fileHandle);*/
 }
 
 void flushScreen(void)
@@ -627,8 +666,13 @@ int processStartupMenu(void)
 //	make3dTatouUnk1(16,0);
 	startChrono(&chrono);
 
-	while(evalChrono(&chrono) <= 0x10000 || ( evalChrono(&chrono) > 0x10000 && selectedEntry==-1)) // exit loop only if time out or if choice made
+	while(evalChrono(&chrono) <= 0x10000) // exit loop only if time out or if choice made
 	{
+		if(selectedEntry!=-1 || evalChrono(&chrono) > 0x10000)
+		{
+			break;
+		}
+
 		process_events();
 		readKeyboard();
 
@@ -677,10 +721,10 @@ int processStartupMenu(void)
 			}
 		} 
 
-/*		if(input2 == 28 || (input1 != 28 && input1!=0)) // select current entry
+		if(input2 == 28 || (input2 != 28 && input1!=0)) // select current entry
 		{
 			selectedEntry = currentSelectedEntry;
-		}*/
+		}
 	}
 
 	if(selectedEntry==2) // if exit game, do not fade
@@ -695,6 +739,514 @@ void preloadResource(void)
 {
 	loadPakToPtr("itd_ress",3,aux);
 	copyPalette(aux,palette);
+}
+
+int selectHero(void)
+{
+	int var_6 = 0;
+	int var_4 = 1;
+	int var_2 = 0;
+
+	//sysInitSub1(aux,screen);
+
+	while(var_2 == 0)
+	{
+		process_events();
+		readKeyboard();
+	
+		loadPakToPtr("itd_ress",10,aux);
+		copyToScreen(aux,screen);
+		copyToScreen(screen,aux2);
+
+		if(var_6 == 0)
+		{
+			drawAITDBox(80,100,160,200);
+		//	selectHeroSub1(10,10,149,190);
+		}
+		else
+		{
+			drawAITDBox(240,100,160,200);
+		//	selectHeroSub1(170,10,309,190);
+		}
+
+		flipScreen();
+
+		if(var_4 != 0)
+		{
+			//make3dTatouUnk1(0x40,0);
+		}
+	}
+
+	//fadeOut(0x40,0);
+
+	//sysInitSub1(aux2,screen);
+
+	return(-1);
+}
+
+int printTextSub1(hqrEntryStruct* hqrPtr,int size)
+{
+	hqrSubEntryStruct* dataPtr1;
+	hqrSubEntryStruct* dataPtr2;
+	int key;
+	int entryNum;
+
+	if(hqrPtr->sizeFreeData>size)
+		return(-1);
+
+	entryNum = hqrPtr->numUsedEntry;
+
+	dataPtr1 = dataPtr2 = (hqrSubEntryStruct*)(hqrPtr+sizeof(hqrEntryStruct));
+
+	key = hqrKeyGen;
+
+	dataPtr1[entryNum].key = key;
+
+	dataPtr1[entryNum].offset = hqrPtr->maxFreeData - hqrPtr->sizeFreeData;
+	dataPtr1[entryNum].size = size;
+
+	hqrPtr->numUsedEntry++;
+	hqrPtr->sizeFreeData -= size;
+
+	hqrKeyGen++;
+
+	return(key);
+}
+
+hqrSubEntryStruct* quickFindEntry(int index, int numMax, hqrSubEntryStruct* ptr) // no RE. Original was probably faster
+{
+	int i;
+
+	for(i=0;i<numMax;i++)
+	{
+		if(ptr->key == index)
+		{
+			return(ptr);
+		}
+	}
+
+	return(NULL);
+}
+
+char* printTextSub2(hqrEntryStruct* hqrPtr, int index)
+{
+	hqrSubEntryStruct* ptr;
+	hqrSubEntryStruct* dataPtr;
+
+	if(index<0)
+		return NULL;
+
+	dataPtr = (hqrSubEntryStruct*)(hqrPtr+sizeof(hqrEntryStruct));
+
+	ptr = quickFindEntry(index, hqrPtr->numUsedEntry, dataPtr);
+
+	if(!ptr)
+		return NULL;
+
+	return(hqrPtr->dataPtr + ptr->offset);
+}
+
+void printTextSub5(int x, int y, int param, char* gfx)
+{
+}
+
+void printTextSub6(hqrEntryStruct* hqrPtr, int index)
+{
+}
+
+void printTextSub7()
+{
+}
+
+void printTextSub8()
+{
+}
+
+int printText(int index, int left, int top, int right, int bottom, int mode, int color)
+{
+	int var_1A8 = 0;
+	char tabString[] = "    ";
+	int var_12 = 1;
+	int currentPage = 0;
+	int quit = 0;
+	int var_2 = -1;
+	int var_1C3;
+	char* localTextTable[100];
+
+	initFont(fontData, color);
+
+	int maxStringWidth = right - left + 4;
+
+	int var_8 = printTextSub1(hqrUnk,getPakSize(languageNameString,index)+300);
+
+	char* textPtr = printTextSub2(hqrUnk, var_8);
+
+	if(!loadPakToPtr( languageNameString, index, textPtr))
+	{
+		theEnd(1, languageNameString );
+	}
+
+	localTextTable[0] = textPtr;
+
+//	soundVar2 = -1;
+//	soundVar1 = -1;
+
+	while(!quit)
+	{
+		copyToScreen(aux,screen);
+		//setClipSize(left,top,right,bottom);
+
+		char* var_1C2 = localTextTable[currentPage];
+
+		int currentTextY = top;
+		var_1A8 = 0;
+
+		while(currentTextY <= bottom - 16)
+		{
+			int var_1AA = 1;
+			int var_1BA = 0;
+
+			regularTextEntryStruct* currentText = textTable;
+
+			int maxTextIdx = 0;
+
+			int var_1B6 = 0;
+
+parseSpe:	while(*var_1C2 == '#')
+			{
+				char* var_1BE = var_1C2;
+				var_1C2++;
+
+				switch(*(var_1C2++))
+				{
+				case 'P':
+					{
+						break;
+					}
+				case 'T':
+					{
+						break;
+					}
+				case 'C':
+					{
+						break;
+					}
+				case 'G':
+					{
+						break;
+					}
+				}
+			}
+
+			currentText->textPtr = var_1C2;
+
+			do
+			{
+				var_1C3 = *(var_1C2++);
+			}while(var_1C3>' '); // go to the end of the string
+
+			*(var_1C2-1) = 0; // add end of string marker to cut the word
+
+			int currentStringWidth = computeStringWidth(currentText->textPtr) + 3;
+
+			if(currentStringWidth <= maxStringWidth)
+			{
+				if( var_1BA + currentStringWidth > maxStringWidth )
+				{
+					var_1C2 = currentText->textPtr;
+				}
+				else
+				{
+					currentText->width = currentStringWidth;
+					var_1BA += currentStringWidth;
+
+					maxTextIdx++;
+					currentText++;
+
+					switch(var_1C3) // eval the character that caused the 'end of word' state
+					{
+					case 0x1A:
+						{
+							var_1AA &= 0xFFFE;
+							var_1AA |= 4;
+							var_1A8 = 1;
+
+							break;
+						}
+					case 0x0D:
+					case 0x00:
+						{
+							if(*var_1C2 < ' ')
+							{
+								if(*(++var_1C2) == 0xD)
+								{
+									var_1C2+=2;
+									var_1AA&=0xFFFE;
+									var_1AA|=2;
+								}
+								else
+								{
+									if(*var_1C2=='#')
+									{
+										var_1AA &=0xFFFE;
+									}
+								}
+							}
+							else
+							{
+								goto parseSpe;
+							}
+							break;
+						}
+					default:
+						{
+							goto parseSpe;
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				quit = 1;
+			}
+
+			if(var_1AA & 1)
+			{
+			//	var_1B6 = (maxStringWidth - var_1BA) / (maxTextIdx-1);
+			}
+
+			currentText = textTable;
+			int currentTextX;
+
+			if(var_1AA & 8)
+			{
+				currentTextX = left + ((maxStringWidth - var_1BA) / 2);
+			}
+			else
+			{
+				currentTextX = left;
+			}
+
+			int currentTextIdx = 0;
+
+			while(currentTextIdx < maxTextIdx)
+			{
+				renderText(currentTextX,currentTextY,screen,currentText->textPtr);
+
+				currentTextX += currentText->width + var_1B6;
+
+				currentText++;
+				currentTextIdx++;
+			}
+
+			if(var_1AA&2) // font size
+			{
+				currentTextY += 8;
+			}
+
+			currentTextY += 16;
+		}
+
+		if(!var_1A8 || bottom+16<currentTextY)
+		{
+			if(var_1A8)
+			{
+				*(var_1C2-1) = 0x1A;
+			}
+			else
+			{
+				var_1C2 = localTextTable[currentPage];
+			}
+
+			if(mode==0)
+			{
+				if(currentPage>0)
+				{
+					printTextSub5(left-19,185,12,aitdBoxGfx);
+				}
+
+				if(var_1A8==0)
+				{
+					printTextSub5(right+4,185,11,aitdBoxGfx);
+				}
+			}
+
+			if(mode==2)
+			{
+				if(currentPage>0)
+				{
+					printTextSub5(left-3,191,13,aitdBoxGfx);
+				}
+
+				if(var_1A8==0)
+				{
+					printTextSub5(right-10,191,14,aitdBoxGfx);
+				}
+			} 
+
+			if(var_12)
+			{
+				if(mode!=1)
+				{
+					flipScreen();
+//								make3dTatouUnk1(16,0);
+				}
+				else
+				{
+					if(readVar)
+					{
+						printTextSub7();
+					}
+					else
+					{
+						flipScreen();
+					}
+				}
+
+				var_12 = 0;
+			}
+			else
+			{
+				if(readVar)
+				{
+					if(var_2<currentPage)
+					{
+						printTextSub7();
+					}
+					else
+					{
+						printTextSub8();
+					}
+				}
+				else
+				{
+					flipScreen();
+				}
+			}
+
+			if(mode!=1) // mode != 1: normal beahior (user can flip pages)
+			{
+				do
+				{
+					readKeyboard();
+				}
+				while(input2 && inputKey && input1);
+
+				input3 = input2 & 0xFF;
+				input4 = inputKey & 0xFF;
+				joy = input1;
+
+				if(input3==1 || !joy)
+				{
+					quit = 1;
+				}
+				else
+				{
+					if(mode!=2 || input3 != 0x1C)
+					{
+						if(inputKey&0xA0 || input3 == 0x1C)
+						{
+							if(var_1A8 == 0) // flip to next page
+							{
+								var_2 = currentPage++;
+
+								if(mode==2)
+								{
+//												playSound(defines.field_0);
+//												soundVar2 = -1;
+//												soundVar1 = -1;
+								}
+							}
+						}
+						else
+						{
+							// flip to previous page
+
+							// TODO: implement...
+						}
+					}
+					else
+					{
+						quit = 1;
+					}
+				}
+			}
+			else // auto page fip
+			{
+				unsigned int var_6;
+				startChrono(&var_6);
+
+			/*	do
+				{
+					if(evalChrono(&var_6) > 300)
+					{
+						break;
+					}
+				}while(!input2 && !input1);*/
+
+				if(input2 || input1)
+				{
+					quit = 1;
+				}
+
+				if(var_1A8==0)
+				{
+				//	currentPage++;
+//								playSound(defines.field_0);
+//								soundVar2 = -1;
+				}
+				else
+				{
+					quit = 1;
+					mode = 0;
+				}
+			}
+		}
+	}
+
+	printTextSub6(hqrUnk, var_8);
+
+	return(mode);
+}
+
+int makeIntroScreens(void)
+{
+	char* data;
+	unsigned int chrono;
+
+	data = loadPak("itd_ress",13);
+	copyToScreen(data+770,unkScreenVar);
+	//make3dTatouUnk1(8,0);
+	memcpy(screen,unkScreenVar,320*200);
+	flipScreen();
+	free(data);
+	loadPakToPtr("itd_ress",7,aux);
+	startChrono(&chrono);
+
+	do
+	{
+		int time;
+
+		process_events();
+		readKeyboard();
+
+		time = evalChrono(&chrono);
+
+		if(time>=0x30)
+			break;
+
+	}while(input2 == 0 && input1 == 0);
+
+	//playSound(defines.field_0);
+/*	soundVar2 = -1;
+	soundVar1 = -1;
+	soundVar2 = -1;
+	soundVar1 = 0; */
+	readVar = 1;
+	printText(defines.field_6+1,48, 2,260,197,1,26);
+
+	return(0);
 }
 
 int main(int argc, char** argv)
@@ -714,19 +1266,19 @@ int main(int argc, char** argv)
 
 //	if(!make3dTatou())
 	{
-	//	makeIntroScreens();
+		makeIntroScreens();
 	}
 
-/*	while(1)
-	{*/
+	while(1)
+	{
 		startupMenuResult = processStartupMenu();
 
-/*		switch(startupMenuResult)
+		switch(startupMenuResult)
 		{
 		case -1: // timeout
 			{
 				defines.hero = rand()&1;
-				startGame(7,1,0);
+			/*	startGame(7,1,0);
 
 				if(!make3dTatou())
 				{
@@ -734,21 +1286,21 @@ int main(int argc, char** argv)
 					{
 						makeSlideshow();
 					}
-				}
+				} */
 
 				break;
 			}
 		case 0: // new game
 			{
-				if(protectionToBeDone)
+			/*	if(protectionToBeDone)
 				{
 					makeProtection();
 					protectionToBeDone = 0;
-				}
+				}*/
 
 				if(selectHero()!=-1)
 				{
-					startGame(7,1,0);
+				/*	startGame(7,1,0);
 
 					if(!protectionState)
 					{
@@ -762,14 +1314,14 @@ int main(int argc, char** argv)
 					{
 						freeAll();
 						exit(-1);
-					}
+					}*/
 				}
 
 				break;
 			}
 		case 1: // continue
 			{
-				if(protectionToBeDone)
+			/*	if(protectionToBeDone)
 				{
 					makeProtection();
 					protectionToBeDone = 0;
@@ -800,7 +1352,7 @@ int main(int argc, char** argv)
 						freeAll();
 						exit(-1);
 					}
-				}
+				}*/
 
 				break;
 			}
@@ -812,7 +1364,7 @@ int main(int argc, char** argv)
 				break;
 			}
 		}
-	}*/
+	}
 
 	return(0);
 }

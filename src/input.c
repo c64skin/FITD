@@ -14,6 +14,8 @@ void readKeyboard(void)
     int j;
 
     inputKey = 0;
+	input1 = 0;
+	input2 = 0;
 
 	unsigned char *keyboard;
   /*  printTextVar12 = 0;
@@ -58,13 +60,13 @@ void readKeyboard(void)
 			{
 			/*case SDLK_ESCAPE:
 			    localKey = 0x1;
-			    break;
+			    break; */
 
 			case SDLK_RETURN:
-			    localKey = 0x1C;
+			    input2 = 0x1C;
 			    break;
 
-			case SDLK_LSHIFT:
+			/*case SDLK_LSHIFT:
 			    localKey = 0x2A;
 			    break;
 
