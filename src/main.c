@@ -1191,6 +1191,11 @@ void initEngine(void)
   maxObjects = READ_LE_U16(pObjectData);
   pObjectData+=2;
 
+  if(gameId == AITD1)
+  {
+    maxObjects = 300; // fix for save engine..
+  }
+
   objectTable = (objectStruct*)malloc(maxObjects*sizeof(objectStruct));
 
   for(i=0;i<maxObjects;i++)

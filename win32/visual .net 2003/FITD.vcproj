@@ -154,7 +154,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain.lib sdl.lib winmm.lib dxguid.lib opengl32.lib glaux.lib glu32.lib SDL_mixer.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain_d.lib sdl_d.lib winmm.lib dxguid.lib opengl32.lib glaux.lib glu32.lib SDL_mixer_d.lib"
 				OutputFile=".\DebugGL/FITD.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"

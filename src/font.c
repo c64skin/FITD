@@ -92,8 +92,6 @@ void renderText(int x, int y, char* surface, char* string)
 {
   unsigned char character;
 
-  return;
-
   fontVar6 = x;
   fontSm7 = y;
 

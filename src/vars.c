@@ -244,28 +244,7 @@ char* listAnimSelect[] = {
   "LISTANI2",
 };
 
-saveEntry saveTable[] = {
-  { &currentDisplayedRoom, 2 },
-  { &currentEtage, 2 },
-  { &currentCamera, 2 },
-  { &currentCameraTarget, 2 },
-  { &genVar9, 2 },
-  { &maxObjects, 2 },
-//  { objectTable, 15600 },
-//  { &defines, 90 },
-  { &inHand, 2 },
-  { &numObjInInventory, 2 },
-  { inventory, 60 },
-  { &statusScreenAllowed, 2 },
-  { &giveUp, 2 },
-  { &lightVar1, 2 },
-  { &shakingAmplitude, 2 },
-  { &shakeVar1, 2 },
-  { &timer, 4 },
-  { &timerFreeze1, 4},
-  { &currentMusic, 2},
-  { NULL, 0 },
-};
+saveEntry saveTable[40];
 
 int hqrVar1 = 0;
 int mainVar3 = 4000;
