@@ -1598,19 +1598,24 @@ void initEngine(void)
 
 	defines.hero = i;
 
-	/*listLife = HQR_InitRessource("LISTLIFE", 10000, 100);
-	listTrack = HQR_InitRessource("LISTTRAK", 1000, 10);*/
+/*	listLife = HQR_InitRessource("LISTLIFE", 10000, 100);
+	listTrack = HQR_InitRessource("LISTTRAK", 1000, 10); */
 
-	listLife = HQR_InitRessource("LISTLIFE", 1000000, 1000);
-	listTrack = HQR_InitRessource("LISTTRAK", 100000, 1000);
+
+	listLife = HQR_InitRessource("LISTLIFE",  10000000, 1000);
+	listTrack = HQR_InitRessource("LISTTRAK", 10000000, 1000); 
+
+
 
 	// TODO: missing dos memory check here
 
-	/*listBody = HQR_InitRessource(listBodySelect[defines.hero],100000, 50); // was calculated from free mem size
-	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],100000, 50); // was calculated from free mem size*/
+/*
+	listBody = HQR_InitRessource(listBodySelect[defines.hero],100000, 50); // was calculated from free mem size
+	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],100000, 50); // was calculated from free mem size
+*/
 
-	listBody = HQR_InitRessource(listBodySelect[defines.hero],10000000, 500); // was calculated from free mem size
-	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],10000000, 500); // was calculated from free mem size
+	listBody = HQR_InitRessource(listBodySelect[defines.hero],10000000, 1000); // was calculated from free mem size
+	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],10000000, 1000); // was calculated from free mem size
 
 	for(i=0;i<50;i++)
 	{
@@ -3761,7 +3766,7 @@ void mainDraw(int mode)
 
 				if(hqrVar1)
 				{
-					initAnimInBody(actorPtr->FRAME, HQR_Get(listAnim, actorPtr->ANIM), bodyPtr);
+//					initAnimInBody(actorPtr->FRAME, HQR_Get(listAnim, actorPtr->ANIM), bodyPtr);
 				}
 
 				renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
@@ -3774,7 +3779,7 @@ void mainDraw(int mode)
 				}
 
 ///////////////////////////////////// DEBUG
-		//		drawZv(actorPtr);
+				drawZv(actorPtr);
 /////////////////////////////////////
 			}
 

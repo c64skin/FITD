@@ -353,7 +353,7 @@ void processLife(int lifeNum)
 		currentOpcode = *(short int*)(currentLifePtr);
 		currentLifePtr+=2;
 
-//		printf("%d:opcode: %04X\n",lifeNum, currentOpcode);
+		printf("%d:opcode: %04X\n",lifeNum, currentOpcode);
 
 		if(currentOpcode & 0x8000)
 		{
@@ -837,6 +837,7 @@ processOpcode:
 		
 					break;
 				}
+			// 0x1B should be BREAK, but is never found in byte compiled scripts
 			case 0x1C: //START_CHRONO
 				{
 					startChrono(&currentProcessedActorPtr->CHRONO);

@@ -76,9 +76,9 @@ void moveHqrEntry(hqrEntryStruct* hqrPtr, int index)
 
 		memcpy(dest,src,hqrPtr->dataPtr + hqrPtr->maxFreeData - src);
 
-		dest = (char*)(hqrSubPtr2+index);
-		src = (char*)(hqrSubPtr2+index+1);
-		memcpy(dest,src,hqrPtr->numMaxEntry-(index+1) * 10);
+		dest = (char*)&hqrSubPtr2[index];
+		src = (char*)&hqrSubPtr2[index+1];
+		memcpy(dest,src,hqrPtr->numMaxEntry-(index+1) * sizeof(hqrSubEntryStruct));
 	}
 
 	hqrPtr->numUsedEntry --;

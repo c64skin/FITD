@@ -86,6 +86,63 @@ int calcDist(int X1, int Y1, int Z1, int X2, int Y2, int Z2)
 	return(Xdist + Ydist + Zdist); // recheck overflow
 }
 
+int testZvEndAnim(actorStruct* actorPtr,char* animPtr, int param)
+{
+	short int var_16;
+	short int var_14;
+	short int var_E = 0;
+	short int var_12 = 0;
+	short int var_10 = param;
+	short int var_18;
+	ZVStruct localZv;
+
+	ASSERT(actorPtr);
+	ASSERT(animPtr);
+
+	var_16 = *(short int*)(animPtr);
+	animPtr += 2;
+	var_14 = *(short int*)(animPtr);
+	animPtr += 2;
+
+	for(var_18 = 0; var_18 < var_16; var_18 ++)
+	{
+		animPtr += 2;
+		var_12 += *(short int*)animPtr;
+		animPtr += 2;
+		animPtr += 2;
+		var_E += *(short int*)animPtr; // step depth
+		animPtr += 2;
+
+		animPtr+= var_14*8;
+	}
+
+	copyZv(&actorPtr->zv, &localZv);
+
+	walkStep(0,var_E,actorPtr->beta);
+
+	localZv.ZVX1 += animMoveX;
+	localZv.ZVX2 += animMoveX;
+	localZv.ZVY1 += var_10;
+	localZv.ZVY2 += var_10;
+	localZv.ZVZ1 += animMoveY;
+	localZv.ZVZ2 += animMoveY;
+
+	if(!checkForHardCol(&localZv, etageVar0 + *(unsigned int*)(etageVar0 + actorPtr->room * 4)))
+	{
+		return(0);
+	}
+
+	localZv.ZVY1 += 100;
+	localZv.ZVY2 += 100;
+
+	if(!checkForHardCol(&localZv, etageVar0 + *(unsigned int*)(etageVar0 + actorPtr->room * 4)))
+	{
+		return(1);
+	}
+
+	return(0);
+}
+
 int evalVar(void)
 {
 	int var1;
@@ -406,6 +463,20 @@ int evalVar(void)
 			case 0x21:
 				{
 					return(actorPtr->roomY);
+					break;
+				}
+			case 0x22: // TEST_ZV_END_ANIM
+				{
+					int temp1;
+					int temp2;
+
+					temp1 = *(short int*)currentLifePtr;
+					currentLifePtr +=2;
+					temp2 = *(short int*)currentLifePtr;
+					currentLifePtr +=2;
+
+					return(testZvEndAnim(actorPtr,HQR_Get(listAnim,temp1),temp2));
+
 					break;
 				}
 			case 0x23: // TODO: music
