@@ -557,8 +557,35 @@ void osystem_flip(unsigned char *videoBuffer)
 
 void osystem_startFrame()
 {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+#ifdef INTERNAL_DEBUGGER
+  if(backgroundMode == backgroundModeEnum_2D)
+#endif
+  {
+    glDisable(GL_DEPTH_TEST);
+    glColor4ub(255,255,255,255);
+    glBindTexture(GL_TEXTURE_2D, backTexture);
+    glBegin(GL_TRIANGLES);
+
+      glTexCoord2f(0,0); // triangle haut gauche
+      glVertex3f(0,0,49);
+      glTexCoord2f(640.f/1024.f,0);
+      glVertex3f(640,0,49);
+      glTexCoord2f(0.0f,480.f/512.f);
+      glVertex3f(0,480,49);
+
+      glTexCoord2f(640.f/1024.f,0); // triangle haut gauche
+      glVertex3f(640,0,49);
+      glTexCoord2f(640.f/1024.f,480.f/512.f);
+      glVertex3f(640,480,49);
+      glTexCoord2f(0.0f,480.f/512.f);
+      glVertex3f(0,480,49); 
+
+    glEnd();
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glEnable(GL_DEPTH_TEST);
+  }
 }
 
 
@@ -991,6 +1018,7 @@ void osystem_draw3dLine(float x1, float y1, float z1, float x2, float y2, float 
 
 void osystem_cleanScreenKeepZBuffer()
 {
+  return;
   glClear(GL_COLOR_BUFFER_BIT );
 
   glDisable(GL_DEPTH_TEST);

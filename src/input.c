@@ -96,6 +96,12 @@ void readKeyboard(void)
       case SDLK_d:
         debugger_enterMainDebug();
         break;
+      case SDLK_b:
+          backgroundMode = backgroundModeEnum_3D;
+          break;
+      case SDLK_n:
+          backgroundMode = backgroundModeEnum_2D;
+          break;
 #endif
       }
     }

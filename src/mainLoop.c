@@ -42,6 +42,11 @@ s32 t_start,t_left;
 u32 t_end;
 s32 q=0;                     /* Dummy */
 
+  while(input2==0x1B || input2 == 0x1C)
+  {
+    readKeyboard();
+  }
+
   //atexit(cleanupAndExit);
 
   while(1)
@@ -52,6 +57,7 @@ s32 q=0;                     /* Dummy */
     timeGlobal++;
 
     timer = timeGlobal;
+
     process_events();
     readKeyboard();
     input3 = input2;
@@ -60,6 +66,20 @@ s32 q=0;                     /* Dummy */
 
     if(input3)
     {
+      if(input3 == 0x1B)
+      {
+        while(input2==0x1B)
+        {
+          readKeyboard();
+        }
+        processSystemMenu();
+        while(input2==0x1B || input2 == 0x1C)
+        {
+          readKeyboard();
+          input3 = input2;
+        }
+      }
+
       if(input3 == 0x1C || input3 == 0x17)
       {
         if(allowSystemMenu == 0)

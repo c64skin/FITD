@@ -138,3 +138,84 @@ int restoreSave(int arg0, int arg1)
   return(loadSave(selectedSave));
 
 }
+
+int makeSaveFile(int entry)
+{
+  FILE* fHandle;
+  char buffer[100];
+  int i;
+  unsigned long int var28 = 0;
+  char* ptr;
+  int var_14 = 0;
+  int temp;
+
+  for(i=0;i<NUM_MAX_ACTOR;i++)
+  {
+    if(actorTable[i].field_0 == -1);
+
+    if(actorTable[i].ANIM == 4 )
+    {
+      defines.field_1C = 0;
+      printTextSub6(hqrUnk,actorTable[i].FRAME);
+    }
+  }
+
+  sprintf(buffer,"SAVE%d.ITD",entry);
+
+  fHandle = fopen(buffer,"wb+");
+
+  if(!fHandle)
+    return 0;
+
+  fwrite(&var28,4,1,fHandle);
+  fwrite(&var28,4,1,fHandle);
+
+  var28 = ftell(fHandle)+12;
+  var28 = ((var28 & 0xFF) << 24) | ((var28 & 0xFF00) << 8) | (( var28 & 0xFF0000) >> 8) | ((var28 & 0xFF000000) >> 24);
+
+  fwrite(&var28,4,1,fHandle);
+
+  fwrite(&var28,4,1,fHandle);
+  fwrite(&var28,4,1,fHandle);
+
+  do
+  {
+    ptr = (char*)getSaveEntry(var_14);
+
+    if(ptr)
+    {
+      var28 = ftell(fHandle);
+      fwrite(ptr,currentSaveEntrySize,1,fHandle);
+    }
+    var_14++;
+
+  }while(ptr);
+
+  //timerFreeze = 1;
+
+  var28 = ftell(fHandle);
+  temp = var28;
+  fseek(fHandle,12,SEEK_SET);
+  var28 = ((var28 & 0xFF) << 24) | ((var28 & 0xFF00) << 8) | (( var28 & 0xFF0000) >> 8) | ((var28 & 0xFF000000) >> 24);
+  fwrite(&var28,4,1,fHandle);
+  fseek(fHandle,temp,SEEK_SET);
+
+  fwrite(&varSize,2,1,fHandle);
+  fwrite(vars,varSize,1,fHandle);
+
+  var28 = ftell(fHandle);
+  temp = var28;
+  fseek(fHandle,16,SEEK_SET);
+  var28 = ((var28 & 0xFF) << 24) | ((var28 & 0xFF00) << 8) | (( var28 & 0xFF0000) >> 8) | ((var28 & 0xFF000000) >> 24);
+  fwrite(&var28,4,1,fHandle);
+  fseek(fHandle,temp,SEEK_SET);
+
+  fwrite(actorTable,8000,1,fHandle);
+  fclose(fHandle);
+}
+
+int makeSave(int arg0)
+{
+  return(makeSaveFile(0));
+}
+

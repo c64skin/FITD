@@ -467,6 +467,18 @@ void processLife(int lifeNum)
                 objectTable[var_6].lifeMode = 0;
                 break;
               }
+            case 0x18: // LIFE_MODE
+              {
+                lifeTempVar1 = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+
+                if(lifeTempVar1 != objectTable[var_6].lifeMode)
+                {
+                  objectTable[var_6].lifeMode = lifeTempVar1;
+                  //objModifFlag1 = 1;
+                }
+                break;
+              }
             case 0x1F:
               {
                 objectTable[var_6].life = *(short int*)(currentLifePtr);

@@ -75,8 +75,8 @@ typedef signed long S32;
 //#include <bool.h>
 //#include <geometry.h>
 int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*triangles)[3]);
+#include "room.h"
 #include "vars.h"
-
 #include "main.h"
 #include "fileAccess.h"
 #include "screen.h"
@@ -100,7 +100,6 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 #include "mainLoop.h"
 #include "inventory.h"
 #include "startupMenu.h"
-#include "room.h"
 #include "floor.h"
 #include "object.h"
 #include "zv.h"

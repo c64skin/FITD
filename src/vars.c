@@ -222,7 +222,7 @@ short int shakeVar1;
 short int shakingAmplitude;
 unsigned int timerFreeze1;
 
-char* hardColTable[30];
+hardColStruct* hardColTable[3];
 
 short int hardColVar1;
 short int hardColVar2;
@@ -279,3 +279,6 @@ int clipBottom = 119;
 hqrEntryStruct* listMus;
 hqrEntryStruct* listSamp;
 
+#ifdef INTERNAL_DEBUGGER
+backgroundModeEnum backgroundMode = backgroundModeEnum_2D;
+#endif

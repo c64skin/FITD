@@ -59,7 +59,7 @@ void loadFloor(int floorNumber)
       roomDataTable = (roomDataStruct*)malloc(sizeof(roomDataStruct));
     }
 
-    roomData = getRoomData(i);
+    roomData = (etageVar0 + *(unsigned int*)(etageVar0 + i * 4));
     currentRoomDataPtr = &roomDataTable[i];
 
     currentRoomDataPtr->worldX = READ_LE_S16(roomData+4);

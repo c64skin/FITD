@@ -10,6 +10,8 @@
 
 char scaledScreen[640*400];
 
+int input5;
+
 //short int inventory[30];
 
 void updateInHand(int objIdx)
@@ -1215,22 +1217,18 @@ void setupCameraSub1()
   int i;
   int j;
   int var_10;
-  int var_6;
   short int* ptr2;
   int var_12;
 
   char* dataTabPos = cameraDataTab;
-  short int* ptr = (short int*)getRoomData(currentDisplayedRoom);
 
   *dataTabPos = -1;
 
-  var_6 = *(ptr++);
-
-  for(i=0;i<var_6;i++)
+  for(i=0;i<roomDataTable[currentDisplayedRoom].numSceZone;i++)
   {
-    if(*(ptr+7) == 0)
+    if(roomDataTable[currentDisplayedRoom].sceZoneTable[i].type == 0)
     {
-      var_10 = *(ptr+6);
+      var_10 = roomDataTable[currentDisplayedRoom].sceZoneTable[i].parameter;
       if(!setupCameraSub1Sub1(var_10))
       {
         *(dataTabPos++) = var_10;
@@ -2428,9 +2426,7 @@ void drawBgOverlaySub2(int size)
   int direction = 1;
 
   short int* data = (short int*)cameraBuffer;
-
-  return;
-  
+ 
   overlaySize1 = size;
   overlaySize2 = size;
 
@@ -2495,7 +2491,10 @@ void drawBgOverlaySub2(int size)
     saveAx = *(short int*)si;
     si += 2;
 
-    //osystem_draw3dLine(tempBxPtr, tempCxPtr, 0, saveDx,saveAx, 0, 130);
+#ifdef INTERNAL_DEBUGGER
+    if(backgroundMode == backgroundModeEnum_2D)
+      osystem_draw3dLine(tempBxPtr, tempCxPtr, 0, saveDx,saveAx, 0, 130);
+#endif
     osystem_addBgPolyPoint(tempBxPtr, tempCxPtr);
 
     dx = saveDx;
@@ -2757,11 +2756,16 @@ void mainDraw(int mode)
   osystem_cleanScreenKeepZBuffer();
 #endif
 
-  for(i=0;i<getNumberOfRoom();i++)
+#ifdef INTERNAL_DEBUGGER
+  if(backgroundMode == backgroundModeEnum_3D)
   {
-    drawHardCol(i);
-    drawSceZone(i);
+    for(i=0;i<getNumberOfRoom();i++)
+    {
+      drawHardCol(i);
+      drawSceZone(i);
+    }
   }
+#endif
 
 //  drawConverZones();
   
@@ -2927,12 +2931,9 @@ int checkZvCollision(ZVStruct* zvPtr1,ZVStruct* zvPtr2)
 
 void getZvRelativePosition(ZVStruct* zvPtr, int startRoom, int destRoom)
 {
-  char* startRoomData = (char*)getRoomData(startRoom);
-  char* destRoomData = (char*)getRoomData(destRoom);
-
-  int Xdif = 10*(*(short int*)(destRoomData+4) - *(short int*)(startRoomData+4));
-  int Ydif = 10*(*(short int*)(destRoomData+6) - *(short int*)(startRoomData+6));
-  int Zdif = 10*(*(short int*)(destRoomData+8) - *(short int*)(startRoomData+8));
+  int Xdif = 10*(roomDataTable[destRoom].worldX - roomDataTable[startRoom].worldX);
+  int Ydif = 10*(roomDataTable[destRoom].worldY - roomDataTable[startRoom].worldY);
+  int Zdif = 10*(roomDataTable[destRoom].worldZ - roomDataTable[startRoom].worldZ);
 
   zvPtr->ZVX1 -= Xdif;
   zvPtr->ZVX2 -= Xdif;
@@ -3066,8 +3067,6 @@ void take(int objIdx)
   objPtr->room = -1;
   objPtr->stage = -1;
 }
-
-int input5;
 
 void foundObject(int objIdx, int param)
 {
@@ -3391,39 +3390,28 @@ void hardColSuB1(ZVStruct* startZv, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
   }
 }
 
-int checkForHardCol(ZVStruct* zvPtr, char* dataPtr)
+int checkForHardCol(ZVStruct* zvPtr, roomDataStruct* pRoomData)
 {
+  u16 i;
   int hardColVar = 0;
-  short int counter;
+  hardColStruct* pCurrentEntry = pRoomData->hardColTable;
   
-  dataPtr += *(short int*)(dataPtr); // skip to data
-
-  counter = *(short int*)dataPtr;
-  dataPtr+=2;
-
-  do
+  for(i=0;i<pRoomData->numHardCol;i++)
   {
-
-    short int X1 = *(short int*)dataPtr;
-    short int X2 = *(short int*)(dataPtr+2);
-
-    if(X1 < zvPtr->ZVX2 && zvPtr->ZVX1 < X2)
+    if(((pCurrentEntry->zv.ZVX1) < (zvPtr->ZVX2)) && ((zvPtr->ZVX1) < (pCurrentEntry->zv.ZVX2)))
     {
-      short int Y1 = *(short int*)(dataPtr+4);
-      short int Y2 = *(short int*)(dataPtr+6);
-
-      if(Y1 < zvPtr->ZVY2 && zvPtr->ZVY1 < Y2)
+      if(((pCurrentEntry->zv.ZVY1) < (zvPtr->ZVY2)) && ((zvPtr->ZVY1) < (pCurrentEntry->zv.ZVY2)))
       {
-        short int Z1 = *(short int*)(dataPtr+8);
-        short int Z2 = *(short int*)(dataPtr+10);
-
-        if(Z1 < zvPtr->ZVZ2 && zvPtr->ZVZ1 < Z2)
-          hardColTable[hardColVar++] = dataPtr;
+        if(((pCurrentEntry->zv.ZVZ1) < (zvPtr->ZVZ2)) && ((zvPtr->ZVZ1) < (pCurrentEntry->zv.ZVZ2)))
+        {
+          ASSERT(hardColVar < 3);
+          hardColTable[hardColVar++] = pCurrentEntry;
+        }
       }
     }
 
-    dataPtr += 0x10;
-  }while(--counter);
+    pCurrentEntry++;
+  }
 
   return hardColVar;
 }
@@ -3470,7 +3458,16 @@ int manageFall(int actorIdx, ZVStruct* zvPtr)
 
 int processActor1Sub2(rotateStruct* data)
 {
-  return(0);
+  if(!data->param)
+    return data->newAngle;
+
+  if(timer - data->timeOfRotate> data->param)
+  {
+    data->param = 0;
+    return data->newAngle;
+  }
+
+  return ((((data->newAngle - data->oldAngle)*(data->timeOfRotate - timer))/data->param)+data->oldAngle);
 }
 
 void processActor1(void)
@@ -3478,9 +3475,9 @@ void processActor1(void)
   int var_42 = 0;
   int var_6 = currentProcessedActorPtr->field_44;
   int var_40;
-  int var_48;
-  int var_4A;
-  int var_4C;
+  int var_48=0;
+  int var_4A=0;
+  int var_4C=0;
   int var_4E;
   int var_50=0;
   int var_52=0;
@@ -3599,7 +3596,7 @@ void processActor1(void)
   {
     if(currentProcessedActorPtr->field_60.param != -1)
     {
-      var_4E = processActor1Sub2(&currentProcessedActorPtr->speedChange) - var_4A;
+      var_4E = processActor1Sub2(&currentProcessedActorPtr->field_60) - var_4A;
     }
     else // stop falling
     {
@@ -3636,18 +3633,18 @@ void processActor1(void)
     {
       int i;
 
-      var_42 = checkForHardCol(&zvLocal, (char*)getRoomData(currentProcessedActorPtr->room));
+      var_42 = checkForHardCol(&zvLocal, &roomDataTable[currentProcessedActorPtr->room]);
 
       for(i=0;i<var_42;i++)
       {
-        char* var_3E = hardColTable[i];
+        hardColStruct* var_3E = hardColTable[i];
 
-        if(*(short int*)(var_3E + 0xE) == 9)
+        if(var_3E->type == 9)
         {
-          currentProcessedActorPtr->HARD_COL = *(short int*)(var_3E + 0xC);
+          currentProcessedActorPtr->HARD_COL = var_3E->parameter;
         }
 
-        if(*(short int*)(var_3E + 0xE) == 3)
+        if(var_3E->type == 3)
         {
           currentProcessedActorPtr->HARD_COL = 255;
         }
@@ -3671,7 +3668,7 @@ void processActor1(void)
     }
     else // no hard collision -> just update the flag without performing the position update
     {
-      if(checkForHardCol(&zvLocal,(char*)getRoomData(currentProcessedActorPtr->room)))
+      if(checkForHardCol(&zvLocal, &roomDataTable[currentProcessedActorPtr->room]))
       {
         currentProcessedActorPtr->HARD_COL = 1;
       }
@@ -3719,7 +3716,7 @@ void processActor1(void)
           localZv2.ZVZ1 += var_50;
           localZv2.ZVZ2 += var_50;
 
-          if(!checkForHardCol(&localZv2, (char*)getRoomData(actorTouchedPtr->room)))
+          if(!checkForHardCol(&localZv2, &roomDataTable[currentProcessedActorPtr->room]))
           {
             if(processActor1Sub1(var_56, &localZv2))
             {
@@ -3849,7 +3846,7 @@ void processActor1(void)
 
       zvLocal.ZVY2 += 100;
 
-      if(currentProcessedActorPtr->roomY < -10 && !checkForHardCol(&zvLocal,(char*)getRoomData(currentProcessedActorPtr->room)) && !manageFall(currentProcessedActorIdx,&zvLocal))
+      if(currentProcessedActorPtr->roomY < -10 && !checkForHardCol(&zvLocal,&roomDataTable[currentProcessedActorPtr->room]) && !manageFall(currentProcessedActorIdx,&zvLocal))
       {
         startActorRotation(0, 2000, 40, &currentProcessedActorPtr->field_60);
       }
@@ -4141,29 +4138,28 @@ void checkIfCameraChangeIsRequired(void)
 
 }
 
-char* processActor2Sub(int x, int y, int z, char* zoneData)
+sceZoneStruct* processActor2Sub(int x, int y, int z, roomDataStruct* pRoomData)
 {
   int i;
   int numOfZones;
-  
-  zoneData += *(short int*)(zoneData+2);
-  numOfZones = *(short int*)zoneData;
-  zoneData+=2;
+  sceZoneStruct* pCurrentZone;  
 
-  for(i=0;i<numOfZones;i++)
+  pCurrentZone = pRoomData->sceZoneTable;
+
+  for(i=0;i<pRoomData->numSceZone;i++)
   {
-    if(*(short int*)(zoneData) <= x && *(short int*)(zoneData+2) >= x)
+    if(pCurrentZone->zv.ZVX1 <= x && pCurrentZone->zv.ZVX2 >= x)
     {
-      if(*(short int*)(zoneData+4) <= y && *(short int*)(zoneData+6) >= y)
+      if(pCurrentZone->zv.ZVY1 <= y && pCurrentZone->zv.ZVY2 >= y)
       {
-        if(*(short int*)(zoneData+8) <= z && *(short int*)(zoneData+10) >= z)
+        if(pCurrentZone->zv.ZVZ1 <= z && pCurrentZone->zv.ZVZ2 >= z)
         {
-          return(zoneData);
+          return(pCurrentZone);
         }
       }
     }
 
-    zoneData += 16;
+    pCurrentZone++;
   }
 
   return(NULL);
@@ -4172,13 +4168,13 @@ char* processActor2Sub(int x, int y, int z, char* zoneData)
 
 void processActor2()
 {
-  char * ptr;
+  sceZoneStruct * ptr;
   int type;
 
   ptr = processActor2Sub( currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
               currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY,
               currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
-              (char*)getRoomData(currentProcessedActorPtr->room) );
+              &roomDataTable[currentProcessedActorPtr->room] );
 
 
   if(!ptr)
@@ -4186,25 +4182,21 @@ void processActor2()
     return;
   }
 
-  type = *(short int*) (ptr + 0xE);
-
-  switch(type)
+  switch(ptr->type)
   {
   case 0:
     {
-      char* ptr2 = (char*)getRoomData(currentProcessedActorPtr->room);
-      char* ptr3;
       int x;
       int y;
       int z;
 
-      currentProcessedActorPtr->room = *(short int*) (ptr + 0xC);
+      int oldRoom = currentProcessedActorPtr->room;
 
-      ptr3 = (char*)getRoomData(currentProcessedActorPtr->room);
+      currentProcessedActorPtr->room = ptr->parameter;
 
-      x = (*(short int*)(ptr3+4) - *(short int*)(ptr2+4)) * 10;
-      y = (*(short int*)(ptr3+6) - *(short int*)(ptr2+6)) * 10;
-      z = (*(short int*)(ptr3+8) - *(short int*)(ptr2+8)) * 10;
+      x = (roomDataTable[currentProcessedActorPtr->room].worldX - roomDataTable[oldRoom].worldX) * 10;
+      y = (roomDataTable[currentProcessedActorPtr->room].worldY - roomDataTable[oldRoom].worldY) * 10;
+      z = (roomDataTable[currentProcessedActorPtr->room].worldZ - roomDataTable[oldRoom].worldZ) * 10;
   
       currentProcessedActorPtr->roomX -= x;
       currentProcessedActorPtr->roomY += y;
@@ -4222,7 +4214,7 @@ void processActor2()
       if(currentProcessedActorIdx == genVar9)
       {
         needChangeRoom = 1;
-        newRoom = *(short int*) (ptr + 0xC);
+        newRoom = ptr->parameter;
       }
       else
       {
@@ -4236,7 +4228,7 @@ void processActor2()
     }
   case 9:
     {
-      currentProcessedActorPtr->HARD_DEC = *(short int*) (ptr + 0xC);
+      currentProcessedActorPtr->HARD_DEC = ptr->parameter;
       break;
     }
   case 10:
@@ -4250,7 +4242,7 @@ void processActor2()
 
       currentProcessedActorPtr->life = life;
 
-      currentProcessedActorPtr->HARD_DEC = *(short int*) (ptr + 0xC);
+      currentProcessedActorPtr->HARD_DEC = ptr->parameter;
       break;
     }
   }
@@ -4292,7 +4284,7 @@ int checkLineProjectionWithActors( int actorIdx, int X, int Y, int Z, int beta, 
       break;
     }
 
-    if(checkForHardCol(&localZv, (char*)getRoomData(room)) <= 0)
+    if(checkForHardCol(&localZv, &roomDataTable[room]) <= 0)
     {
       foundFlag = -1;
     }

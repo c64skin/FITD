@@ -157,7 +157,7 @@ void processAnimAction(void)
         rangeZv.ZVZ1 += z;
         rangeZv.ZVZ2 += z;
 
-        if(checkForHardCol(&rangeZv, (char*)getRoomData(currentProcessedActorPtr->room)))
+        if(checkForHardCol(&rangeZv, &roomDataTable[currentProcessedActorPtr->room]))
         {
           currentProcessedActorPtr->animActionType = 0;
           putAt(objIdx, currentProcessedActorPtr->field_0);
@@ -310,7 +310,7 @@ void processAnimAction(void)
       do
       {
         int collision;
-        char* ptr;
+        sceZoneStruct* ptr;
         
         walkStep(0,-step,currentProcessedActorPtr->beta);
         step += 100;
@@ -403,11 +403,11 @@ void processAnimAction(void)
            }
         }
 
-        ptr = processActor2Sub(x2,y2,z2, (char*)getRoomData(currentProcessedActorPtr->room));
+        ptr = processActor2Sub(x2,y2,z2, &roomDataTable[currentProcessedActorPtr->room]);
 
         if(ptr)
         {
-          if(*(short int*)(ptr+0xE) == 0 || *(short int*)(ptr+0xE) == 10)
+          if(ptr->type == 0 || ptr->type == 10)
           {
              playSound(defines.field_12);
              objectHitActor(x3,z3);
@@ -415,7 +415,7 @@ void processAnimAction(void)
           }
         }
 
-        if(checkForHardCol(&rangeZv, (char*)getRoomData(currentProcessedActorPtr->room)))
+        if(checkForHardCol(&rangeZv, &roomDataTable[currentProcessedActorPtr->room]))
         {
           currentProcessedActorPtr->hotPoint.x = 0;
           currentProcessedActorPtr->hotPoint.y = 0;

@@ -250,15 +250,18 @@
 				EnableFiberSafeOptimizations="TRUE"
 				OptimizeForProcessor="1"
 				OptimizeForWindowsApplication="TRUE"
-				PreprocessorDefinitions="USE_GL"
+				PreprocessorDefinitions="USE_GL,INTERNAL_DEBUGGER,NO_SOUND"
 				RuntimeLibrary="2"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="common.h"
 				DebugInformationFormat="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain.lib sdl.lib winmm.lib dxguid.lib sdl_sound_static.lib opengl32.lib glaux.lib glu32.lib"
-				GenerateDebugInformation="TRUE"/>
+				AdditionalDependencies="odbc32.lib odbccp32.lib SDLmain.lib sdl.lib winmm.lib dxguid.lib opengl32.lib glaux.lib glu32.lib  SDL_mixer.lib"
+				GenerateDebugInformation="TRUE"
+				SubSystem="1"/>
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
@@ -424,6 +427,9 @@
 					RelativePath="..\..\src\startupMenu.c">
 				</File>
 				<File
+					RelativePath="..\..\src\systemMenu.c">
+				</File>
+				<File
 					RelativePath="..\..\src\tatou.c">
 				</File>
 				<File
@@ -488,6 +494,9 @@
 		<Filter
 			Name="headers"
 			Filter="">
+			<File
+				RelativePath="..\..\src\systemMenu.h">
+			</File>
 			<Filter
 				Name="debugger"
 				Filter="">

@@ -474,11 +474,8 @@ void processTrack(void)
     
           if(roomNumber != currentProcessedActorPtr->room)
           {
-            char* roomDestDataPtr = (char*)getRoomData(roomNumber);
-            char* roomSourceDataPtr = (char*)getRoomData(currentProcessedActorPtr->room);
-
-            x -= ((*(short int*)(roomSourceDataPtr+4)) - (*(short int*)(roomDestDataPtr+4))) * 10;
-            z -= ((*(short int*)(roomSourceDataPtr+8)) - (*(short int*)(roomDestDataPtr+8))) * 10;
+            x -= (roomDataTable[currentProcessedActorPtr->room].worldX - roomDataTable[roomNumber].worldX) * 10;
+            z -= (roomDataTable[currentProcessedActorPtr->room].worldZ - roomDataTable[roomNumber].worldZ) * 10;
           }
 
           distanceToPoint = computeDistanceToPoint( currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,

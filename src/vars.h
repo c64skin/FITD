@@ -491,7 +491,7 @@ extern short int shakeVar1;
 extern short int shakingAmplitude;
 extern unsigned int timerFreeze1;
 
-extern char* hardColTable[30];
+extern hardColStruct* hardColTable[3];
 
 extern short int hardColVar1;
 extern short int hardColVar2;
@@ -513,6 +513,18 @@ extern int clipLeft;
 extern int clipTop;
 extern int clipRight;
 extern int clipBottom;
+
+#ifdef INTERNAL_DEBUGGER
+enum backgroundModeEnum
+{
+  backgroundModeEnum_2D,
+  backgroundModeEnum_3D,
+};
+
+typedef enum backgroundModeEnum backgroundModeEnum;
+
+extern backgroundModeEnum backgroundMode;
+#endif
 
 #endif
 
