@@ -791,7 +791,7 @@ void executeMusicCommand(channelTable2Element* entry)
 
     entry->varE--; // voice delay
 
-    if(entry->varE<0)
+    if(entry->varE<=0)
     {
       entry->varE = entry->var10;
     }
