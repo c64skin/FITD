@@ -49,6 +49,12 @@ int boneRotateYSin;
 int boneRotateZCos;
 int boneRotateZSin;
 
+char primBuffer[8000];
+
+char* tempOutPtr;
+
+int renderVar3;
+
 void transformPoint(int* ax, int* bx, int* cx)
 {
 	int x;
@@ -344,6 +350,8 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 		si += 0x10;
 	}
 
+	//(*ptr) = si;
+
 	{
 		numPointInPoly = numOfPoints;
 		char* ptr = (char*)pointBuffer;
@@ -541,15 +549,275 @@ int prerenderFlag0(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr
 		var1--;
 		if(var1==0)
 		{
+			tempOutPtr = ptr;
 			return(1);
 		}
 
 	}while(renderVar1 == 0);
 
+	tempOutPtr = ptr;
 	renderVar1 = 2;
 
 	return(0);
 }
+
+char* primVar1;
+char* primVar2;
+
+void primFunctionDefault(int primType,char** ptr,char** out)
+{
+	printf("UnHandled primType %d\n",primType);
+	exit(1);
+}
+
+void primType0(int primType, char** ptr, char** out) // line untested
+{
+	primVar1 = *(out);
+	*(short int*)(*out) = *(short int*)(*ptr);
+	*out+=2;
+	*ptr+=3;
+
+	int ax = *(short int*)(*ptr);
+	*ptr+=2;
+
+	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
+	ax+=2;
+	*out+=2;
+	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Y
+	ax+=2;
+	*out+=2;
+	int depth1 = *(short int*)(((char*)renderPointList) + ax); // Z
+	ax+=2;
+
+	ax = *(short int*)(*ptr);
+	*ptr+=2;
+
+	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
+	ax+=2;
+	*out+=2;
+	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Y
+	ax+=2;
+	*out+=2;
+	int depth2 = *(short int*)(((char*)renderPointList) + ax); // Z
+	ax+=2;
+
+	primVar2 = *out;
+
+	int depthLow;
+	int depthHi;
+
+	if(depth1 <= depth2)
+	{
+		depthLow = depth1;
+		depthHi = depth2;
+	}
+	else
+	{
+		depthLow = depth2;
+		depthHi = depth1;
+	}
+
+	if(depthLow<=0) // behind camera
+	{
+		*out = primVar1; // do not add the prim
+	}
+	else 
+	{
+		numOfPolyToRender++;
+
+		*out = renderVar2;
+
+		*(short int*)(*out) = depthHi;
+		*out+=2;
+		*(short int*)(*out) = depthHi;
+		*out+=2;
+		*(short int*)(*out) = 0;
+		*out+=2;
+		*(char**)(*out) = primVar1;
+		*out+=4;
+
+		renderVar2 = *out;
+		*out = primVar2;
+	}
+}
+
+void primType1(int primType, char** ptr, char** out)
+{
+	primVar1 = *out;
+
+	int ax = **ptr;
+	**out = ax;
+	int cx = ax;
+	(*out)++;
+	(*ptr)++;
+
+	*(short int*)(*out) = *(short int*)(*ptr);
+	*out+=3;
+	*ptr+=2;
+
+	int min = -0x8300;
+	int max = 0x8300;
+
+	int i;
+
+	char* saveDi = *out;
+
+	for(i=0;i<cx;i++)
+	{
+		int pointNumber = *(short int*)(*ptr);
+		*ptr+=2;
+
+		*(short int*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber); // X
+		ax+=2;
+		*out+=2;
+		*(short int*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber); // Y
+		ax+=2;
+		*out+=2;
+		int depth = *(short int*)(((char*)renderPointList) + pointNumber); // Z
+		ax+=2;
+
+		if(depth>min)
+			min = depth;
+		if(depth<max)
+			max = depth;
+	}
+
+	primVar2 = *out;
+
+	*out = saveDi;
+
+	if(min<=0) // behind camera
+	{
+		*out = primVar1; // do not add the prim
+	}
+	else
+	{
+		renderVar3 = max;
+
+		int bx = *(short int*)((*out)+4) - *(short int*)((*out));
+		int ax = *(short int*)((*out)+2) - *(short int*)((*out)+10);
+
+		ax *= bx;
+
+		int prod1 = ax;
+
+		int cx = *(short int*)((*out)+6) - *(short int*)((*out)+2);
+		ax = *(short int*)((*out)) - *(short int*)((*out)+8);
+
+		ax *= cx;
+
+		int prod2 = ax;
+
+		int prod = prod2 - prod1;
+
+		if(prod<0)
+		{
+			*out = primVar1; // do not add the prim
+		}
+		else
+		{
+			numOfPolyToRender++;
+
+			*(out) = renderVar2;
+
+			*(short int*)(*out) = renderVar3;
+			*out+=2;
+			*(short int*)(*out) = renderVar3;
+			*out+=2;
+			*(short int*)(*out) = 1;
+			*out+=2;
+
+			*(char**)(*out) = primVar1;
+			*out+=4;
+
+			renderVar2 = *out;
+			*out = primVar2;
+		}
+	}
+}
+
+void line(int x1, int y1, int x2, int y2, char c);
+
+void renderStyle0(char* buffer)
+{
+	buffer++;
+
+	char color = *(buffer++);
+
+	short int X1 = *(short int*)buffer;
+	buffer+=2;
+	short int Y1 = *(short int*)buffer;
+	buffer+=2;
+	short int X2 = *(short int*)buffer;
+	buffer+=2;
+	short int Y2 = *(short int*)buffer;
+	buffer+=2;
+
+	line(X1,Y1,X2,Y2,color);
+}
+
+void renderStyle1(char* buffer)
+{
+}
+
+void defaultRenderFunction(char* buffer)
+{
+	printf("Unsupported renderType\n");
+}
+
+typedef void (*renderFunction)(char* buffer);
+
+renderFunction renderFunctions[]={
+	renderStyle0,
+	renderStyle1,
+	defaultRenderFunction,
+	defaultRenderFunction,
+	renderStyle1,
+	defaultRenderFunction,
+	defaultRenderFunction,
+	defaultRenderFunction,
+};
+
+typedef void (*primFunction)(int primType,char** ptr, char** out);
+
+primFunction primFunctionTable[]={
+	primType0,
+	primType1,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+	primFunctionDefault,
+};
 
 int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 {
@@ -575,17 +843,87 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 	
 	if(modelFlags&2)
 	{
-		computeModel(x,y,z,alpha,beta,gamma,modelPtr,ptr);
+		if(!computeModel(x,y,z,alpha,beta,gamma,modelPtr,ptr))
+		{
+			BBox3D3 = -32000;
+			BBox3D4 = -32000;
+			BBox3D1 = 32000;
+			BBox3D2 = 32000;
+			return(2);
+		}
 	}
 	else
 	if(!(modelFlags&4))
 	{
-		prerenderFlag0(x,y,z,alpha,beta,gamma,modelPtr,ptr);
+		if(!prerenderFlag0(x,y,z,alpha,beta,gamma,modelPtr,ptr))
+		{
+			BBox3D3 = -32000;
+			BBox3D4 = -32000;
+			BBox3D1 = 32000;
+			BBox3D2 = 32000;
+			return(2);
+		}
+	}
+	else
+	{
+		printf("unsupported model type prerenderFlag4 in renderer !\n");
+
+		BBox3D3 = -32000;
+		BBox3D4 = -32000;
+		BBox3D1 = 32000;
+		BBox3D2 = 32000;
+		return(2);
+	}
+
+	ptr = tempOutPtr;
+	int numPrim = *(short int*)ptr;
+	ptr+=2;
+
+	if(!numPrim)
+	{
+		BBox3D3 = -32000;
+		BBox3D4 = -32000;
+		BBox3D1 = 32000;
+		BBox3D2 = 32000;
+		return(2);
+	}
+
+	int i;
+	char* out = primBuffer;
+
+	for(i=0;i<numPrim;i++)
+	{
+		char primType = *(ptr++);
+
+		primFunctionTable[primType](primType,&ptr,&out);
+	}
+
+	// TODO: poly sorting by depth
+
+	char* source = renderBuffer;
+
+	if(!numOfPolyToRender)
+	{
+		BBox3D3 = -32000;
+		BBox3D4 = -32000;
+		BBox3D1 = 32000;
+		BBox3D2 = 32000;
+		return(1); // model ok, but out of screen
+	}
+
+	for(i=0;i<numOfPolyToRender;i++)
+	{
+		source+=4;
+
+		int renderType = *(short int*)(source);
+		source+=2;
+		char* bufferSource = *(char**)(source);
+		source+=4;
+
+		renderFunctions[renderType](bufferSource);
 	}
 
 //DEBUG
-	int i;
-
 	for(i=0;i<numPointInPoly;i++)
 	{
 		int x;
