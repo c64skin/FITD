@@ -673,10 +673,10 @@ void primType1(int primType, char** ptr, char** out) // poly
 		*(short int*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber); // X
 		ax+=2;
 		*out+=2;
-		*(short int*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber); // Y
+		*(short int*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber + 2); // Y
 		ax+=2;
 		*out+=2;
-		int depth = *(short int*)(((char*)renderPointList) + pointNumber); // Z
+		int depth = *(short int*)(((char*)renderPointList) + pointNumber + 4); // Z
 		ax+=2;
 
 		if(depth<min)
