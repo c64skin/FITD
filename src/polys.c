@@ -1,10 +1,10 @@
 typedef char ColorP;
 void hline(int x1, int x2, int y, ColorP c);
 void line(int x1, int y1, int x2, int y2, ColorP c);
-
+void pixel(int x, int y, ColorP c);
 
 #include <stdio.h>
-#include <assert.h>
+#include <stdlib.h>
 #include <math.h>
 
 #define SCREENHEIGHT 200
@@ -22,9 +22,21 @@ void fillpoly(short int * datas, int n, ColorP c) {
     int i, j, k, dir = 1;
     double step, curx;
     
-//    printf("fillpoly starting\n");
+//    printf("fillpoly starting with n = %i dots\n", n);
     
-    assert(n >= 3);
+    if (n <= 2) {
+	printf("Désolé Vincent, tu m'envoies une ligne ou un point là ;-)\n");
+	switch (n) {
+	case 0:
+	    return;
+	case 1:
+	    pixel(datas[0], datas[1], c);
+	    return;
+	case 2:
+	    line(datas[0], datas[1], datas[2], datas[3], c);
+	    return;
+	}
+    }
     
     // Reinit array counters
     
@@ -37,17 +49,7 @@ void fillpoly(short int * datas, int n, ColorP c) {
     x2 = datas[n * 2 - 2];
     y2 = datas[n * 2 - 1];
     
-    for (k = 0; k < n; k++) {
-	if (n == 4) {
-	    switch (k) {
-	    case 0: i = 0; break;
-	    case 1: i = 1; break;
-	    case 2: i = 2; break;
-	    case 3: i = 3; break;
-	    }
-	} else {
-	    i = k;
-	}
+    for (i = 0; i < n; i++) {
 	x1 = x2;
 	y1 = y2;
 	x2 = datas[i * 2];
@@ -57,9 +59,11 @@ void fillpoly(short int * datas, int n, ColorP c) {
 //	continue;
 	
 	if (y1 == y2) {
+//	    printf("Horizontal line. x1: %i, y1: %i, x2: %i, y2: %i\n", x1, y1, x2, y2);
 	    // Not sure if this is right.
 	    putdot(x1, y1);
-	    putdot(x2, y2);
+//	    putdot(x2, y2);
+	    dir = 0;
 	    continue;
 	}
 	
@@ -97,7 +101,7 @@ void fillpoly(short int * datas, int n, ColorP c) {
     x2 = datas[0];
     y2 = datas[1];
     
-    if (((y1 < y2) && (dir == -1)) || ((y1 > y2) && (dir == 1))) {
+    if (((y1 < y2) && (dir == -1)) || ((y1 >= y2) && (dir == 1))) {
 //	printf("Adding extra (%i, %i)\n", x1, y1);
 	putdot(x1, y1);
     }
@@ -120,8 +124,12 @@ void fillpoly(short int * datas, int n, ColorP c) {
     
     for (i = 0; i < SCREENHEIGHT; i++) {
 	if (counters[i]) {
-    	    for (j = 0; j < counters[i]; j += 2) {
+//	    printf("%i dots on line %i\n", counters[i], i);
+    	    for (j = 0; j < (counters[i] - 1); j += 2) {
+//		printf("Drawing line (%i, %i)-%i\n", dots[i][j], dots[i][j + 1], i);
 		hline(dots[i][j], dots[i][j + 1], i, c);
+		if ((!dots[i][j]) || !(dots[i][j + 1]))
+		    exit(-1);
 	    }
 	}
     }
