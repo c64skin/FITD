@@ -644,7 +644,7 @@ void flipScreen()
 		
 	}
 
-	osystem.setPalette(paletteRGBA);
+	//osystem.setPalette(paletteRGBA);
 	osystem.Flip((unsigned char*)scaledScreen);
 }
 
@@ -672,7 +672,7 @@ int processStartupMenu(void)
 
 	drawStartupMenu(0);
 	flipScreen();
-//	make3dTatouUnk1(16,0);
+	make3dTatouUnk1(16,0);
 	startChrono(&chrono);
 
 	while(evalChrono(&chrono) <= 0x10000) // exit loop only if time out or if choice made
@@ -738,7 +738,7 @@ int processStartupMenu(void)
 
 	if(selectedEntry==2) // if exit game, do not fade
 	{
-//		fadeOut(16,0);
+		fadeOut(16,0);
 	}
 
 	return(selectedEntry);
@@ -796,7 +796,7 @@ int selectHero(void)
 
 		if(var_4 != 0)
 		{
-			//make3dTatouUnk1(0x40,0);
+			make3dTatouUnk1(0x40,0);
 
 			do
 			{
@@ -842,12 +842,12 @@ int selectHero(void)
 			if(input3 == 1)
 			{
 				sysInitSub1(aux2,screen);
-//				fadeOut(0x40,0);
+				fadeOut(0x40,0);
 				return(-1);
 			}
 		}
 
-//		fadeOut(0x40,0);
+		fadeOut(0x40,0);
 		readVar = 0;
 
 		switch(choice)
@@ -883,7 +883,7 @@ int selectHero(void)
 
 	}
 
-	//fadeOut(0x40,0);
+	fadeOut(0x40,0);
 
 	sysInitSub1(aux2,screen);
 
@@ -1233,7 +1233,7 @@ pageChange:	if(lastPageReached)
 				if(mode!=1)
 				{
 					flipScreen();
-//								make3dTatouUnk1(16,0);
+					make3dTatouUnk1(16,0);
 				}
 				else
 				{
@@ -1361,7 +1361,7 @@ int makeIntroScreens(void)
 
 	data = loadPak("ITD_RESS",13);
 	copyToScreen(data+770,unkScreenVar);
-	//make3dTatouUnk1(8,0);
+	make3dTatouUnk1(8,0);
 	memcpy(screen,unkScreenVar,320*200);
 	flipScreen();
 	free(data);
@@ -2583,8 +2583,7 @@ void processTrack(void)
 
 					int x = *(short int*)(trackPtr);
 					trackPtr += 2;
-					//int y = *(short int*)(trackPtr);
-					trackPtr += 2;
+					int y = 0;
 					int z = *(short int*)(trackPtr);
 					trackPtr += 2;
 		
@@ -2600,6 +2599,7 @@ void processTrack(void)
 					int distanceToPoint = computeDistanceToPoint(	currentProcessedActorPtr->x + currentProcessedActorPtr->field_5A,
 																	currentProcessedActorPtr->z + currentProcessedActorPtr->field_5E,
 																	x,z );
+
 
 					if(distanceToPoint >= 400) // not yet at position
 					{
@@ -3061,7 +3061,7 @@ void mainDraw(int mode)
 			{
 				//makeBlackPalette();
 				flipScreen();
-				//make3dTatouUnk1(0x10,0);
+				make3dTatouUnk1(0x10,0);
 				lightVar2 = 0;
 			}
 			else
@@ -3362,6 +3362,12 @@ void copyZv(ZVStruct* source, ZVStruct* dest)
 	memcpy(dest,source,sizeof(ZVStruct));
 }
 
+void stopAnim(int actorIdx)
+{
+	actorTable[actorIdx].flags |= 0xC;
+	actorTable[actorIdx].flags &= 0xFFFE;
+}
+
 void processActor1(void)
 {
 	int var_42 = 0;
@@ -3381,7 +3387,8 @@ void processActor1(void)
 	{
 		if(var_6 == -2)
 		{
-			// TODO
+			stopAnim(currentProcessedActorIdx);
+			return;
 		}
 
 		if(currentProcessedActorPtr->END_FRAME == 0)
@@ -3566,7 +3573,7 @@ void processActor1(void)
 			{
 				currentProcessedActorPtr->field_40 &= 0xFFFD;
 
-				//anim(currentProcessedActorPtr->field_42, 1, -1);
+				anim(currentProcessedActorPtr->field_42, 1, -1);
 			}
 
 			currentProcessedActorPtr->field_22 += currentProcessedActorPtr->field_5A;
@@ -3581,7 +3588,7 @@ void processActor1(void)
 	}
 	else // not the end of anim
 	{
-		//if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->field_7A == 0))
+		if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->field_7A == 0))
 		{
 			currentProcessedActorPtr->field_22 += currentProcessedActorPtr->field_5A;
 			currentProcessedActorPtr->x += currentProcessedActorPtr->field_5A;

@@ -64,12 +64,163 @@ void paletteFill(void* palette, unsigned char r, unsigned char g, unsigned b)
 	}
 }
 
-void fadeIn(void* localPalette)
+void fadeInSub1(char* palette)
 {
-	flip();
-	memcpy(palette,localPalette,0x300);
-	flip();
-	// TODO: implement fade
+	int i;
+
+	for(i=0;i<256;i++)
+	{
+	/*	palette[i*3] >>=2;
+		palette[i*3+1] >>=2;
+		palette[i*3+2] >>=2; */
+	}
+}
+
+void blitPalette(char* palettePtr,unsigned char startColor,unsigned char nbColor)
+{
+	int i;
+	char paletteRGBA[256*4];
+
+	osystem.getPalette(paletteRGBA);
+
+	for(i=startColor;i<startColor+nbColor;i++)
+	{
+		paletteRGBA[i*4] = palettePtr[i*3];
+		paletteRGBA[i*4+1] = palettePtr[i*3+1];
+		paletteRGBA[i*4+2] = palettePtr[i*3+2];
+		paletteRGBA[i*4+3] = -1;
+	}
+
+	char* outPtr = scaledScreen;
+	char* inPtr = unkScreenVar;
+
+	for(i=0;i<200;i++)
+	{
+		int j;
+		char* copySource = outPtr;
+
+		for(j=0;j<320;j++)
+		{
+			*(outPtr++) = *(inPtr);
+			*(outPtr++) = *(inPtr++);
+		}
+
+		// copy line
+		for(j=0;j<640;j++)
+		{
+			*(outPtr++) = *(copySource++);
+		}
+		
+	}
+
+	osystem.setPalette(paletteRGBA);
+	osystem.Flip((unsigned char*)scaledScreen);
+}
+
+void flipOtherPalette(char* palettePtr)
+{
+	int i;
+	char paletteRGBA[256*4];
+
+	osystem.getPalette(paletteRGBA);
+
+	for(i=0;i<256;i++)
+	{
+		paletteRGBA[i*4] = palettePtr[i*3];
+		paletteRGBA[i*4+1] = palettePtr[i*3+1];
+		paletteRGBA[i*4+2] = palettePtr[i*3+2];
+		paletteRGBA[i*4+3] = -1;
+	}
+
+	char* outPtr = scaledScreen;
+	char* inPtr = unkScreenVar;
+
+	for(i=0;i<200;i++)
+	{
+		int j;
+		char* copySource = outPtr;
+
+		for(j=0;j<320;j++)
+		{
+			*(outPtr++) = *(inPtr);
+			*(outPtr++) = *(inPtr++);
+		}
+
+		// copy line
+		for(j=0;j<640;j++)
+		{
+			*(outPtr++) = *(copySource++);
+		}
+		
+	}
+
+	osystem.setPalette(paletteRGBA);
+	osystem.Flip((unsigned char*)scaledScreen);
+}
+
+void computeProportionalPalette(unsigned char* inPalette, unsigned char* outPalette, int coef)
+{
+	int i;
+
+	for(i=0;i<256;i++)
+	{
+		*(outPalette++) = ((*(inPalette++))*coef)>> 8;
+		*(outPalette++) = ((*(inPalette++))*coef)>> 8;
+		*(outPalette++) = ((*(inPalette++))*coef)>> 8;
+	}
+}
+
+void make3dTatouUnk1(int var1,int var2)
+{
+	char localPalette[0x300];
+	int i;
+	
+	//freezeTime();
+
+	if(paletteVar == 2) // only used for the ending ?
+	{
+	}
+	else
+	{
+		for(i=0;i<256;i+=var1)
+		{
+			computeProportionalPalette((unsigned char*)palette,(unsigned char*)localPalette,i);
+			fadeInSub1(localPalette);
+			flipOtherPalette(localPalette);
+		}
+	}
+
+	paletteVar = 1;
+
+	//unfreezeTime();
+}
+
+void fadeOut(int var1, int var2)
+{
+	char localPalette[0x300];
+	int i;
+	
+	//freezeTime();
+
+	for(i=256;i>=0;i-=var1)
+	{
+		computeProportionalPalette((unsigned char*)palette,(unsigned char*)localPalette,i);
+		fadeInSub1(localPalette);
+		flipOtherPalette(localPalette);
+	}
+
+	//unfreezeTime();
+}
+
+void fadeIn(void* sourcePal)
+{
+	char localPalette[0x300];
+
+	copyPalette((char*)sourcePal,localPalette);
+
+	fadeInSub1(localPalette);
+
+	flipOtherPalette(localPalette);
 }
 
 void flip()
@@ -211,19 +362,23 @@ int make3dTatou(void)
 
 	copyPalette(tatouPal,palette);
 	copyToScreen(tatou2d+770,unkScreenVar);
-	flip();
 	copyToScreen(unkScreenVar,aux2);
 
-	//make3dTatouUnk1(8,0);
+	make3dTatouUnk1(8,0);
 
 	startChrono(&localChrono);
 
 	do
 	{
 		process_events();
+		readKeyboard();
 
-		if(evalChrono(&localChrono)<=0x10) // avant eclair
+		if(evalChrono(&localChrono)<=180) // avant eclair
 		{
+			if(input2 || input1)
+			{
+				break;
+			}
 		}
 		else // eclair
 		{
@@ -280,15 +435,20 @@ int make3dTatou(void)
 	free(tatou3d);
 	free(tatou2d);
 
-	if(input2!=0 || input1 != 0 || inputKey != 0)
+	if(input2 || input1 || inputKey)
 	{
-//		fadeOut(32,0);
+		while(input2)
+		{
+			readKeyboard();
+		}
+
+		fadeOut(32,0);
 		copyPalette(paletteBackup,palette);
 		return(1);
 	}
 	else
 	{
-//		fadeOut(16,0);
+		fadeOut(16,0);
 		copyPalette(paletteBackup,palette);
 		return(0);
 	}

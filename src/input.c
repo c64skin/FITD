@@ -25,6 +25,9 @@ void readKeyboard(void)
 			case SDLK_RETURN:
 			    input2 = 0x1C;
 			    break;
+			case SDLK_ESCAPE:
+				input2 = 0x1B;
+				break;
 
 			case SDLK_UP:
 			    inputKey |= 1;

@@ -31,6 +31,7 @@ class OSystem
     void drawText(int X, int Y, char *text);
     void drawTextColor(int X, int Y, char *string, unsigned char R, unsigned char G, unsigned char B);
     void drawLine(int X1,int X2,int Y1,int Y2,unsigned char color, unsigned char* palette);
+	void getPalette(char* palette);
 //    void getMouseStatus(mouseStatusStruct * mouseData);
 
 	void set320x200Mode(bool mode);

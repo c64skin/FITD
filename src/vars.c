@@ -201,3 +201,5 @@ char* animVar1;
 char* animVar3;
 char* animVar4;
 
+int paletteVar;
+

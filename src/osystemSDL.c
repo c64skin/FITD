@@ -30,6 +30,7 @@ SDL_Surface *sdl_bufferRGBA;
 SDL_Surface *sdl_screen;	// that's the SDL global object for the screen
 SDL_Color sdl_colors[256];
 SDL_Surface *surfaceTable[16];
+char RGBA_Pal[256*4];
 //TTF_Font *font;
 
 void OSystem::delay(int time)
@@ -143,6 +144,7 @@ void OSystem::putpixel(int x, int y, int pixel)
 
 void OSystem::setPalette(byte * palette)
 {
+	memcpy(RGBA_Pal,palette,256*4);
    // int i;
     SDL_Color *sdl_colorsTemp = (SDL_Color *) palette;
 
@@ -151,6 +153,11 @@ void OSystem::setPalette(byte * palette)
     SDL_BlitSurface(sdl_buffer, NULL, sdl_screen, NULL);
 
     SDL_UpdateRect(sdl_screen, 0, 0, 0, 0);
+}
+
+void OSystem::getPalette(char* palette)
+{
+	memcpy(palette,RGBA_Pal,256*4);
 }
 
 void OSystem::setPalette320x200(byte * palette)

@@ -14,6 +14,8 @@ void process_events( void );
 void copyPalette(char* source, char* dest);
 void copyToScreen(char* source, char* dest);
 void makeRotationMtx(int x, int y, int z, int* xOut, int* yOut);
+void make3dTatouUnk1(int var1,int var2);
+void fadeOut(int var1, int var2);
 
 //////////////
 #endif
