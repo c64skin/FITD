@@ -1251,8 +1251,8 @@ typedef void (*renderFunction)(char* buffer);
 renderFunction renderFunctions[]={
   renderStyle0, // line
   renderStyle1, // poly
- // renderStyle2, // point
- // renderStyle3, // sphere
+  renderStyle2, // point
+  renderStyle3, // sphere
   renderStyle1,
   defaultRenderFunction,
   defaultRenderFunction,
@@ -1308,7 +1308,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
   char* out;
 
   char* source;
-#ifndef USE_GL
+#ifndef USE_GL2
   char sortedBuffer[32000];
 
   char* inBuffer;
@@ -1397,7 +1397,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
   }
 
   // TODO: poly sorting by depth
-#ifdef USE_GL
+#ifdef USE_GL2
   source = renderBuffer;
 #else
   inBuffer = renderBuffer;

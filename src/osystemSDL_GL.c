@@ -31,7 +31,7 @@ int osystem_mouseRight;
 int osystem_mouseLeft;
 
 unsigned int ditherTexture;
-unsigned int gouraudTexture;
+unsigned int gouraudTexture=0;
 
 struct quadStruct
 {
@@ -54,7 +54,9 @@ struct quadStruct
   int color;
   int transparency;
 
-  int depth;
+  int numPoint;
+
+  float depth;
   bool sorted;
 };
 
@@ -258,7 +260,7 @@ void osystem_init()  // that's the constructor of the system dependent
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);       // Black Background
   glMatrixMode(GL_PROJECTION);            // Select The Projection Matrix
   glLoadIdentity();                 // Reset The Projection Matrix
-  glOrtho(0,320,200,0,0.2,-50);
+  glOrtho(0,320,200,0,0.2,-50*1000);
   glMatrixMode(GL_MODELVIEW);             // Select The Modelview Matrix
   glLoadIdentity();                 // Reset The Modelview Matrix
 
@@ -309,10 +311,6 @@ void osystem_init()  // that's the constructor of the system dependent
 
 	  unsigned char* tempPtr = ditherMap;
 
-	  unsigned char localPalette[256*256*3];
-
-	  unsigned char* ptr = localPalette;
-
 	  for(i=0;i<256;i++)
 	  {
 		  for(j=0;j<256;j++)
@@ -337,22 +335,7 @@ void osystem_init()  // that's the constructor of the system dependent
 	  glBindTexture(GL_TEXTURE_2D, 0);
 
  	
-	  for(i=0;i<256;i++)
-	  {
-		  memcpy(ptr,palette,256*3);
-
-		  ptr+=256*3;
-	  }
-
-	  glGenTextures(1, &gouraudTexture);
-	  glBindTexture(GL_TEXTURE_2D, gouraudTexture);
-	  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-	  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-	  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, localPalette);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-	  glEnable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_2D);
 	  glEnable(GL_TEXTURE_1D);
   }
 
@@ -363,7 +346,31 @@ void osystem_init()  // that's the constructor of the system dependent
 
 void osystem_setPalette(byte * palette)
 {
+
+  int i;
+  unsigned char localPalette[256*256*4];
+  unsigned char* ptr = localPalette;
+
   memcpy(RGBA_Pal,palette,256*4);
+
+	for(i=0;i<256;i++)
+	{
+		memcpy(ptr,palette,256*4);
+
+		ptr+=256*4;
+	}
+
+  if(gouraudTexture)
+  {
+    glDeleteTextures(1,&gouraudTexture);
+  }
+	glGenTextures(1, &gouraudTexture);
+	glBindTexture(GL_TEXTURE_2D, gouraudTexture);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, localPalette);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void osystem_getPalette(char* palette)
@@ -486,9 +493,9 @@ void osystem_flip(unsigned char *videoBuffer)
 
   for(j=0;j<positionInQuadTable;j++)
   {
-    int bestDepth = -1;
+    float bestDepth = -10000;
     int color;
-    bestIdx = j;
+    bestIdx = 0;
 
     for(i=0;i<positionInQuadTable;i++)
     {
@@ -506,10 +513,11 @@ void osystem_flip(unsigned char *videoBuffer)
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glBegin(GL_QUADS);
-    glVertex3f(quadTable[bestIdx].x1,quadTable[bestIdx].y1,quadTable[bestIdx].z1/1000.f);
-    glVertex3f(quadTable[bestIdx].x2,quadTable[bestIdx].y2,quadTable[bestIdx].z2/1000.f);
-    glVertex3f(quadTable[bestIdx].x3,quadTable[bestIdx].y3,quadTable[bestIdx].z3/1000.f);
-    glVertex3f(quadTable[bestIdx].x4,quadTable[bestIdx].y4,quadTable[bestIdx].z4/1000.f);
+    glVertex3f(quadTable[bestIdx].x1,quadTable[bestIdx].y1,quadTable[bestIdx].z1);
+    glVertex3f(quadTable[bestIdx].x2,quadTable[bestIdx].y2,quadTable[bestIdx].z2);
+    glVertex3f(quadTable[bestIdx].x3,quadTable[bestIdx].y3,quadTable[bestIdx].z3);
+    if(quadTable[bestIdx].numPoint == 4)
+      glVertex3f(quadTable[bestIdx].x4,quadTable[bestIdx].y4,quadTable[bestIdx].z4);
     glEnd();
     glDisable(GL_POLYGON_OFFSET_FILL);
 
@@ -517,10 +525,10 @@ void osystem_flip(unsigned char *videoBuffer)
  /*   color = quadTable[bestIdx].color+3;
     glColor3ub(palette[color*3],palette[color*3+1],palette[color*3+2]);
     glBegin(GL_LINE_LOOP);
-    glVertex3f(quadTable[bestIdx].x1,quadTable[bestIdx].y1,-quadTable[bestIdx].z1/1000.f);
-    glVertex3f(quadTable[bestIdx].x2,quadTable[bestIdx].y2,-quadTable[bestIdx].z2/1000.f);
-    glVertex3f(quadTable[bestIdx].x3,quadTable[bestIdx].y3,-quadTable[bestIdx].z3/1000.f);
-    glVertex3f(quadTable[bestIdx].x4,quadTable[bestIdx].y4,-quadTable[bestIdx].z4/1000.f);
+    glVertex3f(quadTable[bestIdx].x1,quadTable[bestIdx].y1,-quadTable[bestIdx].z1);
+    glVertex3f(quadTable[bestIdx].x2,quadTable[bestIdx].y2,-quadTable[bestIdx].z2);
+    glVertex3f(quadTable[bestIdx].x3,quadTable[bestIdx].y3,-quadTable[bestIdx].z3);
+    glVertex3f(quadTable[bestIdx].x4,quadTable[bestIdx].y4,-quadTable[bestIdx].z4);
     glEnd(); */
   //  glEnable(GL_DEPTH_TEST);
 
@@ -743,7 +751,6 @@ void osystem_fillPoly(float* buffer, int numPoint, unsigned char color,u8 polyTy
 
   switch(polyType)
   {
-  default:
   case 0: // flat:
     {
       glColor4ub(palette[color*3],palette[color*3+1],palette[color*3+2],255);
@@ -751,7 +758,7 @@ void osystem_fillPoly(float* buffer, int numPoint, unsigned char color,u8 polyTy
 
       for(i=0;i<numPoint;i++)
       {
-        glVertex3f(buffer[0],buffer[1],buffer[2]/1000.f);
+        glVertex3f(buffer[0],buffer[1],buffer[2]);
         buffer+=3;
       }
 
@@ -786,10 +793,10 @@ void osystem_fillPoly(float* buffer, int numPoint, unsigned char color,u8 polyTy
 				float Y = *(readList++);
 				float Z = *(readList++);
 
-				//gluProject  ( X , Y, -Z/1000.f , modelMatrix , projMatrix , viewMatrix , &textureX , &textureY , &textureZ ); 
+				//gluProject  ( X , Y, -Z , modelMatrix , projMatrix , viewMatrix , &textureX , &textureY , &textureZ ); 
 
 				glTexCoord2f(X*200,Y*200);
-				glVertex3f(X,Y,Z/1000.f);
+				glVertex3f(X,Y,Z);
 			}
 
 			glEnd();
@@ -798,20 +805,93 @@ void osystem_fillPoly(float* buffer, int numPoint, unsigned char color,u8 polyTy
 			glBindTexture(GL_TEXTURE_2D, 0);
 			break;
 		}
-  case 2:
+  case 2: // trans
     {
-      glColor4ub(palette[color*3] ,palette[color*3+1],palette[color*3+2],128);
+      glColor4ub(palette[color*3],palette[color*3+1],palette[color*3+2],128);
       glBegin(GL_POLYGON);
 
       for(i=0;i<numPoint;i++)
       {
-        glVertex3f(buffer[0],buffer[1],buffer[2]/1000.f);
+        glVertex3f(buffer[0],buffer[1],buffer[2]);
         buffer+=3;
       }
 
       glEnd();
       break;
+ /*     float z1;
+      float z2;
+      float z3;
+      float z4;
+
+			GLdouble textureX = 0;
+			GLdouble textureY = 0;
+			GLdouble textureZ = 0;
+
+			GLdouble modelMatrix[16];
+			GLdouble projMatrix[16];
+			GLint viewMatrix[4];
+
+  		glGetDoublev(GL_MODELVIEW_MATRIX, modelMatrix);
+			glGetDoublev(GL_PROJECTION_MATRIX, projMatrix);
+			glGetIntegerv(GL_VIEWPORT, viewMatrix);
+
+      ASSERT(numPoint == 3 || numPoint == 4);
+
+      quadTable[positionInQuadTable].x1 = buffer[0];
+      quadTable[positionInQuadTable].y1 = buffer[1];
+      quadTable[positionInQuadTable].z1 = buffer[2];
+      gluProject  ( buffer[0] , buffer[1] , buffer[2] , modelMatrix , projMatrix , viewMatrix , &textureX , &textureY , &textureZ ); 
+      z1 = textureZ;
+
+      quadTable[positionInQuadTable].x2 = buffer[3];
+      quadTable[positionInQuadTable].y2 = buffer[4];
+      quadTable[positionInQuadTable].z2 = buffer[5];
+      gluProject  ( buffer[3] , buffer[4] , buffer[5] , modelMatrix , projMatrix , viewMatrix , &textureX , &textureY , &textureZ ); 
+      z2 = textureZ;
+
+      quadTable[positionInQuadTable].x3 = buffer[6];
+      quadTable[positionInQuadTable].y3 = buffer[7];
+      quadTable[positionInQuadTable].z3 = buffer[8];
+      gluProject  ( buffer[6] , buffer[7] , buffer[8] , modelMatrix , projMatrix , viewMatrix , &textureX , &textureY , &textureZ ); 
+      z3 = textureZ;
+
+      if(numPoint == 4)
+      {
+        quadTable[positionInQuadTable].x4 = buffer[9];
+        quadTable[positionInQuadTable].y4 = buffer[10];
+        quadTable[positionInQuadTable].z4 = buffer[11];
+        gluProject  ( buffer[9] , buffer[10] , buffer[11] , modelMatrix , projMatrix , viewMatrix , &textureX , &textureY , &textureZ ); 
+        z4 = textureZ;
+      }
+
+      quadTable[positionInQuadTable].color = color;
+      quadTable[positionInQuadTable].transparency = 128;
+
+      quadTable[positionInQuadTable].numPoint = numPoint;
+
+      quadTable[positionInQuadTable].sorted = false;
+
+      quadTable[positionInQuadTable].depth = z1 + z2 + z3;
+
+      if(numPoint == 4)
+        quadTable[positionInQuadTable].depth += z4;
+
+      quadTable[positionInQuadTable].depth/=numPoint;
+
+/*      if(buffer[5] > quadTable[positionInQuadTable].depth)
+        quadTable[positionInQuadTable].depth = (int)buffer[5];
+
+      if(buffer[8] > quadTable[positionInQuadTable].depth)
+        quadTable[positionInQuadTable].depth = (int)buffer[8];
+
+      if(numPoint == 4)
+      if(buffer[11] > quadTable[positionInQuadTable].depth)
+        quadTable[positionInQuadTable].depth = (int)buffer[11]; */
+
+      //positionInQuadTable++;
+      break;
     }
+  default:
 	case 4: // marbre
 		{
 			int numColorToGo;
@@ -846,7 +926,7 @@ void osystem_fillPoly(float* buffer, int numPoint, unsigned char color,u8 polyTy
         textureX = X;
         textureY = Y;
         textureZ = Z;
-			///	gluProject  ( X/1000.f , Y/1000.f , Z/1000.f , modelMatrix , projMatrix , viewMatrix , &textureX , &textureY , &textureZ ); 
+			///	gluProject  ( X , Y , Z , modelMatrix , projMatrix , viewMatrix , &textureX , &textureY , &textureZ ); 
 
 				if(textureY > maxY)
 					maxY = textureY;
@@ -874,7 +954,7 @@ void osystem_fillPoly(float* buffer, int numPoint, unsigned char color,u8 polyTy
 				float Y = *(readList++);
 				float Z = *(readList++);
 
-				//gluProject  ( X/1000.f , Y/1000.f , Z/1000.f , modelMatrix , projMatrix , viewMatrix , &textureX , &textureY , &textureZ ); 
+				//gluProject  ( X , Y , Z , modelMatrix , projMatrix , viewMatrix , &textureX , &textureY , &textureZ ); 
 
         textureX = X;
         textureY = Y;
@@ -886,7 +966,7 @@ void osystem_fillPoly(float* buffer, int numPoint, unsigned char color,u8 polyTy
 				glTexCoord1f(colorf/256);
 //				glColor3ub(palette[colorf*3],palette[colorf*3+1],palette[colorf*3+2]);
 
-				glVertex3f(X,Y,Z/1000.f);
+				glVertex3f(X,Y,Z);
 			}
 
 			glEnd();
@@ -903,8 +983,8 @@ void osystem_draw3dLine(float x1, float y1, float z1, float x2, float y2, float 
 
   glBegin(GL_LINES);
 
-  glVertex3f(x1,y1,z1/1000.f);
-  glVertex3f(x2,y2,z2/1000.f);
+  glVertex3f(x1,y1,z1);
+  glVertex3f(x2,y2,z2);
 
   glEnd();
 }
@@ -916,7 +996,7 @@ void osystem_cleanScreenKeepZBuffer()
   glDisable(GL_DEPTH_TEST);
   glColor4ub(255,255,255,255);
   glBindTexture(GL_TEXTURE_2D, backTexture);
-glBegin(GL_TRIANGLES);
+  glBegin(GL_TRIANGLES);
 
     glTexCoord2f(0,0); // triangle haut gauche
     glVertex3f(0,0,49);
@@ -930,7 +1010,7 @@ glBegin(GL_TRIANGLES);
     glTexCoord2f(640.f/1024.f,480.f/512.f);
     glVertex3f(640,480,49);
     glTexCoord2f(0.0f,480.f/512.f);
-    glVertex3f(0,480,49);
+    glVertex3f(0,480,49); 
 
   glEnd();
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -941,10 +1021,10 @@ void osystem_draw3dQuad(float x1, float y1, float z1, float x2, float y2, float 
 {
   glColor4ub(palette[(color+3)*3],palette[(color+3)*3+1],palette[(color+3)*3+2],255);
   glBegin(GL_LINE_LOOP);
-  glVertex3f(x1,y1,z1/1000.f);
-  glVertex3f(x2,y2,z2/1000.f);
-  glVertex3f(x3,y3,z3/1000.f);
-  glVertex3f(x4,y4,z4/1000.f);
+  glVertex3f(x1,y1,z1);
+  glVertex3f(x2,y2,z2);
+  glVertex3f(x3,y3,z3);
+  glVertex3f(x4,y4,z4);
   glEnd();
 
   if(transparency != 255)
@@ -968,6 +1048,8 @@ void osystem_draw3dQuad(float x1, float y1, float z1, float x2, float y2, float 
     quadTable[positionInQuadTable].color = color;
     quadTable[positionInQuadTable].transparency = transparency;
 
+    quadTable[positionInQuadTable].numPoint = 4;
+
     quadTable[positionInQuadTable].sorted = false;
 
     quadTable[positionInQuadTable].depth = (int)z1;
@@ -989,10 +1071,10 @@ void osystem_draw3dQuad(float x1, float y1, float z1, float x2, float y2, float 
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glBegin(GL_QUADS);
-    glVertex3f(x1,y1,z1/1000.f);
-    glVertex3f(x2,y2,z2/1000.f);
-    glVertex3f(x3,y3,z3/1000.f);
-    glVertex3f(x4,y4,z4/1000.f);
+    glVertex3f(x1,y1,z1);
+    glVertex3f(x2,y2,z2);
+    glVertex3f(x3,y3,z3);
+    glVertex3f(x4,y4,z4);
     glEnd();
     glDisable(GL_POLYGON_OFFSET_FILL);
   }
@@ -1005,7 +1087,7 @@ void osystem_drawSphere(float X, float Y, float Z, u8 color, float size)
 	glColor3ub(palette[color*3],palette[color*3+1],palette[color*3+2]);
 	glPushMatrix();
 
-	glTranslatef(X,Y,Z/1000.f);
+	glTranslatef(X,Y,Z);
 
   gluDisk(sphere,0,(float)size,10,10);
 
