@@ -1,3 +1,5 @@
+#include "common.h"
+
 short int cosTable[]={
 	4,
 	201,

@@ -46,6 +46,14 @@ int triangulate_polygon(int ncontours,int cntr[],double (*vertices)[2],int (*tri
 #include "cosTable.h"
 #include "hqr.h"
 #include "time.h"
+#include "font.h"
+#include "aitdBox.h"
+#include "save.h"
+#include "anim.h"
+#include "animAction.h"
+#include "actorList.h"
+#include "mainLoop.h"
+#include "inventory.h"
 
 // scripting
 #include "track.h"

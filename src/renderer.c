@@ -62,9 +62,9 @@ void fillpoly(short int * datas, int n, char c);
 #ifdef USE_GL
 void transformPoint(float* ax, float* bx, float* cx)
 {
-	int X = *ax;
-	int Y = *bx;
-	int Z = *cx;
+	int X = (int)*ax;
+	int Y = (int)*bx;
+	int Z = (int)*cx;
 	{
 		int* ax = &X;
 		int* bx = &Y;
@@ -118,9 +118,9 @@ void transformPoint(float* ax, float* bx, float* cx)
 		}
 	}
 
-	*ax = X;
-	*bx = Y;
-	*cx = Z;
+	*ax = (float)X;
+	*bx = (float)Y;
+	*cx = (float)Z;
 /*	float x = *ax;
 	float y = *bx;
 	float z = *cx;
@@ -475,9 +475,9 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 
 				transformPoint(&X,&Y,&Z);
 
-				*(outPtr++) = X;
-				*(outPtr++) = Y;
-				*(outPtr++) = Z;
+				*(outPtr++) = (short int)X;
+				*(outPtr++) = (short int)Y;
+				*(outPtr++) = (short int)Z;
 			}
 		}
 
@@ -513,20 +513,20 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 				*(outPtr2++) = transformedX;
 
 				if(transformedX < BBox3D1)
-					BBox3D1 = transformedX;
+					BBox3D1 = (int)transformedX;
 
 				if(transformedX > BBox3D3)
-					BBox3D3 = transformedX;
+					BBox3D3 = (int)transformedX;
 
 				transformedY = ((Y * cameraZ) / Z) + cameraCenterY;
 
 				*(outPtr2++) = transformedY;
 
 				if(transformedY < BBox3D2)
-					BBox3D2 = transformedY;
+					BBox3D2 = (int)transformedY;
 
 				if(transformedY > BBox3D4)
-					BBox3D4 = transformedY;
+					BBox3D4 = (int)transformedY;
 
 				*(outPtr2++) = Z;
 			}
@@ -663,20 +663,20 @@ int prerenderFlag0(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr
 			*(outPtr++) = transformedX;
 
 			if(transformedX < BBox3D1)
-				BBox3D1 = transformedX;
+				BBox3D1 = (int)transformedX;
 
 			if(transformedX > BBox3D3)
-				BBox3D3 = transformedX;
+				BBox3D3 = (int)transformedX;
 
 			transformedY = ((Y * cameraZ) / Z) + cameraCenterY;
 
 			*(outPtr++) = transformedY;
 
 			if(transformedY < BBox3D2)
-				BBox3D2 = transformedY;
+				BBox3D2 = (int)transformedY;
 
 			if(transformedY > BBox3D4)
-				BBox3D4 = transformedY;
+				BBox3D4 = (int)transformedY;
 
 			*(outPtr++) = Z;
 
@@ -727,7 +727,7 @@ void primType0(int primType, char** ptr, char** out) // line tested
 	*out+=sizeof(float);
 	*(float*)(*out) = renderPointList[ax/2+1]; // Y
 	*out+=sizeof(float);
-	depth1 = *(float*)(*out) = renderPointList[ax/2+2]; // Z
+	depth1 = (int)(*(float*)(*out) = renderPointList[ax/2+2]); // Z
 	*out+=sizeof(float);
 #else
 	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
@@ -748,7 +748,7 @@ void primType0(int primType, char** ptr, char** out) // line tested
 	*out+=sizeof(float);
 	*(float*)(*out) = renderPointList[ax/2+1]; // Y
 	*out+=sizeof(float);
-	depth2 = *(float*)(*out) = renderPointList[ax/2+2]; // Z
+	depth2 = (int)(*(float*)(*out) = renderPointList[ax/2+2]); // Z
 	*out+=sizeof(float);
 #else
 	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
@@ -836,7 +836,7 @@ void primType1(int primType, char** ptr, char** out) // poly
 		*(float*)(*out) = renderPointList[pointNumber/2+1]; // Y
 		ax+=2;
 		*out+=sizeof(float);
-		depth = *(float*)(*out) = renderPointList[pointNumber/2+2]; // Z
+		depth = (int)(*(float*)(*out) = renderPointList[pointNumber/2+2]); // Z
 		ax+=2;
 		*out+=sizeof(float);
 #else

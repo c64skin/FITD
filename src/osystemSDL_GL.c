@@ -142,8 +142,8 @@ void CALLBACK vertexCallback(GLvoid *vertex)
 	y = ptr[1];
 
 	glColor4ub(255,255,255,255);
-	glTexCoord2f(x/(float)1024,y/(float)512);
-	glVertex3f(x,y,-100);
+	glTexCoord2d(x/(float)1024,y/(float)512);
+	glVertex3d(x,y,-100);
 }
 
 
@@ -391,7 +391,7 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len)
 	Sound_Sample *sample = (Sound_Sample *)userdata;
 	Uint8* input = (Uint8*)sample->buffer;
 
-	if(posInStream+len < sample->buffer_size)
+	if((unsigned int)posInStream+len < sample->buffer_size)
 	{
 		memcpy(stream,input+posInStream,len);
 		posInStream+=len;
@@ -561,18 +561,18 @@ void osystem_cleanScreenKeepZBuffer()
 	glBegin(GL_TRIANGLES);
 
 		glTexCoord2f(0,0); // triangle haut gauche
-		glVertex3i(0,0,-100.0f);
+		glVertex3f(0,0,-100.0f);
 		glTexCoord2f(640.f/1024.f,0);
-		glVertex3i(640,0,-100.0f);
+		glVertex3f(640,0,-100.0f);
 		glTexCoord2f(0.0f,480.f/512.f);
-		glVertex3i(0,480,-100.0f);
+		glVertex3f(0,480,-100.0f);
 
 		glTexCoord2f(640.f/1024.f,0); // triangle haut gauche
-		glVertex3i(640,0,-100.0f);
+		glVertex3f(640,0,-100.0f);
 		glTexCoord2f(640.f/1024.f,480.f/512.f);
-		glVertex3i(640,480,-100.0f);
+		glVertex3f(640,480,-100.0f);
 		glTexCoord2f(0.0f,480.f/512.f);
-		glVertex3i(0,480,-100.0f);
+		glVertex3f(0,480,-100.0f);
 
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -601,16 +601,16 @@ void osystem_draw3dQuad(float x1, float y1, float z1, float x2, float y2, float 
 
 	quadTable[positionInQuadTable].sorted = false;
 
-	quadTable[positionInQuadTable].depth = z1;
+	quadTable[positionInQuadTable].depth = (int)z1;
 
 	if(z2 < quadTable[positionInQuadTable].depth)
-		quadTable[positionInQuadTable].depth = z2;
+		quadTable[positionInQuadTable].depth = (int)z2;
 
 	if(z3 < quadTable[positionInQuadTable].depth)
-		quadTable[positionInQuadTable].depth = z3;
+		quadTable[positionInQuadTable].depth = (int)z3;
 
 	if(z4 < quadTable[positionInQuadTable].depth)
-		quadTable[positionInQuadTable].depth = z4;
+		quadTable[positionInQuadTable].depth = (int)z4;
 
 	positionInQuadTable++;
 

@@ -1,6 +1,34 @@
 #ifndef _MAIN_
 #define _MAIN_
 
+void menuWaitVSync();
+void printTextSub5(int x, int y, int param, char* gfx);
+void flipScreen();
+void processActor1(void);
+void processActor2();
+void loadFloor(int floorNumber);
+void loadRoom(int roomNumber);
+void updateInHand(int objIdx);
+void setupCamera();
+void checkIfCameraChangeIsRequired(void);
+void updateAllActorAndObjects();
+void createActorList();
+void mainDraw(int mode);
+int processActor1Sub1(int actorIdx, ZVStruct* zvPtr);
+int checkLineProjectionWithActors( int actorIdx, int X, int Y, int Z, int beta, int room, int param );
+void getZvNormal(char* bodyPtr, ZVStruct* zvPtr);
+int checkForHardCol(ZVStruct* zvPtr, char* dataPtr);
+void removeObjFromInventory(int objIdx);
+void walkStep(int angle1, int angle2, int angle3);
+void objectHitActor(int x, int z);
+char* processActor2Sub(int x, int y, int z, char* zoneData);
+void initEngine(void);
+void initVars();
+void configureHqrHero(hqrEntryStruct* hqrPtr, char* name);
+void flushScreen(void);
+int parseAllSaves(int arg);
+textEntryStruct* getTextFromIdx(int index);
+
 extern char scaledScreen[640*400];
 
 void sysInit(void);

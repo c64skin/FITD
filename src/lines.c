@@ -1,3 +1,5 @@
+#include "common.h"
+
 #define ColorP char
 #define ENTER
 #define LEAVE

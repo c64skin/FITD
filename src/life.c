@@ -1432,7 +1432,7 @@ processOpcode:
 
 						time = evalChrono(&chrono);
 
-						if(time>lifeTempVar1)
+						if(time>(unsigned int)lifeTempVar1)
 							break;
 					}while(!input2 && !input1);
 

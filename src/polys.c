@@ -1,3 +1,5 @@
+#include "common.h"
+
 typedef char ColorP;
 void hline(int x1, int x2, int y, ColorP c);
 void line(int x1, int y1, int x2, int y2, ColorP c);
@@ -76,7 +78,7 @@ void fillpoly(short int * datas, int n, ColorP c) {
 	if (y1 < y2) {
 	    for (j = y1; j < y2; j++, curx += step) {
 //		printf("j = %i, curx = %f\n", j, curx);
-		putdot(curx + 0.5, j);
+		putdot((int)(curx + 0.5), j);
 	    }
 	    if (dir == -1) {
 //		printf("Adding extra (%i, %i)\n", x1, y1);
@@ -86,7 +88,7 @@ void fillpoly(short int * datas, int n, ColorP c) {
 	} else {
 	    for (j = y1; j > y2; j--, curx -= step) {
 //		printf("j = %i, curx = %f\n", j, curx);
-		putdot(curx + 0.5, j);
+		putdot((int)(curx + 0.5), j);
 	    }
 	    if (dir == 1) {
 //		printf("Adding extra (%i, %i)\n", x1, y1);

@@ -5,6 +5,10 @@
 
 #pragma pack(1)
 
+extern char* currentFoundBody;
+extern int currentFoundBodyIdx;
+extern int statusVar1;
+
 struct textEntryStruct
 {
 	short int index;
@@ -295,22 +299,6 @@ extern int currentMenuLeft;
 extern int currentMenuTop;
 extern int currentMenuRight;
 extern int currentMenuBottom;
-
-extern char* fontVar1;
-extern short int currentFontColor;
-extern char* fontVar4;
-extern char* fontVar5;
-extern short int fontVar6;
-
-extern short int fontSm1;
-extern short int fontSm2;
-extern short int fontSm3;
-extern short int fontSm4;
-extern short int fontSm5;
-extern short int fontSm6;
-extern short int fontSm7;
-extern short int fontSm8;
-extern short int fontSm9;
 
 extern textEntryStruct* tabTextes;
 extern char* systemTextes;
