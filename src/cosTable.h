@@ -1,1 +1,2 @@
 extern short int cosTable[];
+

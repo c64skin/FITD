@@ -3,8 +3,6 @@
 
 void readKeyboard(void)
 {
-    int find = 0;
-    char found = 0;
     int size;
     int j;
 

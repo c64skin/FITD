@@ -141,16 +141,6 @@ void OSystem::putpixel(int x, int y, int pixel)
     *p = pixel;
 }
 
-void OSystem::setColor(byte i, byte R, byte G, byte B)	// cette fonction est vraiment vraiment
-							// tres tres lente...
-{
-    sdl_colors[i].r = R;
-    sdl_colors[i].g = G;
-    sdl_colors[i].b = B;
-
-    SDL_SetColors(sdl_buffer, sdl_colors, i, 1);
-}
-
 void OSystem::setPalette(byte * palette)
 {
    // int i;

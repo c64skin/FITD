@@ -390,7 +390,7 @@ extern char* currentLifePtr;
 
 extern int setupCameraVar1;
 
-extern unsigned short int renderPointList[6400];
+extern short int renderPointList[6400];
 
 extern int numActorInList;
 extern int sortedActorTable[50];

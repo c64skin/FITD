@@ -1024,3 +1024,4 @@ short int cosTable[]={
 	-402,
 	-201,
 };
+

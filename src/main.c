@@ -61,7 +61,7 @@ int computeStringWidth(char* string)
 	int width = 0;
 	unsigned char character;
 
-	while(character = (unsigned char)*(string++))
+	while((character = ((unsigned char)(*(string++)))))
 	{
 		char* dataPtr;
 		unsigned short int data;
@@ -431,7 +431,7 @@ void renderText(int x, int y, char* surface, char* string)
 	fontVar6 = x;
 	fontSm7 = y;
 
-	while(character = *((unsigned char*)string++))
+	while((character = *((unsigned char*)(string++))))
 	{
 		char* dataPtr;
 		unsigned short int data;
@@ -1022,7 +1022,7 @@ int printText(int index, int left, int top, int right, int bottom, int mode, int
 
 parseSpe:	while(*var_1C2 == '#')
 			{
-				char* var_1BE = var_1C2;
+				//char* var_1BE = var_1C2;
 				var_1C2++;
 
 				switch(*(var_1C2++))
@@ -1931,7 +1931,7 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 			theEnd(1,hqrPtr->string);
 		}
 
-		unsigned int time = timer;
+		//unsigned int time = timer;
 
 		foundEntry = hqrSubPtr;
 
@@ -2053,11 +2053,11 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 
 	if(flag2 != -1)
 	{
-		char* bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
+		//char* bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
 
 		if(var2 != -1)
 		{
-			char* animPtr = HQR_Get(listAnim,var2);
+			//char* animPtr = HQR_Get(listAnim,var2);
 
 //			initAnimInBody(var3,animPtr,bodyPtr);
 
@@ -2096,7 +2096,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	startChrono(&actorPtr->ROOM_CHRONO);
 	startChrono(&actorPtr->CHRONO);
 
-	ZVStruct* zvPtr = &actorPtr->zv;
+	//ZVStruct* zvPtr = &actorPtr->zv;
 
 	switch(var1)
 	{
@@ -2255,9 +2255,9 @@ void updateAllActorAndObjects()
 							}
 						}
 
-						int var_C = currentObject->flags & 0xFFDF;
-						int var_E = currentObject->field_2;
-						int var_A = currentObject->field_26;
+						//int var_C = currentObject->flags & 0xFFDF;
+						//int var_E = currentObject->field_2;
+						//int var_A = currentObject->field_26;
 
 						int actorIdx = copyObjectToActor(	currentObject->field_2, currentObject->field_6, currentObject->foundName,
 															currentObject->flags & 0xFFDF,
@@ -2430,7 +2430,7 @@ int evalVar(void)
 		}
 		else
 		{
-			int actorIdx = currentLifeActorIdx;
+			//int actorIdx = currentLifeActorIdx;
 			actorStruct* actorPtr = currentLifeActorPtr;
 
 			var1--;
@@ -2583,7 +2583,7 @@ void processTrack(void)
 
 					int x = *(short int*)(trackPtr);
 					trackPtr += 2;
-					int y = *(short int*)(trackPtr);
+					//int y = *(short int*)(trackPtr);
 					trackPtr += 2;
 					int z = *(short int*)(trackPtr);
 					trackPtr += 2;
@@ -2709,7 +2709,7 @@ int anim(int animNum,int arg_2, int arg_4)
 void processLife(int lifeNum)
 {
 	int exitLife = 0;
-	int switchVal = 0;
+	//int switchVal = 0;
 	int var_6;
 
 	currentLifeActorIdx = currentProcessedActorIdx;
@@ -3445,7 +3445,7 @@ void processActor1(void)
 	else // animation
 	{
 		int var_4C = currentProcessedActorPtr->field_5A;
-		int var_4A = currentProcessedActorPtr->field_5C;
+		//int var_4A = currentProcessedActorPtr->field_5C;
 		int var_48 = currentProcessedActorPtr->field_5E;
 
 		currentProcessedActorPtr->END_FRAME = processAnim(currentProcessedActorPtr->FRAME, HQR_Get(listAnim, currentProcessedActorPtr->ANIM), HQR_Get(listBody, currentProcessedActorPtr->bodyNum));
@@ -3781,7 +3781,7 @@ void startGame(int startupFloor, int startupRoom, int allowSystemMenu)
 int main(int argc, char** argv)
 {
 	int startupMenuResult;
-	int protectionToBeDone = 1;
+//	int protectionToBeDone = 1;
 	char version[256];
 	getVersion(version);
 

@@ -178,7 +178,7 @@ char* currentLifePtr;
 
 int setupCameraVar1;
 
-unsigned short int renderPointList[6400];
+short int renderPointList[6400];
 
 int numActorInList;
 int sortedActorTable[50];

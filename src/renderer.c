@@ -113,7 +113,7 @@ int prerenderFlag0(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr
 	numPointInPoly = var1;
 //
 
-	unsigned short int* outPtr = renderPointList;
+	short int* outPtr = renderPointList;
 
 	do
 	{
