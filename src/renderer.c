@@ -686,6 +686,9 @@ void primType1(int primType, char** ptr, char** out) // dummy for the momment
 	primVar2 = *out;
 
 	*out = saveDi;
+
+	// debug: dummy
+	min = 0;
 	
 	if(min<=0) // behind camera
 	{
@@ -759,6 +762,9 @@ void primType2(int primType, char** ptr, char** out)
 	*out+=2;
 
 	primVar2 = *out;
+
+	//debug: dummy
+	ax2 = 0;
 
 	if(ax2<=0)
 	{
