@@ -1,5 +1,166 @@
 #include "common.h"
 
+short int specialTable[4] = {144, 192, 48, 112};
+
+void throwObj(int animThrow, int frameThrow, int arg_4, int objToThrowIdx, int throwRotated, int throwForce, int animNext)
+{
+	objectStruct* objPtr = &objectTable[objToThrowIdx];
+
+	if(anim(animThrow,2,animNext))
+	{
+		currentProcessedActorPtr->animActionANIM = animThrow;
+		currentProcessedActorPtr->animActionFRAME = frameThrow;
+		currentProcessedActorPtr->animActionType = 6;
+		currentProcessedActorPtr->field_98 = arg_4;
+		currentProcessedActorPtr->animActionParam = objToThrowIdx;
+		currentProcessedActorPtr->hitForce = throwForce;
+
+		if(!throwRotated)
+		{
+			objectTable[objToThrowIdx].gamma -= 0x100;
+		}
+
+		objectTable[objToThrowIdx].flags2 |= 0x1000;
+	}
+}
+
+void fire(int fireAnim, int X, int Y, int Z, int hitForce, int nextAnim)
+{
+	if(anim(fireAnim,2,nextAnim))
+	{
+		currentProcessedActorPtr->animActionANIM = fireAnim;
+		currentProcessedActorPtr->animActionFRAME = X;
+		currentProcessedActorPtr->animActionType = 4;
+		currentProcessedActorPtr->animActionParam = Z;
+		currentProcessedActorPtr->field_98 = Y;
+		currentProcessedActorPtr->hitForce = hitForce;
+
+	}
+}
+
+int randRange(int min, int max)
+{
+	return((rand()%(max - min)) + min);
+}
+
+int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, int beta, int gamma, ZVStruct* zvPtr)
+{
+	short int localSpecialTable[4];
+
+	memcpy(localSpecialTable, specialTable, 8);
+
+	actorStruct* currentActorPtr = actorTable;
+	int i;
+
+	for(i=0;i<50;i++) // count the number of active actors
+	{
+		if(currentActorPtr->field_0 == -1)
+			break;
+	}
+
+	if(i==50) // no free actor entry, abort
+	{
+		return(-1);
+	}
+
+	currentActorPtr->flags = 0x20;
+	currentActorPtr->field_0 = -2;
+	currentActorPtr->life = -1;
+	currentActorPtr->lifeMode = 2;
+	currentActorPtr->bodyNum = 0;
+	currentActorPtr->worldX = currentActorPtr->roomX = X;
+	currentActorPtr->worldY = currentActorPtr->roomY = Y;
+	currentActorPtr->worldZ = currentActorPtr->roomZ = Z;
+	currentActorPtr->stage = stage;
+	currentActorPtr->room = room;
+
+	if(currentDisplayedRoom != room)
+	{
+		char* etagePtr = etageVar0 + *(unsigned int*)(etageVar0 + 4*room);
+
+		currentActorPtr->worldX -= ((short int*)(cameraPtr+4) - (short int*)(etagePtr+4))*10;
+		currentActorPtr->worldY += ((short int*)(cameraPtr+6) - (short int*)(etagePtr+6))*10;
+		currentActorPtr->worldZ += ((short int*)(cameraPtr+8) - (short int*)(etagePtr+8))*10;
+	}
+
+	currentActorPtr->alpha = alpha;
+	currentActorPtr->beta = beta;
+	currentActorPtr->gamma = gamma;
+	currentActorPtr->modX = 0;
+	currentActorPtr->modY = 0;
+	currentActorPtr->modZ = 0;
+
+	ZVStruct* actorZvPtr = &currentActorPtr->zv;
+
+	copyZv(zvPtr, actorZvPtr);
+
+	switch(mode)
+	{
+	case 0:
+		{
+			actorZvPtr->ZVX1 -= X;
+			actorZvPtr->ZVX2 -= X;
+			actorZvPtr->ZVY1 -= Y;
+			actorZvPtr->ZVY2 -= Y;
+			actorZvPtr->ZVZ1 -= Z;
+			actorZvPtr->ZVZ2 -= Z;
+
+			currentActorPtr->FRAME = printTextSub1(hqrUnk,304);
+
+			char* flowPtr = printTextSub2(hqrUnk,currentActorPtr->FRAME);
+
+			if(!flowPtr)
+			{
+				currentActorPtr->field_0 = -1;
+				return(-1);
+			}
+
+			currentActorPtr->ANIM = mode;
+
+			*(short int*)flowPtr = localSpecialTable[rand()%3]; // type ? color ?
+			flowPtr+=2;
+			*(short int*)flowPtr = 30; // num of points
+			flowPtr+=2;
+
+			int j;
+
+			for(j=0;j<30;j++)
+			{
+				*(short int*)flowPtr = randRange(actorZvPtr->ZVX1, actorZvPtr->ZVX2); //X
+				flowPtr += 2;
+				*(short int*)flowPtr = randRange(actorZvPtr->ZVY1, actorZvPtr->ZVY2); //Y
+				flowPtr += 2;
+				*(short int*)flowPtr = randRange(actorZvPtr->ZVZ1, actorZvPtr->ZVZ2); //Z
+				flowPtr += 2;
+			}
+
+			for(j=0;j<30;j++)
+			{
+				*(short int*)flowPtr = randRange(150, 300); // ?
+				flowPtr += 2;
+				*(short int*)flowPtr = randRange(30, 80); // ?
+				flowPtr += 2;
+			}
+
+			actorZvPtr->ZVX1 = X - 10;
+			actorZvPtr->ZVX2 = X + 10;
+			actorZvPtr->ZVY1 = Y;
+			actorZvPtr->ZVY2 = Y - 1;
+			actorZvPtr->ZVZ1 = Z - 10;
+			actorZvPtr->ZVZ2 = Z + 10;
+
+			break;
+		}
+	default:
+		{
+			printf("Unsupported case %d in createFlow\n",mode);
+		}
+	}
+
+	actorTurnedToObj = 1;
+	return(i);
+}
+
 void getHardClip()
 {
 	ZVStruct* zvPtr = &currentProcessedActorPtr->zv;
@@ -251,6 +412,13 @@ void processLife(int lifeNum)
 								currentLifePtr+=2;
 
 								//objModifFlag1 = 1;
+
+								break;
+							}
+						case 0x30: // FOUND_NAME
+							{
+								objectTable[var_6].foundName = *(short int*)(currentLifePtr);
+								currentLifePtr+=2;
 
 								break;
 							}
@@ -766,8 +934,60 @@ processOpcode:
 				}
 			case 0x25:
 				{
-					printf("Special Opcode !\n");
-					exit(1);
+					lifeTempVar1 = *(short int*)(currentLifePtr) & 0x1D1;
+					currentLifePtr+=2;
+
+					switch(lifeTempVar1)
+					{
+					case 0:
+						{
+							createFlow(	0,
+										currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+										currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY,
+										currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
+										currentProcessedActorPtr->stage,
+										currentProcessedActorPtr->room,
+										currentProcessedActorPtr->alpha,
+										currentProcessedActorPtr->beta,
+										currentProcessedActorPtr->gamma,
+										&currentProcessedActorPtr->zv );
+							break;
+						}
+					case 1:
+						{
+							currentProcessedActorPtr = &actorTable[currentProcessedActorPtr->HIT_BY];
+
+							createFlow(	1,
+										currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX + currentProcessedActorPtr->field_9A,
+										currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY + currentProcessedActorPtr->field_9C,
+										currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ + currentProcessedActorPtr->field_9E,
+										currentProcessedActorPtr->stage,
+										currentProcessedActorPtr->room,
+										0,
+										-currentProcessedActorPtr->beta,
+										0,
+										NULL );
+							
+							currentProcessedActorPtr = currentLifeActorPtr;
+										
+
+							break;
+						}
+					case 4:
+						{
+							createFlow(	4,
+										currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+										currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY,
+										currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
+										currentProcessedActorPtr->stage,
+										currentProcessedActorPtr->room,
+										currentProcessedActorPtr->alpha,
+										currentProcessedActorPtr->beta,
+										currentProcessedActorPtr->gamma,
+										&currentProcessedActorPtr->zv );
+							break;
+						}
+					}
 					break;
 				}
 			case 0x27:
@@ -947,8 +1167,7 @@ processOpcode:
 					lifeTempVar6 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
-					printf("Fire\n");
-//					fire(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6);
+					fire(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6);
 					
 					break;
 				}
@@ -1031,10 +1250,17 @@ processOpcode:
 
 					break;
 				}
-			case 0x42:
+			case 0x42: // INVENTORY
 				{
 					statusScreenAllowed = *(short int*)currentLifePtr;
 					currentLifePtr+=2;
+					break;
+				}
+			case 0x43: // FOUND_WEIGHT
+				{
+					objectTable[currentProcessedActorPtr->field_0].positionInTrack = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
 					break;
 				}
 			case 0x47: // DEF_ZV
@@ -1063,8 +1289,8 @@ processOpcode:
 					lifeTempVar2 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
-					currentProcessedActorPtr->field_8E = 8;
-					currentProcessedActorPtr->field_94 = lifeTempVar1;
+					currentProcessedActorPtr->animActionType = 8;
+					currentProcessedActorPtr->animActionParam = lifeTempVar1;
 					currentProcessedActorPtr->hitForce = lifeTempVar2;
 					currentProcessedActorPtr->field_98 = -1;
 
@@ -1089,6 +1315,27 @@ processOpcode:
 			case 0x4B: // sample
 				{
 					currentLifePtr+=2;
+					break;
+				}
+			case 0x4C: // throw
+				{
+					lifeTempVar1 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar2 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar3 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar4 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar5 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar6 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+					lifeTempVar7 = *(short int*)(currentLifePtr);
+					currentLifePtr+=2;
+
+					throwObj(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6,lifeTempVar7);
+
 					break;
 				}
 			case 0x4D: // ? shaking related
@@ -1132,6 +1379,7 @@ processOpcode:
 						process_events();
 						readKeyboard();
 						unsigned int time;
+						timer = timeGlobal;
 
 						time = evalChrono(&chrono);
 
@@ -1139,7 +1387,7 @@ processOpcode:
 							break;
 					}while(!input2 && !input1);
 
-					//unfreezeTime();
+					unfreezeTime();
 
 					mainVar1 = 1;
 
@@ -1171,12 +1419,12 @@ processOpcode:
 
 					break;
 				}
-			case 0x52:
+			case 0x52: // cancel hit obj
 				{
-					if(currentProcessedActorPtr->field_8E == 8)
+					if(currentProcessedActorPtr->animActionType == 8)
 					{
-						currentProcessedActorPtr->field_8E = 0;
-						currentProcessedActorPtr->field_94 = 0;
+						currentProcessedActorPtr->animActionType = 0;
+						currentProcessedActorPtr->animActionParam = 0;
 						currentProcessedActorPtr->hitForce = 0;
 						currentProcessedActorPtr->field_98 = -1;
 					}

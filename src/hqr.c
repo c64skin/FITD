@@ -62,6 +62,22 @@ char* printTextSub2(hqrEntryStruct* hqrPtr, int index)
 	return(hqrPtr->dataPtr + ptr->offset);
 }
 
+void moveHqrEntry(hqrEntryStruct* hqrPtr, int index)
+{
+	hqrSubEntryStruct* hqrSubPtr = (hqrSubEntryStruct*)(((char*)hqrPtr)+sizeof(hqrEntryStruct));
+	hqrSubEntryStruct* hqrSubPtr2 = hqrSubPtr;
+
+	int size = hqrSubPtr[index].size;
+
+	if(hqrPtr->numUsedEntry - 1 <= index )
+	{
+
+	}
+
+	hqrPtr->numUsedEntry --;
+	hqrPtr->sizeFreeData += size;
+}
+
 char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 {
 	if(index<0)
@@ -80,7 +96,7 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 	}
 	else
 	{
-		//freezeTime();
+		freezeTime();
 		int size = getPakSize(hqrPtr->string,index);
 
 		if(size>=hqrPtr->maxFreeData)
@@ -88,14 +104,26 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 			theEnd(1,hqrPtr->string);
 		}
 
-		//unsigned int time = timer;
+		unsigned int time = timer;
 
 		foundEntry = hqrSubPtr;
 
 		while(size>hqrPtr->sizeFreeData || hqrPtr->numUsedEntry>= hqrPtr->numMaxEntry)
 		{
-			printf("Unimplemented code in HQR_Get\n");
-			exit(1);
+			int bestEntry = 0;
+			unsigned int bestTime = 0;
+			int entryIdx = 0;
+
+			while(entryIdx>hqrPtr->numUsedEntry)
+			{
+				if(time - foundEntry[entryIdx].lastTimeUsed > bestTime)
+				{
+					bestTime = time - foundEntry[entryIdx].lastTimeUsed;
+					bestEntry = entryIdx;
+				}
+			}
+
+			moveHqrEntry(hqrPtr,bestEntry);
 		}
 
 		char* ptr = hqrPtr->dataPtr + (hqrPtr->maxFreeData - hqrPtr->sizeFreeData);
@@ -114,6 +142,8 @@ char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
 
 		hqrPtr->numUsedEntry++;
 		hqrPtr->sizeFreeData -= size;
+
+		unfreezeTime();
 
 		return(ptr);
 	}

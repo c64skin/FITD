@@ -14,6 +14,7 @@ void foundObject(int objIdx, int param);
 void hit(int animNumber,int arg_2,int arg_4,int arg_6,int hitForce,int arg_A);
 int checkZvCollision(ZVStruct* zvPtr1,ZVStruct* zvPtr2);
 void getZvCube(char* bodyPtr, ZVStruct* zvPtr);
+void putAt(int objIdx, int objIdxToPutAt);
 
 ///
 int printText(int index, int left, int top, int right, int bottom, int mode, int color);

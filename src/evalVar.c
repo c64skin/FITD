@@ -300,10 +300,22 @@ int evalVar(void)
 						return 0;
 					}
 
-					int posRel = getPosRel(actorPtr, &actorTable[objectTable[objNum].ownerIdx]);
-					printf("PosRel: %d\n",posRel);
-					return(posRel);
+					return (getPosRel(actorPtr, &actorTable[objectTable[objNum].ownerIdx]));
 
+					break;
+				}
+			case 0x13:
+				{
+					if(input4 & 4)
+						return 4;
+					if(input4 & 8)
+						return 8;
+					if(input4 & 1)
+						return 1;
+					if(input4 & 2)
+						return 2;
+
+					return 0;
 					break;
 				}
 			case 0x14:
@@ -311,9 +323,13 @@ int evalVar(void)
 					return(button);
 					break;
 				}
-			case 0x15: // TODO
+			case 0x15:
 				{
-					return(-1);
+					int temp1 = actorPtr->COL_BY;
+					if(temp1 == -1)
+						return -1;
+
+					return actorTable[temp1].field_0;
 					break;
 				}
 			case 0x16:
@@ -334,6 +350,11 @@ int evalVar(void)
 			case 0x19:
 				{
 					return(inHand);
+					break;
+				}
+			case 0x1A:
+				{
+					return(actorPtr->hitForce);
 					break;
 				}
 			case 0x1C:

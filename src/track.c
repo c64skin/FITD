@@ -244,6 +244,8 @@ void manualRot(int param)
 	}
 }
 
+#define DISTANCE_TO_POINT_TRESSHOLD 400
+
 void processTrack(void)
 {
 	switch(currentProcessedActorPtr->trackMode)
@@ -418,7 +420,7 @@ void processTrack(void)
 																			x,z );
 
 
-					if(distanceToPoint >= 400) // not yet at position
+					if(distanceToPoint >= DISTANCE_TO_POINT_TRESSHOLD) // not yet at position
 					{
 						int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,

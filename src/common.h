@@ -31,6 +31,7 @@
 #include "version.h"
 #include "cosTable.h"
 #include "hqr.h"
+#include "time.h"
 
 // scripting
 #include "track.h"

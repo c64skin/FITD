@@ -31,7 +31,8 @@ char unkScreenVar[320*200];
 
 char rgbaBuffer[320*200*4];
 
-volatile int timer;
+unsigned int timer;
+volatile unsigned int timeGlobal;
 
 int currentMenuLeft;
 int currentMenuTop;

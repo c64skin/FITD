@@ -172,10 +172,10 @@ struct actorStruct // used to read data from file too
 	short int HARD_COL;
 	short int HIT;
 	short int HIT_BY;
-	short int field_8E;
-	short int field_90;
-	short int field_92;
-	short int field_94;
+	short int animActionType;
+	short int animActionANIM;
+	short int animActionFRAME;
+	short int animActionParam;
 	short int hitForce;
 	short int field_98;
 	short int field_9A;
@@ -262,7 +262,8 @@ extern char unkScreenVar[320*200];
 
 extern char rgbaBuffer[320*200*4];
 
-extern volatile int timer;
+extern unsigned int timer;
+extern volatile unsigned int timeGlobal;
 
 extern int currentMenuLeft;
 extern int currentMenuTop;

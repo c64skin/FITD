@@ -44,6 +44,9 @@ void readKeyboard(void)
 			case SDLK_LEFT:
 			    inputKey |= 4;
 			    break;
+			case SDLK_SPACE:
+				input1 = 1;
+				break;
 			}
 		}
 	}

@@ -19,6 +19,90 @@ int statusBottom;
 
 int statusVar1;
 
+void updateInHand(int objIdx)
+{
+	if(objIdx == -1)
+		return;
+
+	int foundLife = objectTable[objIdx].foundLife;
+
+	if(objectTable[objIdx].foundLife == -1)
+		return;
+
+	actorStruct* currentActorPtr = currentProcessedActorPtr;
+	int currentActorIdx = currentProcessedActorIdx;
+	int currentActorLifeIdx = currentLifeActorIdx;
+	actorStruct* currentActorLifePtr = currentLifeActorPtr;
+	int currentActorLifeNum = currentLifeNum;
+
+	int lifeOffset;
+
+	if(currentLifeNum != -1)
+	{
+		lifeOffset = (currentLifePtr - HQR_Get(listLife,currentActorLifeNum))/2;
+	}
+
+	int var_2 = 0;
+
+	int actorIdx = objectTable[objIdx].ownerIdx;
+
+	if(actorIdx==-1)
+	{
+		actorStruct* currentActorEntryPtr = &actorTable[49];
+		int currentActorEntry = 49;
+
+		while(currentActorEntry>=0)
+		{
+			if(currentActorEntryPtr->field_0 == -1)
+				break;
+
+			currentActorEntryPtr--;
+			currentActorEntry--;
+		}
+
+		if(currentActorEntry==-1) // no space, we will have to overwrite actor 49 !
+		{
+			currentActorEntry = 49;
+			currentActorEntryPtr = &actorTable[49];
+		}
+
+		actorIdx = currentActorEntry;
+		var_2 = 1;
+
+		currentProcessedActorPtr = &actorTable[actorIdx];
+		currentLifeActorPtr = &actorTable[actorIdx];
+		currentProcessedActorIdx = actorIdx;
+		currentLifeActorIdx = actorIdx;
+
+		currentProcessedActorPtr->field_0 = objIdx;
+		currentProcessedActorPtr->life = -1;
+		currentProcessedActorPtr->bodyNum = -1;
+		currentProcessedActorPtr->flags = 0;
+		currentProcessedActorPtr->trackMode = -1;
+		currentProcessedActorPtr->room = -1;
+		currentProcessedActorPtr->lifeMode = -1;
+		currentProcessedActorPtr->ANIM = -1;
+
+	}
+
+	processLife(foundLife);
+
+	if(var_2)
+	{
+		currentProcessedActorPtr->field_0 = -1;
+	}
+
+	currentProcessedActorPtr = currentActorPtr;
+	currentProcessedActorIdx = currentActorIdx;
+	currentLifeActorIdx = currentActorLifeIdx;
+	currentLifeActorPtr = currentActorLifePtr;
+
+	if(currentActorLifeNum != -1)
+	{
+		currentLifeNum = currentActorLifeNum;
+		currentLifePtr = HQR_Get(listLife,currentLifeNum) + lifeOffset * 2;
+	}
+}
 
 void sysInitSub1(char* var0, char* var1)
 {
@@ -783,8 +867,15 @@ int processStartupMenu(void)
 
 void preloadResource(void)
 {
+	char localPalette[768];
+
 	loadPakToPtr("ITD_RESS",3,aux);
 	copyPalette(aux,palette);
+
+	copyPalette(palette,localPalette);
+//	fadeInSub1(localPalette);
+
+	// to finish
 }
 
 void selectHeroSub1(int x1,int y1, int x2, int y2)
@@ -1586,7 +1677,7 @@ void loadRoom(int roomNumber)
 	int cameraVar2;
 	int currentCameraIdx;
 
-//	freezeTime();
+	freezeTime();
 	printf("Load room %d\n",roomNumber);
 
 	if(currentCamera == -1)
@@ -1684,7 +1775,7 @@ void loadRoom(int roomNumber)
 	startGameVar1 = var_1A;
 	mainVar1 = 1;
 	needChangeRoom = 0;
-//	unfreezeTime();
+	unfreezeTime();
 }
 
 void loadCamera(int cameraIdx)
@@ -1852,11 +1943,11 @@ void setupCameraSub1()
 	}
 }
 
-void updateAllActorAndObjectsSub1(int index)
+void updateAllActorAndObjectsSub1(int index) // remove actor
 {
 	actorStruct *actorPtr = &actorTable[index];
 
-	if(actorPtr->field_0 == -2)
+	if(actorPtr->field_0 == -2) // flow
 	{
 		actorPtr->field_0 = -1;
 
@@ -2234,7 +2325,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	actorPtr->trackMode = 0;
 	actorPtr->trackNumber = -1;
 
-	actorPtr->field_8E = 0;
+	actorPtr->animActionType = 0;
 	actorPtr->HIT = -1;
 	actorPtr->HIT_BY = -1;
 
@@ -2650,7 +2741,7 @@ void createActorList()
 
 void setupCamera()
 {
-//	freezeTime();
+	freezeTime();
 
 	currentCamera = startGameVar1;
 
@@ -2696,7 +2787,7 @@ void setupCamera()
 	}
 
 	mainVar1 = 0;
-//unfreezeTime();
+	unfreezeTime();
 }
 
 short int computeDistanceToPoint(int x1, int z1, int x2, int z2)
@@ -3166,6 +3257,25 @@ void drawZones()
 	}
 }
 
+void drawOverlayZones()
+{
+	char* etageData = etageVar0 + *(unsigned int*)(etageVar0 + actorTable[genVar9].room * 4);
+
+	etageData += *(short int*)etageData;
+
+	short int numEntry = *(short int*)(etageData);
+	etageData += 2;
+
+	int i;
+
+	for(i=0;i<numEntry;i++)
+	{
+		drawZone(etageData,60);
+		etageData+=16;
+	}
+
+}
+
 void mainDraw(int mode)
 {
 //	if(mode == 0)
@@ -3197,11 +3307,12 @@ void mainDraw(int mode)
 
 	int i;
 
-	drawHardCol();
+	//drawHardCol();
 	osystem.cleanScreenKeepZBuffer();
 
-	drawConverZones();
+	//drawConverZones();
 	//drawZones();
+	//drawOverlayZones();
 	
 
 #ifdef USE_GL
@@ -3710,11 +3821,11 @@ void take(int objIdx)
 
 	action = 0x800;
 
-//	updateInHand(objIdx);
+	updateInHand(objIdx);
 
 	if(objPtr->ownerIdx != -1)
 	{
-		updateAllActorAndObjectsSub1(objIdx);
+		updateAllActorAndObjectsSub1(objPtr->ownerIdx);
 	}
 
 	objPtr->flags2 &= 0xBFFF;
@@ -3736,7 +3847,7 @@ void foundObject(int objIdx, int param)
 
 	objectStruct* objPtr = &objectTable[objIdx];
 
-	if( param != 0 && !(objPtr->flags2 & 0xC000))
+	if( param != 0 && (objPtr->flags2 & 0xC000))
 	{
 		return;
 	}
@@ -3749,7 +3860,7 @@ void foundObject(int objIdx, int param)
 
 	objPtr->trackNumber = 0;
 
-	//freezeTime();
+	freezeTime();
 //	setupShaking(1000); // probably to remove the shaking when in foundObject screen
 
 	int var_2 = 0;
@@ -3786,8 +3897,14 @@ void foundObject(int objIdx, int param)
 
 	while(!var_C)
 	{
-		readKeyboard();
+#ifdef USE_GL
+		osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
+		osystem.startFrame();
+		osystem.cleanScreenKeepZBuffer();
+#endif
+
 		process_events();
+		readKeyboard();
 
 		input3 = input2;
 		input4 = inputKey;
@@ -3803,24 +3920,23 @@ void foundObject(int objIdx, int param)
 				}
 
 				var_C = 1;
-
-				if(var_6 != 2)
+			}
+			if(var_6 != 2)
+			{
+				if(input4&4)
 				{
-					if(input4&4)
-					{
-						var_6 = 0;
-					}
-
-					if(input4&8)
-					{
-						var_6 = 1;
-					}
+					var_6 = 0;
 				}
 
-				if(input3 == 28 || button !=0)
+				if(input4&8)
 				{
-					var_C = 1;
+					var_6 = 1;
 				}
+			}
+
+			if(input3 == 28 || button !=0)
+			{
+				var_C = 1;
 			}
 		}
 		else
@@ -3845,7 +3961,7 @@ void foundObject(int objIdx, int param)
 //		menuWaitVSync();
 	}
 
-	//unfreezeTime();
+	unfreezeTime();
 
 	if(var_6 == 1)
 	{
@@ -4686,7 +4802,7 @@ void makeStatusScreen(void)
 
 	statusVar1 = 0;
 
-	//freezeTime();
+	freezeTime();
 	//pauseShaking();
 
 	if(lightVar1!=0)
@@ -4708,6 +4824,7 @@ void makeStatusScreen(void)
 #ifdef USE_GL
 		osystem.CopyBlockPhys((unsigned char*)screen,0,0,320,200);
 		osystem.startFrame();
+		osystem.cleanScreenKeepZBuffer();
 #endif
 
 		readKeyboard();
@@ -4891,7 +5008,7 @@ void makeStatusScreen(void)
 		flipScreen();
 	}
 
-	//unfreezeTime();
+	unfreezeTime();
 
 	mainVar1 = 1;
 
@@ -4907,7 +5024,7 @@ void makeStatusScreen(void)
 
 	if(var_10 == 1)
 	{
-	//	updateInHand(var_18);
+		updateInHand(var_18);
 	}
 
 	//updateShaking();
@@ -5188,6 +5305,10 @@ void processActor2()
 		}
 	case 10:
 		{
+// FIXME: fix the stairs zone in green room
+			if(*(short int*) (ptr + 0xC) == 1 && currentProcessedActorPtr->zv.ZVZ1 >= -1600)
+				break;
+
 			int life = objectTable[currentProcessedActorPtr->field_0].field_24;
 
 			if(life==-1)
@@ -5201,35 +5322,220 @@ void processActor2()
 	}
 }
 
+int checkLineProjectionWithActors( int actorIdx, int X, int Y, int Z, int beta, int room, int param )
+{
+	ZVStruct localZv;
+
+	localZv.ZVX1 = X - param;
+	localZv.ZVX2 = X + param;
+	localZv.ZVY1 = Y - param;
+	localZv.ZVY2 = Y + param;
+	localZv.ZVZ1 = Z - param;
+	localZv.ZVZ2 = Z + param;
+
+	walkStep(param * 2, 0, beta);
+
+	int foundFlag = -2;
+
+	int tempX;
+	int tempZ;
+
+	while(foundFlag == -2)
+	{
+		localZv.ZVX1 += animMoveX;
+		localZv.ZVX2 += animMoveX;
+
+		localZv.ZVZ1 += animMoveY;
+		localZv.ZVZ2 += animMoveY;
+
+		tempX = X;
+		tempZ = Z;
+
+		X += animMoveX;
+		Z += animMoveY;
+
+		if(X > 20000 || X < -20000 || Z > 20000 || Z < -20000)
+		{
+			foundFlag = -1;
+			break;
+		}
+
+		if(checkForHardCol(&localZv, etageVar0 + *(unsigned int*)(etageVar0 + room *4)) <= 0)
+		{
+			foundFlag = -1;
+		}
+		else
+		{
+			actorStruct* currentActorPtr = actorTable;
+
+			int i;
+
+			for(i=0;i<50;i++)
+			{
+				if(currentActorPtr->field_0 != -1 && i != actorIdx && !currentActorPtr->flags & 0x20)
+				{
+					ZVStruct* zvPtr = &currentActorPtr->zv;
+
+					if(room != currentActorPtr->room)
+					{
+						ZVStruct localZv2;
+
+						copyZv(&localZv, &localZv2);
+						getZvRelativePosition(&localZv2, room, currentActorPtr->room);
+
+						if(!checkZvCollision(&localZv2,zvPtr))
+						{
+							currentActorPtr++;
+							continue;
+						}
+					}
+					else
+					{
+						if(!checkZvCollision(&localZv,zvPtr))
+						{
+							currentActorPtr++;
+							continue;
+						}
+					}
+
+					foundFlag = i;
+					break;
+				}
+				
+				currentActorPtr++;
+			}
+		}
+	}
+
+	animMoveX = tempX;
+	animMoveY = Y;
+	animMoveZ = tempZ;
+
+	return(foundFlag);
+}
+
+void putAt(int objIdx, int objIdxToPutAt)
+{
+	objectStruct* objPtr = &objectTable[objIdx];
+	objectStruct* objPtrToPutAt = &objectTable[objIdxToPutAt];
+
+	if(objPtrToPutAt->ownerIdx != -1)
+	{
+		actorStruct* actorToPutAtPtr = &actorTable[objPtrToPutAt->ownerIdx];
+
+		removeObjFromInventory(objIdx);
+
+		if(objPtr->ownerIdx == -1)
+		{
+			objPtr->x = actorToPutAtPtr->roomX;
+			objPtr->y = actorToPutAtPtr->roomY;
+			objPtr->z = actorToPutAtPtr->roomZ;
+			objPtr->room = actorToPutAtPtr->room;
+			objPtr->stage = actorToPutAtPtr->stage;
+			objPtr->alpha = actorToPutAtPtr->alpha;
+			objPtr->beta = actorToPutAtPtr->beta;
+			objPtr->gamma = actorToPutAtPtr->gamma;
+
+			objPtr->flags2 |= 0x4000;
+			objPtr->flags |= 0x80;
+
+//			objModifFlag1 = 1;
+//			objModifFlag2 = 1;
+		}
+		else
+		{
+			currentProcessedActorPtr->roomX = actorToPutAtPtr->roomX;
+			currentProcessedActorPtr->roomY = actorToPutAtPtr->roomY;
+			currentProcessedActorPtr->roomZ = actorToPutAtPtr->roomZ;
+			currentProcessedActorPtr->room = actorToPutAtPtr->room;
+			currentProcessedActorPtr->stage = actorToPutAtPtr->stage;
+			currentProcessedActorPtr->alpha = actorToPutAtPtr->alpha;
+			currentProcessedActorPtr->beta = actorToPutAtPtr->beta;
+			currentProcessedActorPtr->gamma = actorToPutAtPtr->gamma;
+
+			objectTable[currentProcessedActorPtr->field_0].flags2 |= 0x4000;
+			objectTable[currentProcessedActorPtr->field_0].flags |= 0x80;
+
+//			objModifFlag1 = 1;
+//			objModifFlag2 = 1;
+		}
+
+	}
+	else
+	{
+		removeObjFromInventory(objIdx);
+
+		if(objPtr->ownerIdx == -1)
+		{
+			objPtr->x = objPtrToPutAt->x;
+			objPtr->y = objPtrToPutAt->y;
+			objPtr->z = objPtrToPutAt->z;
+			objPtr->room = objPtrToPutAt->room;
+			objPtr->stage = objPtrToPutAt->stage;
+			objPtr->alpha = objPtrToPutAt->alpha;
+			objPtr->beta = objPtrToPutAt->beta;
+			objPtr->gamma = objPtrToPutAt->gamma;
+
+			objPtr->flags2 |= 0x4000;
+			objPtr->flags |= 0x80;
+
+//			objModifFlag1 = 1;
+//			objModifFlag2 = 1;
+		}
+		else
+		{
+			currentProcessedActorPtr->roomX = objPtrToPutAt->x;
+			currentProcessedActorPtr->roomY = objPtrToPutAt->y;
+			currentProcessedActorPtr->roomZ = objPtrToPutAt->z;
+			currentProcessedActorPtr->room = objPtrToPutAt->room;
+			currentProcessedActorPtr->stage = objPtrToPutAt->stage;
+			currentProcessedActorPtr->alpha = objPtrToPutAt->alpha;
+			currentProcessedActorPtr->beta = objPtrToPutAt->beta;
+			currentProcessedActorPtr->gamma = objPtrToPutAt->gamma;
+
+			objectTable[currentProcessedActorPtr->field_0].flags2 |= 0x4000;
+			objectTable[currentProcessedActorPtr->field_0].flags |= 0x80;
+
+//			objModifFlag1 = 1;
+//			objModifFlag2 = 1;
+		}
+	}
+}
+
+void objectHitActor(int x, int z)
+{
+}
+
 void processAnimAction(void)
 {
-	switch(currentProcessedActorPtr->field_8E)
+	switch(currentProcessedActorPtr->animActionType)
 	{
-	case 1:
+	case 1: // PRE_HIT
 		{
-			if(currentProcessedActorPtr->ANIM == currentProcessedActorPtr->field_90)
+			if(currentProcessedActorPtr->ANIM == currentProcessedActorPtr->animActionANIM)
 			{
-				currentProcessedActorPtr->field_8E = 10;
+				currentProcessedActorPtr->animActionType = 10;
 			}
 	
-			if(currentProcessedActorPtr->ANIM == currentProcessedActorPtr->field_90)
+			if(currentProcessedActorPtr->ANIM == currentProcessedActorPtr->animActionANIM)
 			{
-				if(currentProcessedActorPtr->FRAME == currentProcessedActorPtr->field_92)
+				if(currentProcessedActorPtr->FRAME == currentProcessedActorPtr->animActionFRAME)
 				{
-					currentProcessedActorPtr->field_8E = 2;
+					currentProcessedActorPtr->animActionType = 2;
 				}
 			}
 			else
 			{
-				currentProcessedActorPtr->field_8E = 0;
+				currentProcessedActorPtr->animActionType = 0;
+				return;
 			}
 			break;
 		}
-	case 2:
+	case 2: // HIT
 		{
-			if(currentProcessedActorPtr->ANIM != currentProcessedActorPtr->field_90)
+			if(currentProcessedActorPtr->ANIM != currentProcessedActorPtr->animActionANIM)
 			{
-				currentProcessedActorPtr->field_8E = 0;
+				currentProcessedActorPtr->animActionType = 0;
 			}
 
 			int x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
@@ -5238,7 +5544,9 @@ void processAnimAction(void)
 
 			ZVStruct rangeZv;
 
-			int range = currentProcessedActorPtr->field_94;
+			int range = currentProcessedActorPtr->animActionParam;
+
+			range = 2000;
 
 			rangeZv.ZVX1 = x - range;
 			rangeZv.ZVX2 = x + range;
@@ -5261,33 +5569,363 @@ void processAnimAction(void)
 
 				if(actorPtr2->flags & 1)
 				{
-					currentProcessedActorPtr->field_8E = 0;
+					currentProcessedActorPtr->animActionType = 0;
 					return;
 				}
 			}
+			break;
+		}
+	case 4: // PRE_FIRE
+		{
+			if(currentProcessedActorPtr->ANIM != currentProcessedActorPtr->animActionANIM)
+				return;
 
+			if(currentProcessedActorPtr->FRAME != currentProcessedActorPtr->animActionFRAME)
+				return;
 
+			currentProcessedActorPtr->animActionType = 5;
+	
+			break;
+		}
+	case 5: // FIRE
+		{
+			createFlow(	3,
+						currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A,
+						currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C,
+						currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E,
+						currentProcessedActorPtr->stage,
+						currentProcessedActorPtr->room,
+						0,
+						currentProcessedActorPtr->beta,
+						0,
+						NULL);
+
+			int touchedActor = checkLineProjectionWithActors(
+												currentProcessedActorIdx,
+												currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A,
+												currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C,
+												currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E,
+												currentProcessedActorPtr->beta - 0x100,
+												currentProcessedActorPtr->room,
+												currentProcessedActorPtr->animActionParam );
+
+			if(touchedActor == -1) // no one has been touched
+			{
+				createFlow(	2, animMoveX, animMoveY, animMoveZ, currentProcessedActorPtr->stage, currentProcessedActorPtr->room,
+							0, -currentProcessedActorPtr->beta, 0, NULL );
+
+				currentProcessedActorPtr->animActionType = 0;
+			}
+			else
+			{
+				createFlow(	2, animMoveX, animMoveY, animMoveZ, currentProcessedActorPtr->stage, currentProcessedActorPtr->room,
+							0, -currentProcessedActorPtr->beta, 0, NULL );
+
+				currentProcessedActorPtr->field_9A = animMoveX - currentProcessedActorPtr->roomX;
+				currentProcessedActorPtr->field_9C = animMoveY - currentProcessedActorPtr->roomY;
+				currentProcessedActorPtr->field_9E = animMoveZ - currentProcessedActorPtr->roomZ;
+
+				currentProcessedActorPtr->HIT = touchedActor;
+
+				actorTable[touchedActor].HIT_BY = currentProcessedActorIdx;
+				actorTable[touchedActor].hitForce = currentProcessedActorPtr->hitForce;
+
+				currentProcessedActorPtr->animActionType = 0;
+			}
+			break;
+		}
+	case 6: // PRE_THROW
+		{
+			if(currentProcessedActorPtr->ANIM == currentProcessedActorPtr->animActionANIM)
+			{
+				int objIdx = currentProcessedActorPtr->animActionParam;
+
+				objectStruct* objPtr = &objectTable[objIdx];
+
+				int x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
+				int y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
+				int z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
+
+				ZVStruct rangeZv;
+
+				getZvNormal(HQR_Get(listBody, objPtr->field_2),&rangeZv);
+
+				rangeZv.ZVX1 += x;
+				rangeZv.ZVX2 += x;
+				rangeZv.ZVY1 += y;
+				rangeZv.ZVY2 += y;
+				rangeZv.ZVZ1 += z;
+				rangeZv.ZVZ2 += z;
+
+				if(checkForHardCol(&rangeZv, etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4)))
+				{
+					currentProcessedActorPtr->animActionType = 0;
+					putAt(objIdx, currentProcessedActorPtr->field_0);
+				}
+				else
+				{
+					if(currentProcessedActorPtr->FRAME == currentProcessedActorPtr->animActionFRAME)
+					{
+						currentProcessedActorPtr->animActionType = 7;
+
+						int x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
+						int y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
+						int z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
+
+						removeObjFromInventory(objIdx);
+
+						objPtr->x = x;
+						objPtr->y = y;
+						objPtr->z = z;
+
+						objPtr->room = currentProcessedActorPtr->room;
+						objPtr->stage = currentProcessedActorPtr->stage;
+						objPtr->alpha = currentProcessedActorPtr->alpha;
+						objPtr->beta = currentProcessedActorPtr->beta;
+
+						objPtr->flags2 &= 0xBFFF;
+						objPtr->flags |= 0x85;
+						objPtr->flags &= 0xFFDF;
+
+						//objModifFlag1 = 1;
+					}
+				}
+			}
+			break;
+		}
+	case 7: // THROW
+		{
+			currentProcessedActorPtr->animActionType = 0;
+
+			int x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
+			int y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
+			int z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
+
+			int objIdx = currentProcessedActorPtr->animActionParam;
+
+			int actorIdx = objectTable[objIdx].ownerIdx;
+
+			if(actorIdx == -1)
+				return;
+
+			actorStruct* actorPtr = &actorTable[actorIdx];
+
+			actorPtr->roomX = x;
+			actorPtr->roomY = y;
+			actorPtr->roomZ = z;
+
+			getZvNormal(HQR_Get(listBody,actorPtr->bodyNum),&actorPtr->zv);
+
+			actorPtr->zv.ZVX1 += x;
+			actorPtr->zv.ZVX2 += x;
+			actorPtr->zv.ZVY1 += y;
+			actorPtr->zv.ZVY2 += y;
+			actorPtr->zv.ZVZ1 += z;
+			actorPtr->zv.ZVZ2 += z;
+
+			actorPtr->flags |= 1;
+			actorPtr->flags &= 0xFFF7;
+
+			objectTable[objIdx].x = x;
+			objectTable[objIdx].y = y;
+			objectTable[objIdx].z = z;
+
+			objectTable[objIdx].alpha = currentProcessedActorPtr->field_0; // hu ?
+
+			actorPtr->dynFlags = 0;
+			actorPtr->animActionType = 9;
+			actorPtr->animActionParam = 100;
+			actorPtr->hitForce = currentProcessedActorPtr->hitForce;
+			actorPtr->field_98 = -1;
+			actorPtr->speed = 3000;
+
+			startActorRotation(0, actorPtr->speed, 60, &actorPtr->speedChange);
 
 			break;
 		}
-	case 10:
+	case 8: // HIT_OBJ
 		{
-			if(currentProcessedActorPtr->ANIM == currentProcessedActorPtr->field_90)
+			break;
+		}
+	case 9: // during throw
+		{
+			objectStruct* objPtr = &objectTable[currentProcessedActorPtr->field_0];
+
+			ZVStruct rangeZv;
+			ZVStruct rangeZv2;
+
+			copyZv(&currentProcessedActorPtr->zv, &rangeZv);
+			copyZv(&currentProcessedActorPtr->zv, &rangeZv2);
+
+			int xtemp = currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+			int ytemp = currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+			int ztemp = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+
+			rangeZv2.ZVX1 -= xtemp;
+			rangeZv2.ZVX2 -= xtemp;
+			rangeZv2.ZVY1 -= ytemp;
+			rangeZv2.ZVY2 -= ytemp;
+			rangeZv2.ZVZ1 -= ztemp;
+			rangeZv2.ZVZ2 -= ztemp;
+
+			int x1 = objPtr->x;
+			int x2 = objPtr->x;
+			int x3 = objPtr->x;
+
+			int y1 = objPtr->y;
+			int y2 = objPtr->y;
+
+			int z1 = objPtr->z;
+			int z2 = objPtr->z;
+			int z3 = objPtr->z;
+
+			int step = 0;
+
+			animMoveY = 0;
+			animMoveX = 0;
+
+			do
 			{
-				if(currentProcessedActorPtr->FRAME == currentProcessedActorPtr->field_92)
+				walkStep(0,-step,currentProcessedActorPtr->beta);
+				step += 100;
+				x2 = x1 + animMoveX;
+				y2 = y1;
+				z2 = z1 + animMoveY;
+
+				copyZv(&rangeZv2,&rangeZv);
+
+				rangeZv.ZVX1 = x2 - 200;
+				rangeZv.ZVX2 = x2 + 200;
+				rangeZv.ZVY1 = y2 - 200;
+				rangeZv.ZVY2 = y2 + 200;
+				rangeZv.ZVZ1 = z2 - 200;
+				rangeZv.ZVZ2 = z2 + 200;
+
+				int collision =  processActor1Sub1(currentProcessedActorIdx,&rangeZv);
+
+				if(collision)
 				{
-					currentProcessedActorPtr->field_8E = 2;
+					currentProcessedActorPtr->field_9A = 0;
+					currentProcessedActorPtr->field_9C = 0;
+					currentProcessedActorPtr->field_9E = 0;
+
+					 int collision2 = collision;
+					 int i;
+
+					 for(i=0;i<collision;i++)
+					 {
+						 int currentActorCol = currentProcessedActorPtr->COL[i];
+
+						 if(actorTable[currentActorCol].field_0 == objPtr->alpha)
+						 {
+							 collision2--;
+							 objPtr->x = xtemp;
+							 objPtr->y = ytemp;
+							 objPtr->z = ztemp;
+
+							 return;
+						 }
+
+						 if(actorTable[currentActorCol].field_0 == defines.field_16)
+						 {
+							 objPtr->alpha = defines.field_16;
+							 currentProcessedActorPtr->beta += 0x200;
+							 xtemp = x3;
+							 ztemp = z3;
+
+							 currentProcessedActorPtr->worldX = currentProcessedActorPtr->roomX = x3;
+							 currentProcessedActorPtr->worldY = currentProcessedActorPtr->roomY = y1;
+							 currentProcessedActorPtr->worldZ = currentProcessedActorPtr->roomZ = z3;
+
+							 currentProcessedActorPtr->modX = 0;
+							 currentProcessedActorPtr->modZ = 0;
+
+							 copyZv(&rangeZv2, &rangeZv);
+
+							 rangeZv.ZVX1 += x3;
+							 rangeZv.ZVX2 += x3;
+							 rangeZv.ZVY1 += y1;
+							 rangeZv.ZVY2 += y1;
+							 rangeZv.ZVZ1 += z3;
+							 rangeZv.ZVZ2 += z3;
+
+							 copyZv(&rangeZv, &currentProcessedActorPtr->zv);
+
+							 objPtr->x = xtemp;
+							 objPtr->y = ytemp;
+							 objPtr->z = ztemp;
+
+							 return;
+
+						 }
+						 else
+						 {
+							 currentProcessedActorPtr->HIT = currentActorCol;
+							 actorStruct* actorPtr = &actorTable[currentActorCol];
+							 actorPtr->HIT_BY = currentProcessedActorIdx;
+							 actorPtr->hitForce = currentProcessedActorPtr->hitForce;
+						 }
+					 }
+
+					 if(collision2)
+					 {
+						 playSound(defines.field_12);
+						 objectHitActor(x3,z3);
+						 return;
+					 }
+				}
+
+				char* ptr = processActor2Sub(x2,y2,z2, etageVar0 + *(unsigned int*)(etageVar0+currentProcessedActorPtr->room *4));
+
+				if(ptr)
+				{
+					if(*(short int*)(ptr+0xE) == 0 || *(short int*)(ptr+0xE) == 10)
+					{
+						 playSound(defines.field_12);
+						 objectHitActor(x3,z3);
+						 return;
+					}
+				}
+
+				if(checkForHardCol(&rangeZv, etageVar0 + *(unsigned int*)(etageVar0+currentProcessedActorPtr->room *4)))
+				{
+					currentProcessedActorPtr->field_9A = 0;
+					currentProcessedActorPtr->field_9C = 0;
+					currentProcessedActorPtr->field_9E = 0;
+
+					playSound(defines.field_12);
+					objectHitActor(x3,z3);
+					return;
+				}
+			}while(		currentProcessedActorPtr->zv.ZVX1 - 100 > x2 ||
+						currentProcessedActorPtr->zv.ZVX2 + 100 < x2 ||
+						currentProcessedActorPtr->zv.ZVZ1 - 100 > z2 ||
+						currentProcessedActorPtr->zv.ZVZ2 + 100 < z2 );
+
+			objPtr->x = xtemp;
+			objPtr->y = ytemp;
+			objPtr->z = ztemp;
+
+			break;
+		}
+	case 10: // PRE_HIT_IN_GOOD_ANIM
+		{
+			if(currentProcessedActorPtr->ANIM == currentProcessedActorPtr->animActionANIM)
+			{
+				if(currentProcessedActorPtr->FRAME == currentProcessedActorPtr->animActionFRAME)
+				{
+					currentProcessedActorPtr->animActionType = 2;
 				}
 			}
 			else
 			{
-				currentProcessedActorPtr->field_8E = 0;
+				currentProcessedActorPtr->animActionType = 0;
 			}
 			break;
 		}
 	default:
 		{
-			printf("Unsupported processAnimAction %d\n",currentProcessedActorPtr->field_8E);
+			printf("Unsupported processAnimAction type %d\n",currentProcessedActorPtr->animActionType);
 			break;
 		}
 	}
@@ -5297,6 +5935,7 @@ void mainLoop(int allowSystemMenu)
 {
 	while(1)
 	{
+		timer = timeGlobal;
 		process_events();
 		readKeyboard();
 		input3 = input2;
@@ -5337,7 +5976,7 @@ void mainLoop(int allowSystemMenu)
 			action = 0;
 		}
 
-//		updateInHand(inHand);
+		updateInHand(inHand);
 
 		if(changeFloor == 0)
 		{
@@ -5380,7 +6019,7 @@ void mainLoop(int allowSystemMenu)
 						processActor2();
 					}
 
-					if(currentProcessedActorPtr->field_8E)
+					if(currentProcessedActorPtr->animActionType)
 					{
 						processAnimAction();
 					}
@@ -5961,11 +6600,10 @@ void hit(int animNumber,int arg_2,int arg_4,int arg_6,int hitForce,int arg_A)
 {
 	if(anim(animNumber, 0, arg_A))
 	{
-		currentProcessedActorPtr->field_90 = animNumber;
-		currentProcessedActorPtr->field_92 = arg_2;
-		currentProcessedActorPtr->field_8E = 1;
-		currentProcessedActorPtr->field_94 = arg_6;
-		currentProcessedActorPtr->field_90 = animNumber;
+		currentProcessedActorPtr->animActionANIM = animNumber;
+		currentProcessedActorPtr->animActionFRAME = arg_2;
+		currentProcessedActorPtr->animActionType = 1;
+		currentProcessedActorPtr->animActionParam = arg_6;
 		currentProcessedActorPtr->field_98 = arg_4;
 		currentProcessedActorPtr->hitForce = hitForce;
 	}

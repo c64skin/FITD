@@ -175,7 +175,7 @@ void make3dTatouUnk1(int var1,int var2)
 	char localPalette[0x300];
 	int i;
 	
-	//freezeTime();
+	freezeTime();
 
 	if(paletteVar == 2) // only used for the ending ?
 	{
@@ -194,7 +194,7 @@ void make3dTatouUnk1(int var1,int var2)
 
 	flip();
 
-	//unfreezeTime();
+	unfreezeTime();
 }
 
 void fadeOut(int var1, int var2)
@@ -202,7 +202,7 @@ void fadeOut(int var1, int var2)
 	char localPalette[0x300];
 	int i;
 	
-	//freezeTime();
+	freezeTime();
 
 	for(i=256;i>=0;i-=var1)
 	{
@@ -211,7 +211,7 @@ void fadeOut(int var1, int var2)
 		flipOtherPalette(localPalette);
 	}
 
-	//unfreezeTime();
+	unfreezeTime();
 }
 
 void fadeIn(void* sourcePal)
