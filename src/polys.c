@@ -53,8 +53,8 @@ void fillpoly(short int * datas, int n, ColorP c) {
 	x2 = datas[i * 2];
 	y2 = datas[i * 2 + 1];
 	
-	line(x1, y1, x2, y2, c);
-	continue;
+//	line(x1, y1, x2, y2, c);
+//	continue;
 	
 	if (y1 == y2) {
 	    // Not sure if this is right.
@@ -80,7 +80,7 @@ void fillpoly(short int * datas, int n, ColorP c) {
 	    }
 	    dir = 1;
 	} else {
-	    for (j = y1; j > y2; j--, curx += step) {
+	    for (j = y1; j > y2; j--, curx -= step) {
 		printf("j = %i, curx = %f\n", j, curx);
 		putdot(curx + 0.5, j);
 	    }
