@@ -135,9 +135,9 @@ int make3dTatou(void)
 	char paletteBackup[768];
 	unsigned int localChrono;
 
-	tatou2d = loadPakSafe("itd_ress",2);
-	tatou3d = loadPakSafe("itd_ress",0);
-	tatouPal = loadPakSafe("itd_ress",1);
+	tatou2d = loadPakSafe("ITD_RESS",2);
+	tatou3d = loadPakSafe("ITD_RESS",0);
+	tatouPal = loadPakSafe("ITD_RESS",1);
 
 	time = 8920;
 	deltaTime = 50;

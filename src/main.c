@@ -223,14 +223,14 @@ void sysInit(void)
 		theEnd(1,"BufferAnim");
 	}
 
-	fontData = loadPakSafe("itd_ress",5);
+	fontData = loadPakSafe("ITD_RESS",5);
 
 	initFont(fontData, 14);
 	initFont2(2,0);
 
-	aitdBoxGfx = loadPakSafe("itd_ress",4);
+	aitdBoxGfx = loadPakSafe("ITD_RESS",4);
 
-	priority = loadFromItd("Priority.ITD");
+	priority = loadFromItd("PRIORITY.ITD");
 
 	fHandle = fopen("DEFINES.ITD","rb");
 	if(!fHandle)
@@ -726,7 +726,7 @@ int processStartupMenu(void)
 
 void preloadResource(void)
 {
-	loadPakToPtr("itd_ress",3,aux);
+	loadPakToPtr("ITD_RESS",3,aux);
 	copyPalette(aux,palette);
 }
 
@@ -757,7 +757,7 @@ int selectHero(void)
 		process_events();
 		readKeyboard();
 	
-		loadPakToPtr("itd_ress",10,aux);
+		loadPakToPtr("ITD_RESS",10,aux);
 		copyToScreen(aux,screen);
 		copyToScreen(screen,aux2);
 
@@ -836,7 +836,7 @@ int selectHero(void)
 			{
 				copyToScreen(unkScreenVar,screen);
 //				setClipSize(0,0,319,199);
-				loadPakToPtr("itd_ress",14,aux);
+				loadPakToPtr("ITD_RESS",14,aux);
 				selectHeroSub1(160,0,319,199);
 				copyToScreen(screen,aux);
 				printText(defines.field_C+1,165,5,314,194,2,15);
@@ -847,7 +847,7 @@ int selectHero(void)
 			{
 				copyToScreen(unkScreenVar,screen);
 //				setClipSize(0,0,319,199);
-				loadPakToPtr("itd_ress",14,aux);
+				loadPakToPtr("ITD_RESS",14,aux);
 				selectHeroSub1(0,0,159,199);
 				copyToScreen(screen,aux);
 				printText(defines.field_A+1,5,5,154,194,2,15);
@@ -1038,7 +1038,7 @@ parseSpe:	while(*var_1C2 == '#')
 							var_1C2 ++;
 						}
 
-						if(loadPakToPtr("itd_ress",9,aux2))
+						if(loadPakToPtr("ITD_RESS",9,aux2))
 						{
 						/*	var_C = printTextSub3(currentTextIdx,aux2);
 							var_A = printTextSub4(currentTextIdx,aux2);
@@ -1339,13 +1339,13 @@ int makeIntroScreens(void)
 	char* data;
 	unsigned int chrono;
 
-	data = loadPak("itd_ress",13);
+	data = loadPak("ITD_RESS",13);
 	copyToScreen(data+770,unkScreenVar);
 	//make3dTatouUnk1(8,0);
 	memcpy(screen,unkScreenVar,320*200);
 	flipScreen();
 	free(data);
-	loadPakToPtr("itd_ress",7,aux);
+	loadPakToPtr("ITD_RESS",7,aux);
 	startChrono(&chrono);
 
 	do
