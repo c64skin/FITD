@@ -2110,7 +2110,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 
 	}
 
-	return(0);
+	return(i);
 }
 
 void setupCameraSub4(void)
@@ -2292,6 +2292,56 @@ void updateAllActorAndObjects()
 	//TODO: object update
 }
 
+int checkActorInRoom(int room)
+{
+	int i;
+
+	char* ptr = roomVar5[currentCamera];
+
+	int var2 = *(short int*)ptr;
+	ptr+=2;
+
+	for(i=0;i<var2;i++)
+	{
+		if(*(short int*)ptr == room)
+		{
+			return(1);
+		}
+
+		ptr+=0xC;
+	}
+
+	return(0);
+
+}
+
+void createActorList()
+{
+	int i;
+	numActorInList = 0;
+
+	actorStruct* actorPtr = actorTable;
+
+	for(i=0;i<50;i++)
+	{
+		if(actorPtr->field_0 != -1 && actorPtr->bodyNum != -1)
+		{
+			if(checkActorInRoom(actorPtr->room))
+			{
+				sortedActorTable[numActorInList] = i;
+				if(!(actorPtr->flags & 0x21))
+				{
+					actorPtr->flags |= 8;
+				//	objModifFlag2 = 1;
+				}
+				numActorInList++;
+			}
+		}
+
+		actorPtr++;
+	}
+}
+
 void setupCamera()
 {
 //	freezeTime();
@@ -2318,8 +2368,8 @@ void setupCamera()
 
 	setupCameraSub1();
 	updateAllActorAndObjects();
-/*	setupCameraSub2();
-	setupCameraSub3(); */
+	createActorList();
+//	setupCameraSub3();
 	setupCameraSub4();
 /*	setupCameraSub5();
 */
@@ -2712,9 +2762,34 @@ void mainDraw(int mode)
 
 	int i;
 
-	/*for(i=0;i<numActorInList;i++)
+	for(i=0;i<numActorInList;i++)
 	{
-	}*/
+		int currentDrawActor = sortedActorTable[i];
+		actorStruct* actorPtr;
+
+		actorPtr = &actorTable[currentDrawActor];
+
+		if(actorPtr->flags & 0x25)
+		{
+			actorPtr->flags &= 0xFFFB;
+			
+			if(actorPtr->flags & 0x20)
+			{
+			}
+			else
+			{
+				char* bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
+
+				//if(hqrVar1)
+				{
+					//TODO: implement anim stuff
+				}
+
+				renderModel(actorPtr->field_22 + actorPtr->field_5A, actorPtr->field_24 + actorPtr->field_5C, actorPtr->field_26 + actorPtr->field_5E,
+							actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
+			}
+		}
+	}
 
 	/*if(drawTextOverlay())
 	{
