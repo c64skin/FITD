@@ -2801,7 +2801,7 @@ void mainDraw(int mode)
 
         renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
               actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
-        
+       
 
         if(actorPtr->animActionType && actorPtr->field_98 != -1)
         {
@@ -2835,7 +2835,12 @@ void mainDraw(int mode)
           mainVar2 = (BBox3D4 + BBox3D2) / 2;
         }
 
-        drawBgOverlay(actorPtr);
+#ifdef INTERNAL_DEBUGGER
+        if(backgroundMode == backgroundModeEnum_2D)
+#endif
+        {
+          drawBgOverlay(actorPtr);
+        }
         //addToRedrawBox();
       }
       else
@@ -3404,7 +3409,7 @@ int checkForHardCol(ZVStruct* zvPtr, roomDataStruct* pRoomData)
       {
         if(((pCurrentEntry->zv.ZVZ1) < (zvPtr->ZVZ2)) && ((zvPtr->ZVZ1) < (pCurrentEntry->zv.ZVZ2)))
         {
-          ASSERT(hardColVar < 3);
+          ASSERT(hardColVar < 10);
           hardColTable[hardColVar++] = pCurrentEntry;
         }
       }

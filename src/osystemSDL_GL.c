@@ -160,7 +160,7 @@ void CALLBACK vertexCallback(GLvoid *vertex)
 
   glColor4ub(255,255,255,255);
   glTexCoord2d(x/(float)1024,y/(float)512);
-  glVertex3d(x,y,-100);
+  glVertex3d(x,y,100);
 }
 
 void Sound_Quit(void)
@@ -721,7 +721,7 @@ int tesselatePosition = 0;
 
 void osystem_startBgPoly()
 {
-  glDisable(GL_DEPTH_TEST);
+ // glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
   glBindTexture(GL_TEXTURE_2D, backTexture);
   //glBegin(GL_POLYGON);
@@ -737,7 +737,7 @@ void osystem_endBgPoly()
   gluTessEndContour(tobj);
   gluTessEndPolygon(tobj);
 
-  glEnable(GL_DEPTH_TEST);
+ // glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
   glBindTexture(GL_TEXTURE_2D, 0);
 

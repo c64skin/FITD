@@ -1,5 +1,91 @@
 #include "common.h"
 
+struct rendererPointStruct
+{
+  float X;
+  float Y;
+  float Z;
+};
+
+typedef struct rendererPointStruct rendererPointStruct;
+
+#define NUM_MAX_POINT 5000
+
+rendererPointStruct primPointTable[NUM_MAX_POINT];
+
+u32 positionInPointTable = 0;
+
+enum primTypeEnum
+{
+  primTypeEnum_Line = 0,
+  primTypeEnum_Poly = 1,
+  primTypeEnum_Point = 2,
+  primTypeEnum_Disc = 3,
+};
+
+typedef enum primTypeEnum primTypeEnum;
+
+struct primEntryLineStruct
+{
+  u8 color;
+
+  rendererPointStruct points[2];
+};
+
+typedef struct primEntryLineStruct primEntryLineStruct;
+
+struct primEntryPolyStruct
+{
+  u16 numOfPoints;
+  u8 color;
+  u8 polyType;
+  rendererPointStruct* firstPointPtr;
+};
+
+typedef struct primEntryPolyStruct primEntryPolyStruct;
+
+struct primEntryPointStruct
+{
+  u8 color;
+  float X;
+  float Y;
+  float Z;
+};
+
+typedef struct primEntryPointStruct primEntryPointStruct;
+
+struct primEntryDiscStruct
+{
+  u8 color;
+  u16 size;
+  float X;
+  float Y;
+  float Z;
+};
+
+typedef struct primEntryDiscStruct primEntryDiscStruct;
+
+struct primEntryStruct
+{
+  primTypeEnum type;
+
+  union
+  {
+    primEntryLineStruct lineEntry;
+    primEntryPolyStruct polyEntry;
+    primEntryPointStruct pointEntry;
+    primEntryDiscStruct discEntry;
+  };
+};
+
+typedef struct primEntryStruct primEntryStruct;
+
+#define NUM_MAX_PRIM_ENTRY 500
+
+primEntryStruct primTable[NUM_MAX_PRIM_ENTRY];
+
+u32 positionInPrimEntry = 0;
+
 int BBox3D1=0;
 int BBox3D2=0;
 int BBox3D3=0;
@@ -717,320 +803,162 @@ void primFunctionDefault(int primType,char** ptr,char** out)
 
 void primType0(int primType, char** ptr, char** out) // line tested
 {
-  int ax;
-  int depth1;
-  int depth2;
-  int depthLow;
-  int depthHi;
-  
-  primVar1 = *(out);
-  *(short int*)(*out) = *(short int*)(*ptr);
-  *out+=2;
-  *ptr+=3;
+  int i;
+  u8 lineColor;
+  float depth = 32000.f;
+  primEntryStruct* pCurrentPrimEntry = &primTable[positionInPrimEntry];
 
-  ax = *(short int*)(*ptr);
-  *ptr+=2;
+  (*ptr)++;
+  lineColor = **ptr;
+  (*ptr)++;
+  (*ptr)++;
 
-#ifdef USE_GL
-  *(float*)(*out) = renderPointList[ax/2]; // X
-  *out+=sizeof(float);
-  *(float*)(*out) = renderPointList[ax/2+1]; // Y
-  *out+=sizeof(float);
-  depth1 = (int)(*(float*)(*out) = renderPointList[ax/2+2]); // Z
-  *out+=sizeof(float);
-#else
-  *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
-  ax+=2;
-  *out+=2;
-  *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Y
-  ax+=2;
-  *out+=2;
-  depth1 = *(short int*)(((char*)renderPointList) + ax); // Z
-  ax+=2;
-#endif
-
-  ax = *(short int*)(*ptr);
-  *ptr+=2;
-
-#ifdef USE_GL
-  *(float*)(*out) = renderPointList[ax/2]; // X
-  *out+=sizeof(float);
-  *(float*)(*out) = renderPointList[ax/2+1]; // Y
-  *out+=sizeof(float);
-  depth2 = (int)(*(float*)(*out) = renderPointList[ax/2+2]); // Z
-  *out+=sizeof(float);
-#else
-  *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
-  ax+=2;
-  *out+=2;
-  *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Y
-  ax+=2;
-  *out+=2;
-  depth2 = *(short int*)(((char*)renderPointList) + ax); // Z
-  ax+=2;
-#endif
-
-  primVar2 = *out;
+  pCurrentPrimEntry->type = primTypeEnum_Line;
+  pCurrentPrimEntry->lineEntry.color = lineColor;
 
 
-  if(depth1 <= depth2)
+  for(i=0;i<2;i++)
   {
-    depthLow = depth1;
-    depthHi = depth2;
-  }
-  else
-  {
-    depthLow = depth2;
-    depthHi = depth1;
+    u16 pointIndex;
+
+    pointIndex = *(u16*)(*ptr);
+    (*ptr)+=2;
+
+    ASSERT((pointIndex%2) == 0);
+
+    pCurrentPrimEntry->lineEntry.points[i].X = renderPointList[pointIndex/2];
+    pCurrentPrimEntry->lineEntry.points[i].Y = renderPointList[(pointIndex/2)+1];
+    pCurrentPrimEntry->lineEntry.points[i].Z = renderPointList[(pointIndex/2)+2];
+
+    if(depth>pCurrentPrimEntry->lineEntry.points[i].Z)
+      depth = pCurrentPrimEntry->lineEntry.points[i].Z;
   }
 
-  if(depthLow<=0) // behind camera
+  if(depth > 0)
   {
-    *out = primVar1; // do not add the prim
-  }
-  else 
-  {
+    positionInPrimEntry++;
+
     numOfPolyToRender++;
-
-    *out = renderVar2;
-
-    *(short int*)(*out) = depthHi;
-    *out+=2;
-    *(short int*)(*out) = depthHi;
-    *out+=2;
-    *(short int*)(*out) = 0;
-    *out+=2;
-    *(char**)(*out) = primVar1;
-    *out+=4;
-
-    renderVar2 = *out;
-    *out = primVar2;
   }
 }
 
 void primType1(int primType, char** ptr, char** out) // poly
 {
-  int ax;
-  int cx;
-  int min = 32000;
-  int max = -32000;
-  int depth;
   int i;
+  int numOfPointInPoly;
+  u8 polyColor;
+  u8 polyType;
+  float depth = 32000.f;
+  rendererPointStruct* pCurrentPoint = &primPointTable[positionInPointTable];
+  primEntryStruct* pCurrentPrimEntry = &primTable[positionInPrimEntry];
 
-  char* saveDi;
-
-  primVar1 = *out;
-
-  ax = **ptr;
-  **out = ax;
-  cx = ax;
-  (*out)++;
+  numOfPointInPoly = **ptr;
   (*ptr)++;
 
-  *(short int*)(*out) = *(short int*)(*ptr);
-  *out+=3;
-  *ptr+=2;
+  polyType = **ptr;
+  (*ptr)++;
 
-  saveDi = *out;
+  polyColor = **ptr;
+  (*ptr)++;
 
-  for(i=0;i<cx;i++)
+  pCurrentPrimEntry->type = primTypeEnum_Poly;
+  pCurrentPrimEntry->polyEntry.numOfPoints = numOfPointInPoly;
+  pCurrentPrimEntry->polyEntry.firstPointPtr = pCurrentPoint;
+  pCurrentPrimEntry->polyEntry.color = polyColor;
+  pCurrentPrimEntry->polyEntry.polyType = polyType;
+
+  for(i=0;i<numOfPointInPoly;i++)
   {
-    int pointNumber = *(short int*)(*ptr);
-    *ptr+=2;
+    u16 pointIndex;
 
-#ifdef USE_GL
-    *(float*)(*out) = renderPointList[pointNumber/2]; // X
-    ax+=2;
-    *out+=sizeof(float);
-    *(float*)(*out) = renderPointList[pointNumber/2+1]; // Y
-    ax+=2;
-    *out+=sizeof(float);
-    depth = (int)(*(float*)(*out) = renderPointList[pointNumber/2+2]); // Z
-    ax+=2;
-    *out+=sizeof(float);
-#else
-    *(short int*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber); // X
-    ax+=2;
-    *out+=2;
-    *(short int*)(*out) = *(short int*)(((char*)renderPointList) + pointNumber + 2); // Y
-    ax+=2;
-    *out+=2;
-    depth = *(short int*)(((char*)renderPointList) + pointNumber + 4); // Z
-    ax+=2;
-#endif
+    pointIndex = *(u16*)(*ptr);
+    (*ptr)+=2;
 
-    if(depth<min)
-      min = depth;
-    if(depth>max)
-      max = depth;
+    ASSERT((pointIndex%2) == 0);
+
+    pCurrentPoint->X = renderPointList[pointIndex/2];
+    pCurrentPoint->Y = renderPointList[(pointIndex/2)+1];
+    pCurrentPoint->Z = renderPointList[(pointIndex/2)+2];
+
+    if(depth>pCurrentPoint->Z)
+      depth = pCurrentPoint->Z;
+
+    pCurrentPoint++;
   }
 
-  primVar2 = *out;
-
-  *out = saveDi;
-
-  if(min<=0) // behind camera
+  if(depth > 0)
   {
-    *out = primVar1; // do not add the prim
-  }
-  else
-  {
-    
-    int prod1;
-    int prod2;
-    int prod;
-    int cx;
-#ifdef USE_GL
-    int bx = *(short int*)((*out)+6) - *(short int*)((*out));
-    int ax = *(short int*)((*out)+2) - *(short int*)((*out)+14);
-#else
-    int bx = *(short int*)((*out)+4) - *(short int*)((*out));
-    int ax = *(short int*)((*out)+2) - *(short int*)((*out)+10);
-#endif
-    renderVar3 = max;
-    ax *= bx;
+    positionInPointTable += numOfPointInPoly;
+    positionInPrimEntry++;
 
-    prod1 = ax;
-
-#ifdef USE_GL
-    cx = *(short int*)((*out)+8) - *(short int*)((*out)+2);
-    ax = *(short int*)((*out)) - *(short int*)((*out)+12);
-#else
-    cx = *(short int*)((*out)+6) - *(short int*)((*out)+2);
-    ax = *(short int*)((*out)) - *(short int*)((*out)+8);
-#endif
-    ax *= cx;
-
-    prod2 = ax;
-
-    prod = prod2 - prod1;
-
-#ifdef USE_GL
-    prod = 1;
-#endif
-
-    if(prod<0)
-    {
-      *out = primVar1; // do not add the prim
-    }
-    else 
-    {
-      numOfPolyToRender++;
-
-      *(out) = renderVar2;
-
-      *(short int*)(*out) = renderVar3;
-      *out+=2;
-      *(short int*)(*out) = renderVar3;
-      *out+=2;
-      *(short int*)(*out) = 1;
-      *out+=2;
-
-      *(char**)(*out) = primVar1;
-      *out+=4;
-
-      renderVar2 = *out;
-      *out = primVar2;
-    }
+    numOfPolyToRender++;
   }
 }
 
 void primType2(int primType, char** ptr, char** out) // point
 {
-  int pointNumber;
-  int ax2;
+  u8 pointColor;
+  u16 pointIndex;
+  float depth = 32000.f;
+  primEntryStruct* pCurrentPrimEntry = &primTable[positionInPrimEntry];
 
-  primVar1 = *out;
+  (*ptr)++;
+  pointColor = **ptr;
+  (*ptr)++;
+  (*ptr)++;
 
-	*(short int*)(*out) = *(short int*)(*ptr);
-	*out+=2;
-	*ptr+=3;
+  pCurrentPrimEntry->type = primTypeEnum_Point;
+  pCurrentPrimEntry->pointEntry.color = pointColor;
 
-	pointNumber = *(short int*)(*ptr);
-	*ptr+=2;
+  pointIndex = *(u16*)(*ptr);
+  (*ptr)+=2;
 
-	*(float*)(*out) = renderPointList[pointNumber/2]; // X
-	*out+=sizeof(float);
-	*(float*)(*out) = renderPointList[pointNumber/2+1]; // Y
-	*out+=sizeof(float);
-	ax2 = *(float*)(*out) = renderPointList[pointNumber/2+2]; // Z
-	*out+=sizeof(float);
+  ASSERT((pointIndex%2) == 0);
 
-	primVar2 = *out;
+  pCurrentPrimEntry->pointEntry.X = renderPointList[pointIndex/2];
+  pCurrentPrimEntry->pointEntry.Y = renderPointList[(pointIndex/2)+1];
+  depth = pCurrentPrimEntry->pointEntry.Z = renderPointList[(pointIndex/2)+2];
 
-	//debug: dummy
-
-/*	if(ax2<=0)
-	{
-		*out = primVar1; // do not add the prim
-	}
-	else*/
-	{
-		numOfPolyToRender++;
-
-		*out = renderVar2;
-
-		*(short int*)(*out) = ax2;
-		*out+=2;
-		*(short int*)(*out) = ax2;
-		*out+=2;
-		*(short int*)(*out) = primType;
-		*out+=2;
-
-		*(char**)(*out) = primVar1;
-		*out+=4;
-
-		renderVar2 = *out;
-		*out = primVar2;
-	} 
-
+  if(depth > 0)
+  {
+    positionInPrimEntry++;
+    numOfPolyToRender++;
+  }
 }
 
 void primType3(int primType, char** ptr, char** out) // sphere
 {
-  int pointNumber;
-  int ax2;
+  u8 discColor;
+  u16 discSize;
+  u16 pointIndex;
+  float depth = 32000.f;
+  primEntryStruct* pCurrentPrimEntry = &primTable[positionInPrimEntry];
 
-	primVar1 = *out;
+  (*ptr)++;
+  discColor = **ptr;
+  (*ptr)++;
+  (*ptr)++;
+  discSize = *(u16*)(*ptr);
+  (*ptr)+=2;
 
-	*(short int*)(*out) = *(short int*)(*ptr);
-	*out+=2;
-	*ptr+=3;
+  pCurrentPrimEntry->type = primTypeEnum_Disc;
+  pCurrentPrimEntry->discEntry.color = discColor;
+  pCurrentPrimEntry->discEntry.size = discSize;
 
-	*(short int*)(*out) = *(short int*)(*ptr);
-	*out+=2;
-	*ptr+=2;
+  pointIndex = *(u16*)(*ptr);
+  (*ptr)+=2;
 
-	pointNumber = *(short int*)(*ptr);
-	*ptr+=2;
+  ASSERT((pointIndex%2) == 0);
 
-	*(float*)(*out) = renderPointList[pointNumber/2]; // X
-	*out+=sizeof(float);
-	*(float*)(*out) = renderPointList[pointNumber/2+1]; // Y
-	*out+=sizeof(float);
-	ax2 = *(float*)(*out) = renderPointList[pointNumber/2+2]; // Z
-	*out+=sizeof(float);
+  pCurrentPrimEntry->discEntry.X = renderPointList[pointIndex/2];
+  pCurrentPrimEntry->discEntry.Y = renderPointList[(pointIndex/2)+1];
+  depth = pCurrentPrimEntry->discEntry.Z = renderPointList[(pointIndex/2)+2];
 
-	primVar2 = *out;
-
-	{
-		numOfPolyToRender++;
-
-		*out = renderVar2;
-
-		*(short int*)(*out) = ax2;
-		*out+=2;
-		*(short int*)(*out) = ax2;
-		*out+=2;
-		*(short int*)(*out) = 3;
-		*out+=2;
-
-		*(char**)(*out) = primVar1;
-		*out+=4;
-
-		renderVar2 = *out;
-		*out = primVar2;
-	}
+  if(depth > 0)
+  {
+    positionInPrimEntry++;
+    numOfPolyToRender++;
+  }
 }
 
 void primType5(int primType, char** ptr, char** out) // draw out of hardClip
@@ -1080,164 +1008,34 @@ void primType5(int primType, char** ptr, char** out) // draw out of hardClip
 
 void line(int x1, int y1, int x2, int y2, char c);
 
-void renderStyle0(char* buffer) // line
+void renderStyle0(primEntryStruct* pEntry) // line
 {
-  char color;
-#ifdef USE_GL
-  float X1;
-  float Y1;
-  float Z1;
-
-  float X2;
-  float Y2;
-  float Z2;
-
-#else
-  short int X1;
-  short int Y1;
-  short int X2;
-  short int Y2;
-#endif
-
-  
-  
-  buffer++;
-
-  color = *(buffer++);
-
-#ifdef USE_GL
-  X1 = *(float*)buffer;
-  buffer+=sizeof(float);
-  Y1 = *(float*)buffer;
-  buffer+=sizeof(float);
-  Z1 = *(float*)buffer;
-  buffer+=sizeof(float);
-
-  X2 = *(float*)buffer;
-  buffer+=sizeof(float);
-  Y2 = *(float*)buffer;
-  buffer+=sizeof(float);
-  Z2 = *(float*)buffer;
-  buffer+=sizeof(float);
-
-#else
-  X1 = *(short int*)buffer;
-  buffer+=2;
-  Y1 = *(short int*)buffer;
-  buffer+=2;
-  X2 = *(short int*)buffer;
-  buffer+=2;
-  Y2 = *(short int*)buffer;
-  buffer+=2;
-#endif
-
-#ifdef USE_GL
-  osystem_draw3dLine(X1,Y1,Z1,X2,Y2,Z2,color);
-#else
-  line(X1,Y1,X2,Y2,color);
-#endif
+  osystem_draw3dLine( pEntry->lineEntry.points[0].X,pEntry->lineEntry.points[0].Y,pEntry->lineEntry.points[0].Z,
+                      pEntry->lineEntry.points[1].X,pEntry->lineEntry.points[1].Y,pEntry->lineEntry.points[1].Z,
+                      pEntry->lineEntry.color);
 }
 
-
-// buffer is made of:
-// numPoint (short int)
-// color (short int)
-// {
-//  X
-//  Y
-//  Z
-// } * numPoint
-void renderStyle1(char* buffer) // poly
+void renderStyle1(primEntryStruct* pEntry) // poly
 {
-  int i;
-
-  int max = 3000;
-  int min = -3000;
-
-  u8 numPoint = *(u8*)buffer;
-  u8 polyType = *(u8*)(buffer+1); 
-  int color;
-  buffer+=2;
-
-  color = *(short int*)buffer;
-  buffer+=2;
-
-  {
-    short int* ptr = (short int*) buffer;
-
-    for(i=0;i<numPoint;i++)
-    {
-      ptr++;
-
-      if(*ptr<max)
-        max = *ptr;
-
-      if(*ptr>min)
-        min = *ptr;
-
-      ptr++;
-      ptr++;
-    }
-  }
-
-#ifdef USE_GL
-  osystem_fillPoly((float *)buffer,numPoint,color,polyType);
-#else
-  if(max>=0 && min <320)
-    fillpoly((short *)buffer,numPoint,color);
-#endif
+  osystem_fillPoly(pEntry->polyEntry.firstPointPtr,pEntry->polyEntry.numOfPoints, pEntry->polyEntry.color, pEntry->polyEntry.polyType);
 }
 
-void renderStyle2(char* buffer) // point
+void renderStyle2(primEntryStruct* pEntry) // point
 {
-	char color;
-	float X;
-	float Y;
-	float Z;
   float transformedSize;
 	
-	buffer++;
+  transformedSize = ((5.f * (float)cameraY) / (float)(pEntry->pointEntry.Z+cameraX));
 
-	color = *(buffer++);
-
-	X = *(float*)buffer;
-	buffer+=sizeof(float);
-	Y = *(float*)buffer;
-	buffer+=sizeof(float);
-	Z = *(float*)buffer;
-	buffer+=sizeof(float);
-
-  transformedSize = ((5.f * (float)cameraY) / (float)(Z+cameraX));
-
-  osystem_drawSphere(X,Y,Z,color,transformedSize);
+  osystem_drawSphere(pEntry->pointEntry.X,pEntry->pointEntry.Y,pEntry->pointEntry.Z,pEntry->pointEntry.color,transformedSize);
 }
 
-void renderStyle3(char* buffer)
+void renderStyle3(primEntryStruct* pEntry)
 {
-  unsigned char var1;
-  short int var2;
-	float X;
-	float Y;
-	float Z;
   float transformedSize;
 
-	buffer+=1;
-	var1 = *(char*)buffer;
-	buffer+=1;
+  transformedSize = (((float)pEntry->discEntry.size * (float)cameraY) / (float)(pEntry->discEntry.Z+cameraX));
 
-	var2 = *(short int*)buffer;
-	buffer+=2;
-
-	X = *(float*)buffer;
-	buffer+=sizeof(float);
-	Y = *(float*)buffer;
-	buffer+=sizeof(float);
-	Z = *(float*)buffer;
-	buffer+=sizeof(float);
-
-  transformedSize = (((float)var2 * (float)cameraY) / (float)(Z+cameraX));
-
-  osystem_drawSphere(X,Y,Z,var1,transformedSize);
+  osystem_drawSphere(pEntry->discEntry.X,pEntry->discEntry.Y,pEntry->discEntry.Z,pEntry->discEntry.color,transformedSize);
 }
 
 
@@ -1253,7 +1051,7 @@ renderFunction renderFunctions[]={
   renderStyle1, // poly
   renderStyle2, // point
   renderStyle3, // sphere
-  renderStyle1,
+  defaultRenderFunction,
   defaultRenderFunction,
   defaultRenderFunction,
   defaultRenderFunction,
@@ -1268,7 +1066,7 @@ primFunction primFunctionTable[]={
   primType3,
   primFunctionDefault,
   primFunctionDefault,
-  primType5,
+  primFunctionDefault,
   primFunctionDefault,
   primFunctionDefault,
   primFunctionDefault,
@@ -1314,6 +1112,11 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
   char* inBuffer;
   char* outBuffer;
 #endif
+
+  // reinit the 2 static tables
+  positionInPointTable = 0;
+  positionInPrimEntry = 0;
+  //
 
   BBox3D1 = 0x7FFF;
   BBox3D2 = 0x7FFF;
@@ -1396,6 +1199,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
     }
   }
 
+#if 0
   // TODO: poly sorting by depth
 #ifdef USE_GL2
   source = renderBuffer;
@@ -1430,6 +1234,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
   source = sortedBuffer;
 
 #endif
+#endif
   
 //  
 
@@ -1448,17 +1253,7 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
     int renderType;
     char* bufferSource;
     
-    source+=4;
-
-    renderType = *(short int*)(source);
-    source+=2;
-    bufferSource = *(char**)(source);
-    source+=4;
-
-    if(renderFunctions[renderType] != defaultRenderFunction)
-    {
-      renderFunctions[renderType](bufferSource);
-    }
+    renderFunctions[primTable[i].type](&primTable[i]);
   }
 
 //DEBUG

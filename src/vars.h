@@ -491,7 +491,7 @@ extern short int shakeVar1;
 extern short int shakingAmplitude;
 extern unsigned int timerFreeze1;
 
-extern hardColStruct* hardColTable[3];
+extern hardColStruct* hardColTable[10];
 
 extern short int hardColVar1;
 extern short int hardColVar2;

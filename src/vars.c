@@ -222,7 +222,7 @@ short int shakeVar1;
 short int shakingAmplitude;
 unsigned int timerFreeze1;
 
-hardColStruct* hardColTable[3];
+hardColStruct* hardColTable[10];
 
 short int hardColVar1;
 short int hardColVar2;

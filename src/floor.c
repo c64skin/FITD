@@ -74,25 +74,32 @@ void loadFloor(int floorNumber)
     currentRoomDataPtr->numHardCol = READ_LE_U16(hardColData);
     hardColData+=2;
 
-    currentRoomDataPtr->hardColTable = (hardColStruct*)malloc(sizeof(hardColStruct)*currentRoomDataPtr->numHardCol);
-
-    for(j=0;j<currentRoomDataPtr->numHardCol;j++)
+    if(currentRoomDataPtr->numHardCol)
     {
-      ZVStruct* zvData;
+      currentRoomDataPtr->hardColTable = (hardColStruct*)malloc(sizeof(hardColStruct)*currentRoomDataPtr->numHardCol);
 
-      zvData = &currentRoomDataPtr->hardColTable[j].zv;
+      for(j=0;j<currentRoomDataPtr->numHardCol;j++)
+      {
+        ZVStruct* zvData;
 
-      zvData->ZVX1 = READ_LE_U16(hardColData+0x00);
-      zvData->ZVX2 = READ_LE_U16(hardColData+0x02);
-      zvData->ZVY1 = READ_LE_U16(hardColData+0x04);
-      zvData->ZVY2 = READ_LE_U16(hardColData+0x06);
-      zvData->ZVZ1 = READ_LE_U16(hardColData+0x08);
-      zvData->ZVZ2 = READ_LE_U16(hardColData+0x0A);
+        zvData = &currentRoomDataPtr->hardColTable[j].zv;
 
-      currentRoomDataPtr->hardColTable[j].parameter = READ_LE_U16(hardColData+0x0C);
-      currentRoomDataPtr->hardColTable[j].type = READ_LE_U16(hardColData+0x0E);
+        zvData->ZVX1 = READ_LE_U16(hardColData+0x00);
+        zvData->ZVX2 = READ_LE_U16(hardColData+0x02);
+        zvData->ZVY1 = READ_LE_U16(hardColData+0x04);
+        zvData->ZVY2 = READ_LE_U16(hardColData+0x06);
+        zvData->ZVZ1 = READ_LE_U16(hardColData+0x08);
+        zvData->ZVZ2 = READ_LE_U16(hardColData+0x0A);
 
-      hardColData+=0x10;
+        currentRoomDataPtr->hardColTable[j].parameter = READ_LE_U16(hardColData+0x0C);
+        currentRoomDataPtr->hardColTable[j].type = READ_LE_U16(hardColData+0x0E);
+
+        hardColData+=0x10;
+      }
+    }
+    else
+    {
+      currentRoomDataPtr->hardColTable = NULL;
     }
 
     // sce zone read
@@ -101,64 +108,33 @@ void loadFloor(int floorNumber)
     currentRoomDataPtr->numSceZone = READ_LE_U16(sceZoneData);
     sceZoneData+=2;
 
-    currentRoomDataPtr->sceZoneTable = (sceZoneStruct*)malloc(sizeof(sceZoneStruct)*currentRoomDataPtr->numSceZone);
-
-    for(j=0;j<currentRoomDataPtr->numSceZone;j++)
+    if(currentRoomDataPtr->numSceZone)
     {
-      ZVStruct* zvData;
+      currentRoomDataPtr->sceZoneTable = (sceZoneStruct*)malloc(sizeof(sceZoneStruct)*currentRoomDataPtr->numSceZone);
 
-      zvData = &currentRoomDataPtr->sceZoneTable[j].zv;
+      for(j=0;j<currentRoomDataPtr->numSceZone;j++)
+      {
+        ZVStruct* zvData;
 
-      zvData->ZVX1 = READ_LE_U16(sceZoneData+0x00);
-      zvData->ZVX2 = READ_LE_U16(sceZoneData+0x02);
-      zvData->ZVY1 = READ_LE_U16(sceZoneData+0x04);
-      zvData->ZVY2 = READ_LE_U16(sceZoneData+0x06);
-      zvData->ZVZ1 = READ_LE_U16(sceZoneData+0x08);
-      zvData->ZVZ2 = READ_LE_U16(sceZoneData+0x0A);
+        zvData = &currentRoomDataPtr->sceZoneTable[j].zv;
 
-      currentRoomDataPtr->sceZoneTable[j].parameter = READ_LE_U16(sceZoneData+0x0C);
-      currentRoomDataPtr->sceZoneTable[j].type = READ_LE_U16(sceZoneData+0x0E);
+        zvData->ZVX1 = READ_LE_U16(sceZoneData+0x00);
+        zvData->ZVX2 = READ_LE_U16(sceZoneData+0x02);
+        zvData->ZVY1 = READ_LE_U16(sceZoneData+0x04);
+        zvData->ZVY2 = READ_LE_U16(sceZoneData+0x06);
+        zvData->ZVZ1 = READ_LE_U16(sceZoneData+0x08);
+        zvData->ZVZ2 = READ_LE_U16(sceZoneData+0x0A);
 
-      sceZoneData+=0x10;
+        currentRoomDataPtr->sceZoneTable[j].parameter = READ_LE_U16(sceZoneData+0x0C);
+        currentRoomDataPtr->sceZoneTable[j].type = READ_LE_U16(sceZoneData+0x0E);
+
+        sceZoneData+=0x10;
+      }
     }
-/*
-	short int offsetToCameraDef; // 0
-	short int offsetToPosDef; // 2
-	short int worldX;//4
-	short int worldY;//6
-	short int worldZ;//8
-	short int numCameraInRoom;//0xA */
-
-
-
- /*   numCameraInRoom = roomDataPtr->numCameraInRoom;
-
-    var_20 = cameraPtr + roomDataPtr->offsetToPosDef;
-    numCameraZone = *(short int*)var_20;
-    var_20 += 2;
-    cameraZoneData = var_20;
-
-    roomData.numCameraCoverZone = numCameraZone;
-
-    var_20 = cameraPtr + roomDataPtr->offsetToCameraDef;
-    numRoomZone = *(short int*)var_20;
-    var_20 += 2;
-    roomZoneData = var_20;
-
-    roomData.numHardCol = numRoomZone;
-
-    if(roomData.hardColTable)
+    else
     {
-      ASSERT_PTR(roomData.hardColTable);
-      free(roomData.hardColTable);
+      currentRoomDataPtr->sceZoneTable = NULL;
     }
-    roomData.hardColTable = (hardColStruct*)malloc(numRoomZone*sizeof(hardColStruct));
-    ASSERT_PTR(roomData.hardColTable);
-
-    for(i=0;i<numRoomZone;i++) // load hard col to HIL
-    {
-
-    }*/
   }
   ///////////////////////////////////
 }
