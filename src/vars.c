@@ -215,6 +215,11 @@ short int shakeVar1;
 short int shakingAmplitude;
 unsigned int timerFreeze1;
 
+char* hardColTable[30];
+
+short int hardColVar1;
+short int hardColVar2;
+
 char* listBodySelect[] = {
 	"LISTBODY",
 	"LISTBOD2",

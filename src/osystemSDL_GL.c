@@ -380,4 +380,18 @@ void OSystem::draw3dLine(int x1, int y1, int z1, int x2, int y2, int z2, unsigne
 	glEnd();
 }
 
+void OSystem::draw3dQuad(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3, int x4, int y4, int z4, unsigned char color)
+{
+	glColor4ub(palette[color*3],palette[color*3+1],palette[color*3+2],0.5f);
+
+	glBegin(GL_QUADS);
+
+	glVertex3f(x1,y1,-z1/1000.f);
+	glVertex3f(x2,y2,-z2/1000.f);
+	glVertex3f(x3,y3,-z3/1000.f);
+	glVertex3f(x4,y4,-z4/1000.f);
+
+	glEnd();
+}
+
 #endif

@@ -395,7 +395,7 @@ void processTrack(void)
 					int betaDif = *(short int*)(trackPtr);
 					trackPtr += 2;
 
-					if((currentProcessedActorPtr->beta - betaDif)&0x3FF > 0x200)
+					if(((currentProcessedActorPtr->beta - betaDif)&0x3FF) > 0x200)
 					{
 						currentProcessedActorPtr->field_72 = 1;
 					}

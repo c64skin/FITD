@@ -2211,9 +2211,9 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 	actorPtr->rotate.newAngle = 0;
 	actorPtr->rotate.param = 0;
 
-	actorPtr->field_60 = 0;
-	actorPtr->field_62 = 0;
-	actorPtr->field_64 = 0;
+	actorPtr->field_60.oldAngle = 0;
+	actorPtr->field_60.newAngle = 0;
+	actorPtr->field_60.param = 0;
 
 	actorPtr->falling = 0;
 
@@ -2989,7 +2989,56 @@ void drawConverZones()
 	}
 }
 
-void drawZone(char* zoneData)
+#ifdef USE_GL
+void drawProjectedQuad(int x1,int x2, int x3, int x4, int y1,int y2, int y3, int y4, int z1,int z2, int z3, int z4, int color)
+{
+	x1 -= translateX;
+	x2 -= translateX;
+	x3 -= translateX;
+	x4 -= translateX;
+
+	y1 -= translateY;
+	y2 -= translateY;
+	y3 -= translateY;
+	y4 -= translateY;
+
+	z1 -= translateZ;
+	z2 -= translateZ;
+	z3 -= translateZ;
+	z4 -= translateZ;
+
+	transformPoint(&x1,&y1,&z1);
+	transformPoint(&x2,&y2,&z2);
+	transformPoint(&x3,&y3,&z3);
+	transformPoint(&x4,&y4,&z4);
+
+	z1 += cameraX;
+	z2 += cameraX;
+	z3 += cameraX;
+	z4 += cameraX;
+
+	int transformedX1 = ((x1 * cameraY) / z1) + cameraCenterX;
+	int transformedX2 = ((x2 * cameraY) / z2) + cameraCenterX;
+	int transformedX3 = ((x2 * cameraY) / z3) + cameraCenterX;
+	int transformedX4 = ((x2 * cameraY) / z4) + cameraCenterX;
+
+	int transformedY1 = ((y1 * cameraZ) / z1) + cameraCenterY;
+	int transformedY2 = ((y2 * cameraZ) / z2) + cameraCenterY;
+	int transformedY3 = ((y3 * cameraZ) / z3) + cameraCenterY;
+	int transformedY4 = ((y4 * cameraZ) / z4) + cameraCenterY;
+
+	if(z1>0 && z2>0 && z3>0 && z4>0)
+		osystem.draw3dQuad(transformedX1,transformedY1,z1, transformedX2,transformedY2,z2, transformedX3,transformedY3,z3, transformedX4,transformedY4,z4, color);
+}
+
+void drawProjectedBox(int x1,int x2,int y1,int y2,int z1,int z2, int color)
+{
+	//bottom
+	drawProjectedQuad(x1,x1,x2,x2,y1,y2,y2,y1,z1,z1,z1,z1,100);
+}
+#endif
+
+void drawZone(char* zoneData,int color)
 {
 	int x1;
 	int x2;
@@ -3011,23 +3060,41 @@ void drawZone(char* zoneData)
 	z1 = *( short int*)(zoneData+0x8);
 	z2 = *( short int*)(zoneData+0xA);
 
-	int color = 40;
+#ifdef USE_GL
+	drawProjectedBox(x1,x2,y1,y2,z1,z2,type);
+#else
+	drawProjectedLine(x1,y1,z1,x1,y1,z2,type);
+	drawProjectedLine(x1,y1,z2,x2,y1,z2,type);
+	drawProjectedLine(x2,y1,z2,x2,y1,z1,type);
+	drawProjectedLine(x2,y1,z1,x1,y1,z1,type);
 
-	drawProjectedLine(x1,y1,z1,x1,y1,z2,color);
-	drawProjectedLine(x1,y1,z2,x2,y1,z2,color);
-	drawProjectedLine(x2,y1,z2,x2,y1,z1,color);
-	drawProjectedLine(x2,y1,z1,x1,y1,z1,color);
+	drawProjectedLine(x1,y2,z1,x1,y2,z2,type);
+	drawProjectedLine(x1,y2,z2,x2,y2,z2,type);
+	drawProjectedLine(x2,y2,z2,x2,y2,z1,type);
+	drawProjectedLine(x2,y2,z1,x1,y2,z1,type);
 
-	drawProjectedLine(x1,y2,z1,x1,y2,z2,color);
-	drawProjectedLine(x1,y2,z2,x2,y2,z2,color);
-	drawProjectedLine(x2,y2,z2,x2,y2,z1,color);
-	drawProjectedLine(x2,y2,z1,x1,y2,z1,color);
+	drawProjectedLine(x1,y1,z1,x1,y2,z1,type);
+	drawProjectedLine(x1,y1,z2,x1,y2,z2,type);
+	drawProjectedLine(x2,y1,z2,x2,y2,z2,type);
+	drawProjectedLine(x2,y1,z1,x2,y2,z1,type);
+#endif
+}
 
-	drawProjectedLine(x1,y1,z1,x1,y2,z1,color);
-	drawProjectedLine(x1,y1,z2,x1,y2,z2,color);
-	drawProjectedLine(x2,y1,z2,x2,y2,z2,color);
-	drawProjectedLine(x2,y1,z1,x2,y2,z1,color);
+void drawHardCol()
+{
+	char* data = etageVar0 + *(unsigned int*)(etageVar0 + actorTable[genVar9].room * 4);
+	data += *(short int*)(data);
 
+	short int numHardCol = *(short int*)data;
+	data+=2;
+
+	int i;
+
+	for(i=0;i<numHardCol;i++)
+	{
+		drawZone(data,100);
+		data+=0x10;
+	}
 }
 
 void drawZones()
@@ -3042,7 +3109,7 @@ void drawZones()
 
 	for(i=0;i<numZones;i++)
 	{
-		drawZone(zoneData);
+		drawZone(zoneData,40);
 		zoneData+=16;
 	}
 }
@@ -3080,6 +3147,7 @@ void mainDraw(int mode)
 
 	drawConverZones();
 	drawZones();
+	drawHardCol();
 
 #ifdef USE_GL
 	osystem.startModelRender();
@@ -3441,6 +3509,147 @@ void stopAnim(int actorIdx)
 	//objModifFlag2 = 1;
 }
 
+int checkZvCollision(ZVStruct* zvPtr1,ZVStruct* zvPtr2)
+{
+	if(zvPtr1->ZVX1 >= zvPtr2->ZVX2)
+		return 0;
+
+	if(zvPtr2->ZVX1 >= zvPtr1->ZVX2)
+		return 0;
+
+	if(zvPtr1->ZVY1 >= zvPtr2->ZVY2)
+		return 0;
+
+	if(zvPtr2->ZVY1 >= zvPtr1->ZVY2)
+		return 0;
+
+	if(zvPtr1->ZVZ1 >= zvPtr2->ZVZ2)
+		return 0;
+
+	if(zvPtr2->ZVZ1 >= zvPtr1->ZVZ2)
+		return 0;
+
+	return 1;
+}
+
+void getZvRelativePosition(ZVStruct* zvPtr, int startRoom, int destRoom)
+{
+	char* startRoomData = etageVar0 + *(unsigned int*)(etageVar0+startRoom*4);
+	char* destRoomData = etageVar0 + *(unsigned int*)(etageVar0+destRoom*4);
+
+	int Xdif = 10*(*(short int*)(destRoomData+4) - *(short int*)(startRoomData+4));
+	int Ydif = 10*(*(short int*)(destRoomData+6) - *(short int*)(startRoomData+6));
+	int Zdif = 10*(*(short int*)(destRoomData+8) - *(short int*)(startRoomData+8));
+
+	zvPtr->ZVX1 -= Xdif;
+	zvPtr->ZVX2 -= Xdif;
+	zvPtr->ZVY1 += Ydif;
+	zvPtr->ZVY2 += Ydif;
+	zvPtr->ZVZ1 += Zdif;
+	zvPtr->ZVZ2 += Zdif;
+}
+
+int processActor1Sub1(int actorIdx, ZVStruct* zvPtr)
+{
+	int currentCollisionSlot = 0;
+	actorStruct* currentActor = actorTable;
+	int actorRoom = actorTable[actorIdx].room;
+
+	int i;
+
+	for(i=0;i<50;i++)
+	{
+		if(currentActor->field_0 != -1 && i!=actorIdx)
+		{
+			ZVStruct* currentActorZv = &currentActor->zv;
+
+			if(currentActor->room != actorRoom)
+			{
+				ZVStruct localZv;
+
+				copyZv(zvPtr,&localZv);
+
+				getZvRelativePosition(&localZv,actorRoom,currentActor->room);
+
+				if(checkZvCollision(&localZv,currentActorZv))
+				{
+					currentProcessedActorPtr->COL[currentCollisionSlot++] = i;
+
+					if(currentCollisionSlot == 3)
+						return(3);
+				}
+			}
+			else
+			{
+				if(checkZvCollision(zvPtr,currentActorZv))
+				{
+					currentProcessedActorPtr->COL[currentCollisionSlot++] = i;
+
+					if(currentCollisionSlot == 3)
+						return(3);
+				}
+			}
+		}
+		currentActor++;
+	}
+
+	return(currentCollisionSlot);
+}
+
+void foundObject(int objIdx, int param)
+{
+	printf("Found object %d\n", objIdx);
+}
+
+void hardColSuB1(ZVStruct* zvPtr, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
+{
+}
+
+int checkForHardCol(ZVStruct* zvPtr, char* dataPtr)
+{
+	dataPtr += *(short int*)(dataPtr);
+
+	int hardColVar = 0;
+
+	short int counter = *(short int*)dataPtr;
+	dataPtr+=2;
+
+	do
+	{
+
+		short int X1 = *(short int*)dataPtr;
+		short int X2 = *(short int*)(dataPtr+2);
+
+		if(X1 < zvPtr->ZVX2 && zvPtr->ZVX1 < X2)
+		{
+			short int Y1 = *(short int*)(dataPtr+4);
+			short int Y2 = *(short int*)(dataPtr+6);
+
+			if(Y1 < zvPtr->ZVY2 && zvPtr->ZVY1 < Y2)
+			{
+				short int Z1 = *(short int*)(dataPtr+8);
+				short int Z2 = *(short int*)(dataPtr+10);
+
+				hardColTable[hardColVar++] = dataPtr;
+			}
+		}
+
+		dataPtr += 0x10;
+	}while(--counter);
+
+	return hardColVar;
+}
+
+int manageFall(int actorIdx, ZVStruct* zvPtr)
+{
+	return(0);
+}
+
+int processActor1Sub2(rotateStruct* data)
+{
+	return(0);
+}
+
 void processActor1(void)
 {
 	int var_42 = 0;
@@ -3461,6 +3670,11 @@ void processActor1(void)
 		if(var_6 == -2)
 		{
 			stopAnim(currentProcessedActorIdx);
+			currentProcessedActorPtr->field_44 = -1;
+			currentProcessedActorPtr->field_46 = 0;
+			currentProcessedActorPtr->field_48 = -1;
+			currentProcessedActorPtr->END_ANIM = 1;
+
 			return;
 		}
 
@@ -3498,7 +3712,7 @@ void processActor1(void)
 		currentProcessedActorPtr->END_FRAME = 0;
 		if(currentProcessedActorPtr->speed == 0)
 		{
-			//var_42 = processActor1Sub1(currentProcessedActorIdx, &currentProcessedActorPtr->zv);
+			var_42 = processActor1Sub1(currentProcessedActorIdx, &currentProcessedActorPtr->zv);
 
 			if(var_42)
 			{
@@ -3531,7 +3745,7 @@ void processActor1(void)
 			animRot3 = 0;
 			animRot2 = 0;
 
-			//animRot1 = processActor1Sub2(&currentProcessedActorPtr->speedChange);
+			animRot1 = processActor1Sub2(&currentProcessedActorPtr->speedChange);
 
 			walkStep(0,animRot1,currentProcessedActorPtr->beta);
 
@@ -3556,9 +3770,20 @@ void processActor1(void)
 
 	}
 
-	if(currentProcessedActorPtr->field_64)
+	if(currentProcessedActorPtr->field_60.param)
 	{
-		// TODO
+		if(currentProcessedActorPtr->field_60.param != -1)
+		{
+			var_4E = processActor1Sub2(&currentProcessedActorPtr->speedChange) - var_4A;
+		}
+		else
+		{
+			var_4E = currentProcessedActorPtr->field_60.newAngle - var_4A;
+
+			currentProcessedActorPtr->field_60.param = 0;
+			currentProcessedActorPtr->field_60.newAngle = 0;
+			currentProcessedActorPtr->field_60.oldAngle = 0;
+		}
 	}
 	else
 	{
@@ -3568,8 +3793,11 @@ void processActor1(void)
 	memcpy(localTable,currentProcessedActorPtr->COL,6);
 	var_56 = -1;
 
+	ZVStruct* zvPtr;
+
 	if(var_52 || var_50 || var_4E)
 	{
+		zvPtr = &currentProcessedActorPtr->zv;
 		copyZv(&currentProcessedActorPtr->zv,&zvLocal);
 
 		zvLocal.ZVX1 += var_52;
@@ -3581,8 +3809,42 @@ void processActor1(void)
 		zvLocal.ZVZ1 += var_50;
 		zvLocal.ZVZ2 += var_50;
 
-		/*if(currentProcessedActorPtr->dynFlags & 1)
+		if(currentProcessedActorPtr->dynFlags & 1)
 		{
+			int i;
+
+			var_42 = checkForHardCol(&zvLocal, etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4));
+
+			for(i=0;i<var_42;i++)
+			{
+				char* var_3E = hardColTable[i];
+
+				if(*(short int*)(var_3E + 0xE) == 9)
+				{
+					currentProcessedActorPtr->HARD_COL = *(short int*)(var_3E + 0xC);
+				}
+
+				if(*(short int*)(var_3E + 0xE) == 3)
+				{
+					currentProcessedActorPtr->HARD_COL = 255;
+				}
+
+				if(var_52 || var_50)
+				{
+					hardColVar1 = var_52;
+					hardColVar2 = var_50;
+
+					hardColSuB1(zvPtr, &zvLocal, (ZVStruct*)var_3E);
+
+					zvLocal.ZVX1 +=  hardColVar1 - var_52;
+					zvLocal.ZVX2 +=  hardColVar1 - var_52;
+					zvLocal.ZVZ1 +=  hardColVar2 - var_50;
+					zvLocal.ZVZ2 +=  hardColVar2 - var_50;
+
+					var_52 = hardColVar1;
+					var_50 = hardColVar2;
+				}
+			}
 		}
 		else
 		{
@@ -3594,9 +3856,135 @@ void processActor1(void)
 			{
 				currentProcessedActorPtr->HARD_COL = 0;
 			}
-		}*/
+		}
 
-		// TODO -> actor/actor collision
+		var_42 = processActor1Sub1(currentProcessedActorIdx,&zvLocal);
+
+		int j;
+
+		for(j=0;j<var_42;j++)
+		{
+			actorStruct* actorTouchedPtr;
+
+			actorTouchedPtr = &actorTable[currentProcessedActorPtr->COL[j]];
+
+			actorTouchedPtr->COL_BY = currentProcessedActorIdx;
+
+			ZVStruct* touchedZv = &actorTouchedPtr->zv;
+
+			if(actorTouchedPtr->flags & 0x80)
+			{
+				if(currentProcessedActorPtr->trackMode == 1 && defines.field_1E == 0)
+				{
+					foundObject(actorTouchedPtr->field_0, 0);
+				}
+			}
+			else
+			{
+				if(actorTouchedPtr->flags & 0x10)
+				{
+					ZVStruct localZv2;
+
+					int var_8 = 1;
+
+					copyZv(touchedZv, &localZv2);
+
+					localZv2.ZVX1 += var_52;
+					localZv2.ZVX2 += var_52;
+
+					localZv2.ZVZ1 += var_50;
+					localZv2.ZVZ2 += var_50;
+
+					if(!checkForHardCol(&localZv2, etageVar0 + *(unsigned int*)(etageVar0 + actorTouchedPtr->room * 4)))
+					{
+						int var_54 = processActor1Sub1(var_56, &localZv2);
+
+						if(var_54)
+							var_8 = 0;
+					}
+					else
+					{
+						var_8 = 0;
+					}
+
+					if(!var_8)
+					{
+						if(!var_52 || !var_50)
+						{
+							if(actorTouchedPtr->room != currentProcessedActorPtr->room)
+							{
+								ZVStruct localZv3;
+
+								copyZv(touchedZv, &localZv3);
+
+								getZvRelativePosition(&localZv3, actorTouchedPtr->room, currentProcessedActorPtr->room);
+
+								hardColVar1 = var_52;
+								hardColVar2 = var_50;
+
+								hardColSuB1(zvPtr, &zvLocal, &localZv3);
+
+								var_52 = hardColVar1;
+								var_50 = hardColVar2;
+							}
+						}
+					}
+					else
+					{
+						if(actorTouchedPtr->flags & 8)
+						{
+							deleteSub(var_56);
+						}
+						
+						actorTouchedPtr->flags |= 1;
+
+						actorTouchedPtr->worldX += var_52;
+						actorTouchedPtr->worldY += var_50;
+
+						actorTouchedPtr->roomX += var_52;
+						actorTouchedPtr->roomY += var_50;
+
+						copyZv(&localZv2,touchedZv);
+
+					}
+				}
+				else
+				{
+					if(currentProcessedActorPtr->dynFlags & 1)
+					{
+						if(var_52 || var_50)
+						{
+							if(actorTouchedPtr->room == currentProcessedActorPtr->room)
+							{
+								hardColVar1 = var_52;
+								hardColVar2 = var_50;
+
+								hardColSuB1(zvPtr, &zvLocal, touchedZv);
+
+								var_52 = hardColVar1;
+								var_50 = hardColVar2;
+							}
+							else
+							{
+								ZVStruct localZv3;
+
+								copyZv(touchedZv, &localZv3);
+
+								getZvRelativePosition(&localZv3, actorTouchedPtr->room, currentProcessedActorPtr->room);
+
+								hardColVar1 = var_52;
+								hardColVar2 = var_50;
+
+								hardColSuB1(zvPtr, &zvLocal, &localZv3);
+
+								var_52 = hardColVar1;
+								var_50 = hardColVar2;
+							}
+						}
+					}
+				}
+			}
+		}
 
 		currentProcessedActorPtr->modX = var_52 + var_4C;
 		currentProcessedActorPtr->modY = var_4E + var_4A;
@@ -3613,7 +4001,7 @@ void processActor1(void)
 
 	}
 
-	if(!currentProcessedActorPtr->field_64)
+	if(!currentProcessedActorPtr->field_60.param)
 	{
 		// fall management ?
 		currentProcessedActorPtr->worldY += currentProcessedActorPtr->modY;
@@ -3623,12 +4011,25 @@ void processActor1(void)
 
 		if(currentProcessedActorPtr->flags & 0x100)
 		{
-			// TODO
+			zvPtr = &currentProcessedActorPtr->zv;
+
+			copyZv(zvPtr, &zvLocal);
+
+			zvLocal.ZVY2 += 100;
+
+			if(currentProcessedActorPtr->roomY < -10 && !checkForHardCol(&zvLocal,etageVar0+*(unsigned int*)(etageVar0 + currentProcessedActorPtr->room*4)) && !manageFall(currentProcessedActorIdx,&zvLocal))
+			{
+				startActorRotation(0, 2000, 40, &currentProcessedActorPtr->field_60);
+			}
+			else
+			{
+				currentProcessedActorPtr->falling = 0;
+			}
 		}
 	}
 	else
 	{
-		if((currentProcessedActorPtr->field_64 != -1) && (currentProcessedActorPtr->flags & 0x100))
+		if((currentProcessedActorPtr->field_60.param != -1) && (currentProcessedActorPtr->flags & 0x100))
 		{
 			currentProcessedActorPtr->falling = 1;
 		}
@@ -3645,7 +4046,29 @@ void processActor1(void)
 
 	for(var_40=0; var_40<3; var_40++)
 	{
-		// TODO
+		var_56 = localTable[var_40];
+
+		if(var_56 != -1)
+		{
+			actorStruct* actorTouchedPtr = &actorTable[var_56];
+
+			if(actorTouchedPtr->flags & 0x10)
+			{
+				int i;
+
+				for(i=0;i<3;i++)
+				{
+					if(currentProcessedActorPtr->COL[i] == var_56)
+						break;
+				}
+
+				if(i == 3)
+				{
+					actorTouchedPtr->flags &= 0xFFFE;
+					stopAnim(var_56);
+				}
+			}
+		}
 	}
 
 	if(currentProcessedActorPtr->END_FRAME) // key frame change

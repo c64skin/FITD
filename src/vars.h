@@ -160,10 +160,7 @@ struct actorStruct // used to read data from file too
 	short int modY;
 	short int modZ;
 
-	short int field_60;
-	short int field_62;
-	short int field_64;
-	short int field_66;
+	rotateStruct field_60;
 	short int falling;
 	rotateStruct rotate;
 	short int field_72;
@@ -452,6 +449,11 @@ extern short int inventory[30];
 extern short int shakeVar1;
 extern short int shakingAmplitude;
 extern unsigned int timerFreeze1;
+
+extern char* hardColTable[30];
+
+extern short int hardColVar1;
+extern short int hardColVar2;
 
 extern saveEntry saveTable[];
 
