@@ -1577,28 +1577,28 @@ void loadRoom(int roomNumber)
 
 		int j;
 
-		for(j=0;*(short int*)(var_20+=2)!=currentDisplayedRoom;(j++) && (var_20+=0xA))
+	/*	for(j=0;*(short int*)(var_20+=2)!=currentDisplayedRoom;(j++) && (var_20+=0xA))
 		{
 			if(j>= cameraIdx)
 			{
 				break;
 			}
-		}
+		} */
 
-	/*	for(j=0;j<cameraIdx;j++)
+		for(j=0;j<cameraIdx;j++)
 		{
 			if(*(short int*)var_20 == currentDisplayedRoom)
 				break;
 
 			var_20+=2;
 			var_20+=0xA;
-		}*/
+		}
 
 		var_1C = j;
 
-		char* var_8 = roomVar5[i] + (var_1C << 3) + (var_1C<<2) + 0x18;
+		char* var_8 = roomVar5[i] + (var_1C*12) + 0x18;
 
-		roomVar6[i] = (*(short int*)var_8)*2;
+		roomVar6[i] = (*(short int*)var_8)/2;
 	}
 
 	if(currentCameraIdx != -1) // if the two room have the current camera in common, update the actor transform
