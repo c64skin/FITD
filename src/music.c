@@ -1,5 +1,7 @@
 #include "common.h"
 
+int musicVolume = 0x7F;
+
 typedef int(*musicDrvFunctionType)(void * ptr);
 
 FM_OPL* virtualOpl;
@@ -586,15 +588,13 @@ int musicLoad(void* ptr)
     if(*((u32*)(musicPtr + i*4 + 8)))
     {
       channelTable2[i].dataPtr = musicPtr + *((u32*)(musicPtr + i*4 + 8));
-      channelTable2[i].var4 = 0x2;
     }
     else
     {
       channelTable2[i].dataPtr = NULL;
-      channelTable2[i].var4 |= 0x40;
     }
 
-    //channelTable2[i].var4 |= 0x40;
+    channelTable2[i].var4 |= 0x40;
   }
 
   currentMusicPtr = musicPtr + *((u32*)(musicPtr + 0x34));
@@ -842,17 +842,40 @@ unsigned char smallData2[] =
 };
 
 
-void configChannel(int value, u8* data)
+void configChannel(u8 value, u8* data)
 {
   if(smallData2[value] != 0xFF)
   {
     sendAdlib(0xC0 + smallData2[value], data[2]);
   }
 
-  sendAdlib(0x60 + value, data[4]);
-  sendAdlib(0x80 + value, data[5]);
-  sendAdlib(0x20 + value, data[1]);
-  sendAdlib(0xE0 + value, data[3]);
+  sendAdlib(0x60 + value, data[4]); // Attack Rate 	Decay Rate
+  sendAdlib(0x80 + value, data[5]); // Sustain Level 	Release Rate
+  sendAdlib(0x20 + value, data[1]); // Tremolo 	Vibrato 	Sustain 	KSR 	Frequency Multiplication Factor
+  sendAdlib(0xE0 + value, data[3]); // 	Waveform Select
+}
+
+void applyToOpl2(u8 value, u8* data,int bp)
+{
+  int ax;
+  int dx;
+
+  if(value == 0xFF)
+    return;
+
+  data++;
+
+  ax = *data;
+
+  bp *= ax;
+  bp += bp;
+  bp += 0x7F;
+
+  dx = 0x3F;
+
+  dx -= bp/0xFE;
+
+  sendAdlib(0x40+value,(data[0]&0xC0) | (dx&0xFF));
 }
 
 void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement* element)
@@ -877,7 +900,7 @@ void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement*
   if(element2->var4 & 0x40)
     return;
 
-  if((element->var8 & 1) || (element->var8 == element2->var4&0x8000))
+  if((element->var8 & 1) || (element->var8 != (element2->var4&0x8000)))
   {
     element->var8 = element2->var4&0x8000;
     element->var5 = 0xFF;
@@ -886,22 +909,20 @@ void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement*
     element->var7 = 0x9C;
   }
 
-  value = *((u16*)&tablePtr[element2->index]);
+  value = *((u16*)&tablePtr[element2->index*2]);
 
   if(value == 0xFFFF)
     return;
 
-  if(element2->var12 != element->var4)
+  if(element2->var12 != element->var4) // change channel main config
   {
     element->var4 = element2->var12;
 
-    configChannel(value&0xFF,(currentMusicPtr2+0xD*element2->index)+1);
+    configChannel(value&0xFF,(currentMusicPtr2+0xD*element2->var12)+1);
 
-    value>>=8;
-
-    if(value != 0xFF)
+    if((value>>8) != 0xFF)
     {
-      configChannel(value,(currentMusicPtr2+0xD*element2->index)+1);
+      configChannel((value>>8)&0xFF,(currentMusicPtr2+0xD*element2->var12)+7);
     }
 
     element->var5 = 0xFF;
@@ -914,6 +935,23 @@ void applyMusicCommandToOPL(channelTable2Element* element2, channelTableElement*
 
   if(element->var5 == al)
   {
+    int dx;
+
+    element->var5 = al;
+
+    dx = element2->var1D;
+
+    if(((value>>8)&0xFF)==0xFF)
+    {
+      dx = element->var5;
+    }
+
+    applyToOpl2(value&0xFF,currentMusicPtr2+0xD*element2->var12,dx);
+
+      if(((value>>8)&0xFF) != 0xFF)
+      {
+        applyToOpl2((value>>8)&0xFF,(currentMusicPtr2+0xD*element2->var12)+6,0);
+      }
   }
 
   bp = dx = element2->var17;
@@ -972,6 +1010,81 @@ int update(void* dummy)
   return 0;
 }
 
+int musicFade(void * param)
+{
+  int i;
+  int cx;
+  int si;
+  int dx;
+  int bp;
+  int di = 1;
+
+  cx = ((int*)param)[0];
+  si = ((int*)param)[1];
+  dx = ((int*)param)[2];
+
+  bp = si;
+
+  si = 0xFFFF;
+
+  if(!bp)
+    bp = 0x7FF;
+
+  for(i=0;i<11;i++)
+  {
+    if((bp&i))
+    {
+      if(channelTable2[i].dataPtr)
+      {
+        if(dx & 0x100)
+        {
+        }
+
+        if(dx & 0x40)
+        {
+          if(!channelTable2[i].var4&0x40)
+            channelTable2[i].var4|=0x40;
+        }
+
+        if(dx & 0x80) // start all
+        {
+          channelTable2[i].var4 = 0x40;
+          cx &= 0x7F;
+
+          channelTable2[i].var1D = cx;
+          channelTable2[i].var1A = cx;
+
+          channelTable2[i].var1E = 0;
+
+          createDefaultChannel(channelTable2[i].index);
+
+          channelTable2[i].var4 = 2;
+        }
+
+        if(dx & 0x20)
+        {
+        }
+
+        if(dx & 0x2000)
+        {
+        }
+
+        if(dx & 0x8000)
+        {
+        }
+
+        if(dx & 0x1000)
+        {
+        }
+
+        if(dx & 0x10)
+        {
+        }
+      }
+    }
+  }
+}
+
 musicDrvFunctionType musicDrvFunc[14]=
 {
   update,
@@ -979,7 +1092,7 @@ musicDrvFunctionType musicDrvFunc[14]=
   musicStart,
   musicLoad,
   NULL,
-  NULL,
+  musicFade,
   NULL,
   NULL,
   getSignature,
@@ -1013,6 +1126,17 @@ void loadMusic(int param, char* musicPtr)
   callMusicDrv(2,NULL);
 }
 
+int fadeParam[3];
+
+int fadeMusic(int param1, int param2, int param3)
+{
+  fadeParam[0] = param1;
+  fadeParam[1] = param2;
+  fadeParam[2] = param3;
+
+  callMusicDrv(5,&fadeParam);
+}
+
 void playMusic(int musicNumber)
 {
 //  if(musicEnabled)
@@ -1023,13 +1147,13 @@ void playMusic(int musicNumber)
 
       currentMusic = musicNumber;
 
-      //fadeMusic(0,0,0x40);
+      fadeMusic(0,0,0x40);
 
       musicPtr = HQR_Get(listMus,musicNumber);
 
       loadMusic(0,musicPtr);
 
-      //fadeMusic(musicVolume,0,0,0x80);
+      fadeMusic(musicVolume,0,0x80);
     }
   }
 /*  else
