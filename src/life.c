@@ -1,5 +1,44 @@
 #include "common.h"
 
+void getHardClip()
+{
+	ZVStruct* zvPtr = &currentProcessedActorPtr->zv;
+	char* etageData = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4);
+
+	etageData += *(short int*)etageData;
+
+	short int numEntry = *(short int*)etageData;
+	etageData += 2;
+
+	int i;
+
+	for(i=0;i<numEntry;i++)
+	{
+		if(checkZvCollision(zvPtr, (ZVStruct*)etageData))
+		{
+			ZVStruct* zvTemp = (ZVStruct*)etageData;
+
+			hardClipX1 = zvTemp->ZVX1;
+			hardClipX2 = zvTemp->ZVX2;
+			hardClipY1 = zvTemp->ZVY1;
+			hardClipY2 = zvTemp->ZVY2;
+			hardClipZ1 = zvTemp->ZVZ1;
+			hardClipZ2 = zvTemp->ZVZ2;
+
+			return;
+		}
+
+		etageData += 16;
+	}
+
+	hardClipX1 = 32000;
+	hardClipX2 = -32000;
+	hardClipY1 = 32000;
+	hardClipY2 = -32000;
+	hardClipZ1 = 32000;
+	hardClipZ2 = -32000;
+}
+
 void animMove(int a,int b,int c,int d,int e,int f,int g)
 {
 	if(currentProcessedActorPtr->speed == 4)
@@ -210,6 +249,8 @@ void processLife(int lifeNum)
 
 								objectTable[var_6].z = *(short int*)(currentLifePtr);
 								currentLifePtr+=2;
+
+								//objModifFlag1 = 1;
 
 								break;
 							}
@@ -438,12 +479,12 @@ processOpcode:
 					currentLifePtr += 2;	
 					break;
 				}
-			case 0xB:
+			case 0xB: // RETURN
 				{
 					exitLife = 1;
 					break;
 				}
-			case 0xC: // RETURN
+			case 0xC: // END
 				{
 					exitLife = 1;
 					break;
@@ -504,7 +545,7 @@ processOpcode:
 					lifeTempVar6 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
-//					hit(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6);
+					hit(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6);
 
 					break;
 				}
@@ -605,12 +646,12 @@ processOpcode:
 		
 					break;
 				}
-			case 0x1C:
+			case 0x1C: //START_CHRONO
 				{
 					startChrono(&currentProcessedActorPtr->CHRONO);
 					break;
 				}
-			case 0x1D:
+			case 0x1D: // MULTI_CASE
 				{
 					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
@@ -644,7 +685,7 @@ processOpcode:
 					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
-//					foundObject(lifeTempVar1, 1);
+					foundObject(lifeTempVar1, 1);
 
 					break;
 				}
@@ -693,6 +734,7 @@ processOpcode:
 
 					fadeOut(0x20,0);
 
+					printf("ReadBook\n");
 //					readBook(lifeTempVar2+1, lifeTempVar1);
 
 					fadeOut(4,0);
@@ -801,6 +843,13 @@ processOpcode:
 						currentProcessedActorPtr->beta,
 						currentProcessedActorPtr->gamma);
 					
+					currentProcessedActorPtr->zv.ZVX1 += currentProcessedActorPtr->roomX;
+					currentProcessedActorPtr->zv.ZVX2 += currentProcessedActorPtr->roomX;
+					currentProcessedActorPtr->zv.ZVY1 += currentProcessedActorPtr->roomY;
+					currentProcessedActorPtr->zv.ZVY2 += currentProcessedActorPtr->roomY;
+					currentProcessedActorPtr->zv.ZVZ1 += currentProcessedActorPtr->roomZ;
+					currentProcessedActorPtr->zv.ZVZ2 += currentProcessedActorPtr->roomZ;
+
 					break;
 				}
 			case 0x2F: // STAGE
@@ -878,6 +927,7 @@ processOpcode:
 					lifeTempVar2 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
+					printf("Drop\n");
 					// drop(lifeTempVar1, lifeTempVar2);
 
 					break;
@@ -897,6 +947,7 @@ processOpcode:
 					lifeTempVar6 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
+					printf("Fire\n");
 //					fire(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6);
 					
 					break;
@@ -932,6 +983,19 @@ processOpcode:
 					*(((short int*)(&defines))+lifeTempVar1) = evalVar();
 					break;
 				}
+			case 0x3E: // DO_CARRE_ZV
+				{
+					getZvCube(HQR_Get(listBody,currentProcessedActorPtr->bodyNum),&currentProcessedActorPtr->zv);
+
+					currentProcessedActorPtr->zv.ZVX1 += currentProcessedActorPtr->roomX;
+					currentProcessedActorPtr->zv.ZVX2 += currentProcessedActorPtr->roomX;
+					currentProcessedActorPtr->zv.ZVY1 += currentProcessedActorPtr->roomY;
+					currentProcessedActorPtr->zv.ZVY2 += currentProcessedActorPtr->roomY;
+					currentProcessedActorPtr->zv.ZVZ1 += currentProcessedActorPtr->roomZ;
+					currentProcessedActorPtr->zv.ZVZ2 += currentProcessedActorPtr->roomZ;
+
+					break;
+				}
 			case 0x3F: //todo
 				{
 					playSound(evalVar());
@@ -956,6 +1020,7 @@ processOpcode:
 				}
 			case 0x41: // SHAKING
 				{
+					printf("Shaking\n");
 					//shakingState = shakingAmplitude = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
@@ -1005,6 +1070,11 @@ processOpcode:
 
 					break;
 				}
+			case 0x49: //GET_HARD_CLIP
+				{
+					getHardClip();
+					break;
+				}
 			case 0x4A:
 				{
 					currentProcessedActorPtr->alpha = *(short int*)currentLifePtr;
@@ -1023,6 +1093,7 @@ processOpcode:
 				}
 			case 0x4D: // ? shaking related
 				{
+					printf("Shaking related\n");
 //					mainLoopVar1 = shakeVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
@@ -1039,7 +1110,7 @@ processOpcode:
 				}
 			case 0x4E: // displayScreen
 				{
-				/*	loadPakToPtr("ITD_RESS", *(short int*)currentLifePtr, aux);
+					loadPakToPtr("ITD_RESS", *(short int*)currentLifePtr, aux);
 					currentLifePtr+=2;
 
 					copyToScreen(aux,unkScreenVar);
@@ -1070,7 +1141,7 @@ processOpcode:
 
 					//unfreezeTime();
 
-					mainVar1 = 1;*/
+					mainVar1 = 1;
 
 					currentLifePtr += 6;
 

@@ -224,6 +224,13 @@ char* hardColTable[30];
 short int hardColVar1;
 short int hardColVar2;
 
+short int hardClipX1;
+short int hardClipX2;
+short int hardClipY1;
+short int hardClipY2;
+short int hardClipZ1;
+short int hardClipZ2;
+
 char* listBodySelect[] = {
 	"LISTBODY",
 	"LISTBOD2",

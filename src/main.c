@@ -3069,7 +3069,7 @@ void drawProjectedQuad(float x1,float x2, float x3, float x4, float y1,float y2,
 	float transformedY3 = ((y3 * cameraZ) / (float)z3) + cameraCenterY;
 	float transformedY4 = ((y4 * cameraZ) / (float)z4) + cameraCenterY;
 
-	if(z1>100 && z2>100 && z3>100 && z4>100)
+	if(z1>500 && z2>500 && z3>500 && z4>500)
 		osystem.draw3dQuad(transformedX1,transformedY1,z1, transformedX2,transformedY2,z2, transformedX3,transformedY3,z3, transformedX4,transformedY4,z4, color);
 }
 
@@ -3197,9 +3197,12 @@ void mainDraw(int mode)
 
 	int i;
 
-	drawConverZones();
-	drawZones();
 	drawHardCol();
+	osystem.cleanScreenKeepZBuffer();
+
+	drawConverZones();
+	//drawZones();
+	
 
 #ifdef USE_GL
 	osystem.startModelRender();
@@ -3223,17 +3226,12 @@ void mainDraw(int mode)
 			{
 				char* bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
 
-				//if(hqrVar1)
-				{
-					//TODO: implement anim stuff
-				}
-
 //				if(actorPtr->field_0 == 1)
 //					printf("pos: %d %d %d\n",actorPtr->worldX, actorPtr->worldY, actorPtr->worldZ); 
 				renderModel(actorPtr->worldX + actorPtr->modX, actorPtr->worldY + actorPtr->modY, actorPtr->worldZ + actorPtr->modZ,
 							actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
 
-				drawZv(actorPtr);
+				//drawZv(actorPtr);
 
 			}
 		}
@@ -5192,7 +5190,7 @@ void processActor2()
 		{
 			int life = objectTable[currentProcessedActorPtr->field_0].field_24;
 
-			if(!life)
+			if(life==-1)
 				return;
 
 			currentProcessedActorPtr->life = life;
@@ -5203,13 +5201,93 @@ void processActor2()
 	}
 }
 
-void processActor3(void)
+void processAnimAction(void)
 {
 	switch(currentProcessedActorPtr->field_8E)
 	{
+	case 1:
+		{
+			if(currentProcessedActorPtr->ANIM == currentProcessedActorPtr->field_90)
+			{
+				currentProcessedActorPtr->field_8E = 10;
+			}
+	
+			if(currentProcessedActorPtr->ANIM == currentProcessedActorPtr->field_90)
+			{
+				if(currentProcessedActorPtr->FRAME == currentProcessedActorPtr->field_92)
+				{
+					currentProcessedActorPtr->field_8E = 2;
+				}
+			}
+			else
+			{
+				currentProcessedActorPtr->field_8E = 0;
+			}
+			break;
+		}
+	case 2:
+		{
+			if(currentProcessedActorPtr->ANIM != currentProcessedActorPtr->field_90)
+			{
+				currentProcessedActorPtr->field_8E = 0;
+			}
+
+			int x = currentProcessedActorPtr->roomX + currentProcessedActorPtr->field_9A + currentProcessedActorPtr->modX;
+			int y = currentProcessedActorPtr->roomY + currentProcessedActorPtr->field_9C + currentProcessedActorPtr->modY;
+			int z = currentProcessedActorPtr->roomZ + currentProcessedActorPtr->field_9E + currentProcessedActorPtr->modZ;
+
+			ZVStruct rangeZv;
+
+			int range = currentProcessedActorPtr->field_94;
+
+			rangeZv.ZVX1 = x - range;
+			rangeZv.ZVX2 = x + range;
+			rangeZv.ZVY1 = y - range;
+			rangeZv.ZVY2 = y + range;
+			rangeZv.ZVZ1 = z - range;
+			rangeZv.ZVZ2 = z + range;
+
+			int collision = processActor1Sub1(currentProcessedActorIdx,&rangeZv);
+
+			int i;
+
+			for(i=0;i<collision;i++)
+			{
+				currentProcessedActorPtr->HIT = currentProcessedActorPtr->COL[i];
+				actorStruct* actorPtr2 = &actorTable[currentProcessedActorPtr->COL[i]];
+
+				actorPtr2->HIT_BY = currentProcessedActorIdx;
+				actorPtr2->hitForce = currentProcessedActorPtr->hitForce;
+
+				if(actorPtr2->flags & 1)
+				{
+					currentProcessedActorPtr->field_8E = 0;
+					return;
+				}
+			}
+
+
+
+			break;
+		}
+	case 10:
+		{
+			if(currentProcessedActorPtr->ANIM == currentProcessedActorPtr->field_90)
+			{
+				if(currentProcessedActorPtr->FRAME == currentProcessedActorPtr->field_92)
+				{
+					currentProcessedActorPtr->field_8E = 2;
+				}
+			}
+			else
+			{
+				currentProcessedActorPtr->field_8E = 0;
+			}
+			break;
+		}
 	default:
 		{
-			printf("Unsupported processActor3 %d\n",currentProcessedActorPtr->field_8E);
+			printf("Unsupported processAnimAction %d\n",currentProcessedActorPtr->field_8E);
 			break;
 		}
 	}
@@ -5304,7 +5382,7 @@ void mainLoop(int allowSystemMenu)
 
 					if(currentProcessedActorPtr->field_8E)
 					{
-						processActor3();
+						processAnimAction();
 					}
 				}
 
@@ -5876,5 +5954,19 @@ void makeMessage(int messageIdx)
 				return;
 			}
 		}
+	}
+}
+
+void hit(int animNumber,int arg_2,int arg_4,int arg_6,int hitForce,int arg_A)
+{
+	if(anim(animNumber, 0, arg_A))
+	{
+		currentProcessedActorPtr->field_90 = animNumber;
+		currentProcessedActorPtr->field_92 = arg_2;
+		currentProcessedActorPtr->field_8E = 1;
+		currentProcessedActorPtr->field_94 = arg_6;
+		currentProcessedActorPtr->field_90 = animNumber;
+		currentProcessedActorPtr->field_98 = arg_4;
+		currentProcessedActorPtr->hitForce = hitForce;
 	}
 }

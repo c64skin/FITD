@@ -459,6 +459,13 @@ extern char* hardColTable[30];
 extern short int hardColVar1;
 extern short int hardColVar2;
 
+extern short int hardClipX1;
+extern short int hardClipX2;
+extern short int hardClipY1;
+extern short int hardClipY2;
+extern short int hardClipZ1;
+extern short int hardClipZ2;
+
 extern saveEntry saveTable[];
 
 #endif

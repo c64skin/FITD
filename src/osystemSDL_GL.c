@@ -220,14 +220,14 @@ void OSystem::flip(unsigned char *videoBuffer)
 			}
 		}
 
-		glColor4ub(palette[quadTable[bestIdx].color*3],palette[quadTable[bestIdx].color*3+1],palette[quadTable[bestIdx].color*3+2],40);
+	/*	glColor4ub(palette[quadTable[bestIdx].color*3],palette[quadTable[bestIdx].color*3+1],palette[quadTable[bestIdx].color*3+2],40);
 
 		glBegin(GL_QUADS);
 		glVertex3f(quadTable[bestIdx].x1,quadTable[bestIdx].y1,-quadTable[bestIdx].z1/1000.f);
 		glVertex3f(quadTable[bestIdx].x2,quadTable[bestIdx].y2,-quadTable[bestIdx].z2/1000.f);
 		glVertex3f(quadTable[bestIdx].x3,quadTable[bestIdx].y3,-quadTable[bestIdx].z3/1000.f);
 		glVertex3f(quadTable[bestIdx].x4,quadTable[bestIdx].y4,-quadTable[bestIdx].z4/1000.f);
-		glEnd();
+		glEnd();*/
 
 	//	glDisable(GL_DEPTH_TEST);
 		int color = quadTable[bestIdx].color+3;
@@ -252,27 +252,6 @@ void OSystem::startFrame()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-
-	glColor4ub(255,255,255,255);
-	glBindTexture(GL_TEXTURE_2D, backTexture);
-	glBegin(GL_TRIANGLES);
-
-		glTexCoord2f(0,0); // triangle haut gauche
-		glVertex3i(0,0,-100.0f);
-		glTexCoord2f(640.f/1024.f,0);
-		glVertex3i(640,0,-100.0f);
-		glTexCoord2f(0.0f,480.f/512.f);
-		glVertex3i(0,480,-100.0f);
-
-		glTexCoord2f(640.f/1024.f,0); // triangle haut gauche
-		glVertex3i(640,0,-100.0f);
-		glTexCoord2f(640.f/1024.f,480.f/512.f);
-		glVertex3i(640,480,-100.0f);
-		glTexCoord2f(0.0f,480.f/512.f);
-		glVertex3i(0,480,-100.0f);
-
-	glEnd();
-	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
@@ -455,6 +434,34 @@ void OSystem::draw3dLine(float x1, float y1, float z1, float x2, float y2, float
 	glEnd();
 }
 
+void OSystem::cleanScreenKeepZBuffer()
+{
+	glClear(GL_COLOR_BUFFER_BIT );
+
+	glDisable(GL_DEPTH_TEST);
+	glColor4ub(255,255,255,255);
+	glBindTexture(GL_TEXTURE_2D, backTexture);
+	glBegin(GL_TRIANGLES);
+
+		glTexCoord2f(0,0); // triangle haut gauche
+		glVertex3i(0,0,-100.0f);
+		glTexCoord2f(640.f/1024.f,0);
+		glVertex3i(640,0,-100.0f);
+		glTexCoord2f(0.0f,480.f/512.f);
+		glVertex3i(0,480,-100.0f);
+
+		glTexCoord2f(640.f/1024.f,0); // triangle haut gauche
+		glVertex3i(640,0,-100.0f);
+		glTexCoord2f(640.f/1024.f,480.f/512.f);
+		glVertex3i(640,480,-100.0f);
+		glTexCoord2f(0.0f,480.f/512.f);
+		glVertex3i(0,480,-100.0f);
+
+	glEnd();
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glEnable(GL_DEPTH_TEST);
+}
+
 void OSystem::draw3dQuad(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4, unsigned char color)
 {
 	quadTable[positionInQuadTable].x1 = x1;
@@ -489,6 +496,17 @@ void OSystem::draw3dQuad(float x1, float y1, float z1, float x2, float y2, float
 		quadTable[positionInQuadTable].depth = z4;
 
 	positionInQuadTable++;
+
+/////
+	glColor4f(1.f,1.f,1.f,1.f);
+
+	glBegin(GL_QUADS);
+	glVertex3f(x1,y1,-z1/1000.f);
+	glVertex3f(x2,y2,-z2/1000.f);
+	glVertex3f(x3,y3,-z3/1000.f);
+	glVertex3f(x4,y4,-z4/1000.f);
+	glEnd();
+///
 }
 
 #endif
