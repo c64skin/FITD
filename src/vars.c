@@ -79,7 +79,7 @@ char* screenSm5;
 
 actorStruct actorTable[50];
 
-int currentCameraTarget;
+short int currentCameraTarget;
 
 int fileSize;
 
@@ -98,7 +98,7 @@ int varSize;
 
 char* messageVar1[5]; // may be bigger
 
-int currentMusic;
+short int currentMusic;
 int action;
 
 boxStruct genVar2[15]; // recheckSize
@@ -110,26 +110,26 @@ int genVar5;
 int genVar6;
 int genVar7;
 int genVar8;
-int genVar9;
-int giveUp;
-int inHand;
-int lightVar1;
+short int genVar9;
+short int giveUp;
+short int inHand;
+short int lightVar1;
 int lightVar2;
-int numObjInInventory;
+short int numObjInInventory;
 int soundVar1;
 int soundVar2;
-int statusScreenAllowed;
+short int statusScreenAllowed;
 
 char* etageVar0 = NULL;
 char* etageVar1 = NULL;
 
 int changeFloor;
-int currentCamera;
-int currentEtage;
+short int currentCamera;
+short int currentEtage;
 int needChangeRoom;
 
 char* cameraPtr;
-int currentDisplayedRoom;
+short int currentDisplayedRoom;
 int mainVar1;
 int roomVar0;
 int roomVar1;
@@ -203,3 +203,41 @@ char* animVar4;
 
 int paletteVar;
 
+short int inventory[30];
+
+short int shakeVar1;
+short int shakingAmplitude;
+unsigned int timerFreeze1;
+
+char* listBodySelect[] = {
+	"LISTBODY",
+	"LISTBOD2",
+};
+
+char* listAnimSelect[] = {
+	"LISTANIM",
+	"LISTANI2",
+};
+
+saveEntry saveTable[] = {
+	{ &currentDisplayedRoom, 2 },
+	{ &currentEtage, 2 },
+	{ &currentCamera, 2 },
+	{ &currentCameraTarget, 2 },
+	{ &genVar9, 2 },
+	{ &maxObjects, 2 },
+	{ objectTable, 15600 },
+	{ &defines, 90 },
+	{ &inHand, 2 },
+	{ &numObjInInventory, 2 },
+	{ inventory, 60 },
+	{ &statusScreenAllowed, 2 },
+	{ &giveUp, 2 },
+	{ &lightVar1, 2 },
+	{ &shakingAmplitude, 2 },
+	{ &shakeVar1, 2 },
+	{ (void*)timer, 4 },
+	{ &timerFreeze1, 4},
+	{ &currentMusic, 2},
+	{ NULL, 0 },
+};

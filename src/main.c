@@ -890,68 +890,6 @@ int selectHero(void)
 	return(choice);
 }
 
-int printTextSub1(hqrEntryStruct* hqrPtr,int size)
-{
-	hqrSubEntryStruct* dataPtr1;
-	hqrSubEntryStruct* dataPtr2;
-	int key;
-	int entryNum;
-
-	if(hqrPtr->sizeFreeData<size)
-		return(-1);
-
-	entryNum = hqrPtr->numUsedEntry;
-
-	dataPtr1 = dataPtr2 = (hqrSubEntryStruct*)((char*)hqrPtr+sizeof(hqrEntryStruct));
-
-	key = hqrKeyGen;
-
-	dataPtr1[entryNum].key = key;
-
-	dataPtr1[entryNum].offset = hqrPtr->maxFreeData - hqrPtr->sizeFreeData;
-	dataPtr1[entryNum].size = size;
-
-	hqrPtr->numUsedEntry++;
-	hqrPtr->sizeFreeData -= size;
-
-	hqrKeyGen++;
-
-	return(key);
-}
-
-hqrSubEntryStruct* quickFindEntry(int index, int numMax, hqrSubEntryStruct* ptr) // no RE. Original was probably faster
-{
-	int i;
-
-	for(i=0;i<numMax;i++)
-	{
-		if(ptr[i].key == index)
-		{
-			return(&ptr[i]);
-		}
-	}
-
-	return(NULL);
-}
-
-char* printTextSub2(hqrEntryStruct* hqrPtr, int index)
-{
-	hqrSubEntryStruct* ptr;
-	hqrSubEntryStruct* dataPtr;
-
-	if(index<0)
-		return NULL;
-
-	dataPtr = (hqrSubEntryStruct*)((char*)hqrPtr+sizeof(hqrEntryStruct));
-
-	ptr = quickFindEntry(index, hqrPtr->numUsedEntry, dataPtr);
-
-	if(!ptr)
-		return NULL;
-
-	return(hqrPtr->dataPtr + ptr->offset);
-}
-
 void printTextSub5(int x, int y, int param, char* gfx)
 {
 }
@@ -1295,7 +1233,7 @@ pageChange:	if(lastPageReached)
 
 								if(mode==2)
 								{
-//												playSound(defines.field_0);
+									playSound(defines.field_0);
 //												soundVar2 = -1;
 //												soundVar1 = -1;
 								}
@@ -1337,7 +1275,7 @@ pageChange:	if(lastPageReached)
 				if(!lastPageReached)
 				{
 					currentPage++;
-//								playSound(defines.field_0);
+					playSound(defines.field_0);
 //								soundVar2 = -1;
 				}
 				else
@@ -1382,7 +1320,7 @@ int makeIntroScreens(void)
 
 	}while(input2 == 0 && input1 == 0);
 
-	//playSound(defines.field_0);
+	playSound(defines.field_0);
 /*	soundVar2 = -1;
 	soundVar1 = -1;
 	soundVar2 = -1;
@@ -1487,16 +1425,6 @@ void initEngine(void)
 	listTrack = HQR_InitRessource("LISTTRAK", 1000, 10);
 
 	// TODO: missing dos memory check here
-
-	char* listBodySelect[] = {
-		"LISTBODY",
-		"LISTBOD2",
-	};
-
-	char* listAnimSelect[] = {
-		"LISTANIM",
-		"LISTANI2",
-	};
 
 	listBody = HQR_InitRessource(listBodySelect[defines.hero],100000, 50); // was calculated from free mem size
 	listAnim = HQR_InitRessource(listAnimSelect[defines.hero],100000, 50); // was calculated from free mem size
@@ -1905,64 +1833,6 @@ void updateAllActorAndObjectsSub1(int index)
 	}
 }
 
-char* HQR_Get(hqrEntryStruct* hqrPtr, int index)
-{
-	if(index<0)
-		return NULL;
-
-	hqrSubEntryStruct* hqrSubPtr = (hqrSubEntryStruct*)(((char*)hqrPtr)+sizeof(hqrEntryStruct));
-
-	hqrSubEntryStruct* foundEntry = quickFindEntry(index,hqrPtr->numUsedEntry,hqrSubPtr);
-
-	if(foundEntry)
-	{
-		foundEntry->lastTimeUsed = timer;
-//		hqrVar1 = 0;
-
-		return(hqrPtr->dataPtr + foundEntry->offset);
-	}
-	else
-	{
-		//freezeTime();
-		int size = getPakSize(hqrPtr->string,index);
-
-		if(size>=hqrPtr->maxFreeData)
-		{
-			theEnd(1,hqrPtr->string);
-		}
-
-		//unsigned int time = timer;
-
-		foundEntry = hqrSubPtr;
-
-		while(size>hqrPtr->sizeFreeData || hqrPtr->numUsedEntry>= hqrPtr->numMaxEntry)
-		{
-			printf("Unimplemented code int HQR_Get\n");
-			exit(1);
-		}
-
-		char* ptr = hqrPtr->dataPtr + (hqrPtr->maxFreeData - hqrPtr->sizeFreeData);
-
-		if(!loadPakToPtr(hqrPtr->string,index,ptr))
-		{
-			theEnd(1,hqrPtr->string);
-		}
-
-//		hqrVar1 = 1;
-
-		foundEntry[hqrPtr->numUsedEntry].key = index;
-		foundEntry[hqrPtr->numUsedEntry].lastTimeUsed = timer;
-		foundEntry[hqrPtr->numUsedEntry].offset = hqrPtr->maxFreeData - hqrPtr->sizeFreeData;
-		foundEntry[hqrPtr->numUsedEntry].size = size;
-
-		hqrPtr->numUsedEntry++;
-		hqrPtr->sizeFreeData -= size;
-
-		return(ptr);
-	}
-
-}
-
 int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y, int z, int stage, int room, int alpha, int beta, int gamma, int var2, int var3, int var4, int var5)
 {
 	int i;
@@ -2053,15 +1923,15 @@ int copyObjectToActor(int flag2, int var1, int foundName, int flag, int x, int y
 
 	if(flag2 != -1)
 	{
-		//char* bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
+		char* bodyPtr = HQR_Get(listBody,actorPtr->bodyNum);
 
 		if(var2 != -1)
 		{
-			//char* animPtr = HQR_Get(listAnim,var2);
+			char* animPtr = HQR_Get(listAnim,var2);
 
-//			initAnimInBody(var3,animPtr,bodyPtr);
+			initAnimInBody(var3,animPtr,bodyPtr);
 
-//			actorPtr->field_4C = getAnimParam(animPtr);
+			actorPtr->field_4C = getAnimParam(animPtr);
 			actorPtr->END_ANIM = 0;
 			actorPtr->flags |= 1;
 
@@ -2401,81 +2271,6 @@ void setupCamera()
 //unfreezeTime();
 }
 
-int evalVar(void)
-{
-	int var1;
-
-	var1 = *(short int*)(currentLifePtr);
-	currentLifePtr+=2;
-
-	if(var1 == -1)
-	{
-		int temp = *(short int*)(currentLifePtr);
-		currentLifePtr+=2;
-
-		return(temp);
-	}
-	else
-	if(var1 == 0)
-	{
-		printf("Unimplemented code int evalVar: var1 == 0\n");
-		exit(1);
-	}
-	else
-	{
-		if(var1 & 0x8000)
-		{
-			printf("Unimplemented code int evalVar: var1 & 0x8000\n");
-			exit(1);
-		}
-		else
-		{
-			//int actorIdx = currentLifeActorIdx;
-			actorStruct* actorPtr = currentLifeActorPtr;
-
-			var1--;
-
-			switch(var1)
-			{
-			case 0x9:
-				{
-					return(actorPtr->bodyNum);
-					break;
-				}
-			case 0xA: // MARK
-				{
-					return(actorPtr->MARK);
-					break;
-				}
-			case 0xB: // NUM_TRACK
-				{
-					return(actorPtr->trackNumber);
-					break;
-				}
-			case 0xC: // CHRONO
-				{
-					return(evalChrono(&actorPtr->CHRONO) / 0x3C0000); // recheck
-					break;
-				}
-			case 0xF: // COL_BY
-				{
-					if(actorPtr->COL_BY == -1)
-						return(-1);
-					else
-						return(actorTable[actorPtr->COL_BY].field_0);
-					break;
-				}
-			default:
-				{
-					printf("Unhandled test type %X in evalVar\n",var1);
-					exit(1);
-					break;
-				}
-			}
-		}
-	}
-}
-
 short int computeDistanceToPoint(int x1, int z1, int x2, int z2)
 {
 	x1 -= x2;
@@ -2500,40 +2295,6 @@ short int computeDistanceToPoint(int x1, int z1, int x2, int z2)
 	}
 }
 
-int computeAngleModificatorToPositionSub1(int ax)
-{
-	int xOut;
-	int yOut;
-
-	makeRotationMtx(ax,0,1000,&xOut,&yOut);
-
-	yOut *= angleCompX;
-	xOut *= angleCompZ;
-
-	yOut -= xOut;
-
-	return(abs(yOut));
-}
-
-int computeAngleModificatorToPosition(int x1,int z1, int beta, int x2, int z2)
-{
-	angleCompX = x2 - x1;
-	angleCompZ = z2 - z1;
-	angleCompBeta = beta;
-
-	int resultMin = computeAngleModificatorToPositionSub1(beta - 4);
-	int resultMax = computeAngleModificatorToPositionSub1(beta + 4);
-
-	if(resultMax == -1 && resultMin == 1) // in the middle
-	{
-		return(computeAngleModificatorToPositionSub1(beta));
-	}
-	else
-	{
-		return(((resultMax+resultMin)+1)>>1);
-	}
-}
-
 void startActorRotation(short int beta, short int newBeta, short int param, rotateStruct* rotatePtr)
 {
 	rotatePtr->oldAngle = beta;
@@ -2548,131 +2309,6 @@ short int updateActorRotation(rotateStruct* rotatePtr)
 	// TODO: proper implementation;
 
 	return(rotatePtr->newAngle);
-}
-
-void processTrack(void)
-{
-	switch(currentProcessedActorPtr->trackMode)
-	{
-	case 1: // manual
-		{
-			printf("Manual move !\n");
-			break;
-		}
-	case 2: // ?
-		{
-			printf("unsupported move mode 2\n");
-			exit(1);
-			break;
-		}
-	case 3: // track
-		{
-			char* trackPtr = HQR_Get(listTrack,currentProcessedActorPtr->trackNumber);
-			
-			trackPtr+=currentProcessedActorPtr->positionInTrack * 2;
-
-			short int trackMacro = *(short int*)trackPtr;
-			trackPtr += 2;
-
-			switch(trackMacro)
-			{
-			case 1: // goToPosition
-				{
-					int roomNumber = *(short int*)(trackPtr);
-					trackPtr += 2;
-
-					int x = *(short int*)(trackPtr);
-					trackPtr += 2;
-					int y = 0;
-					int z = *(short int*)(trackPtr);
-					trackPtr += 2;
-		
-					if(roomNumber != currentProcessedActorPtr->room)
-					{
-						char* roomDestDataPtr = etageVar0 + *(unsigned int*)(etageVar0+roomNumber*4);
-						char* roomSourceDataPtr = etageVar0 + *(unsigned int*)(etageVar0+currentProcessedActorPtr->room*4);
-
-						x -= ((*(short int*)(roomSourceDataPtr+4)) - (*(short int*)(roomDestDataPtr+4))) * 10;
-						z -= ((*(short int*)(roomSourceDataPtr+8)) - (*(short int*)(roomDestDataPtr+8))) * 10;
-					}
-
-					int distanceToPoint = computeDistanceToPoint(	currentProcessedActorPtr->x + currentProcessedActorPtr->field_5A,
-																	currentProcessedActorPtr->z + currentProcessedActorPtr->field_5E,
-																	x,z );
-
-
-					if(distanceToPoint >= 400) // not yet at position
-					{
-						int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->x + currentProcessedActorPtr->field_5A,
-																			currentProcessedActorPtr->z + currentProcessedActorPtr->field_5E,
-																			currentProcessedActorPtr->beta,
-																			x,z );
-
-						if(currentProcessedActorPtr->rotate.param == 0 || (currentProcessedActorPtr->rotate.param != 0 && currentProcessedActorPtr->field_72 != angleModif))
-						{
-							startActorRotation(currentProcessedActorPtr->beta, currentProcessedActorPtr->beta - (angleModif<<6), 15, &currentProcessedActorPtr->rotate);
-						}
-
-						currentProcessedActorPtr->field_72 = angleModif;
-
-						if(angleModif)
-						{
-							currentProcessedActorPtr->rotate.param = 0;
-						}
-						else
-						{
-							currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
-						}
-					}
-					else // reached position
-					{
-						currentProcessedActorPtr->positionInTrack += 4;
-					}
-						
-					break;
-				}
-			case 2: // stop
-				{
-					currentProcessedActorPtr->speed = 0;
-					currentProcessedActorPtr->trackNumber = -1;
-					setMoveMode(0,0);
-					break;
-				}
-			case 4: // MARK
-				{
-					currentProcessedActorPtr->MARK = *(short int*)(trackPtr);
-					trackPtr += 2;
-					currentProcessedActorPtr->positionInTrack += 2;
-					break;
-				}
-			case 0x13: // rotate
-				{
-					currentProcessedActorPtr->alpha = *(short int*)(trackPtr);
-					trackPtr += 2;
-					currentProcessedActorPtr->beta = *(short int*)(trackPtr);
-					trackPtr += 2;
-					currentProcessedActorPtr->gamma = *(short int*)(trackPtr);
-					trackPtr += 2;
-
-					currentProcessedActorPtr->field_72 = 0;
-
-					currentProcessedActorPtr->positionInTrack +=4;
-
-					break;
-				}
-			default:
-				{
-					printf("Unknown track macro %X\n",trackMacro);
-					exit(1);
-					break;
-				}
-			}
-
-			break;
-		}
-	}
-
-	currentProcessedActorPtr->beta &= 0x3FF;
 }
 
 int anim(int animNum,int arg_2, int arg_4)
@@ -2704,299 +2340,6 @@ int anim(int animNum,int arg_2, int arg_4)
 	}
 
 	return(1);
-}
-
-void processLife(int lifeNum)
-{
-	int exitLife = 0;
-	//int switchVal = 0;
-	int var_6;
-
-	currentLifeActorIdx = currentProcessedActorIdx;
-	currentLifeActorPtr = currentProcessedActorPtr;
-	currentLifeNum = lifeNum;
-
-	currentLifePtr = HQR_Get(listLife,lifeNum);
-
-	while(!exitLife)
-	{
-		int lifeTempVar1;
-		int lifeTempVar2;
-		int lifeTempVar3;
-
-		int switchVal = 0;
-
-		var_6 = -1;
-
-		short int currentOpcode = *(short int*)(currentLifePtr);
-		currentLifePtr+=2;
-
-		if(currentOpcode & 0x8000)
-		{
-				var_6 = *(short int*)(currentLifePtr);
-				currentLifePtr+=2;
-
-				if(var_6==-1)
-				{
-					printf("Unsupported newVar = -1\n");
-					exit(1);
-				}
-				else
-				{
-					currentProcessedActorIdx = objectTable[var_6].ownerIdx;
-					currentProcessedActorPtr = &actorTable[currentProcessedActorIdx];
-
-					goto processOpcode;
-				}
-		}
-		else
-		{
-processOpcode:
-			switch(currentOpcode & 0x7FFF)
-			{
-			case 0x0: // DO_MOVE
-				{
-					processTrack();
-					break;
-				}
-			case 0x1: // ANIM
-				{
-					lifeTempVar1 = *(short int*)currentLifePtr;
-					currentLifePtr +=2;
-					lifeTempVar2 = *(short int*)currentLifePtr;
-					currentLifePtr +=2;
-
-					if(lifeTempVar1==-1)
-					{
-						currentProcessedActorPtr->ANIM = -1;
-						currentProcessedActorPtr->field_44 = -2;
-					}
-					else
-					{
-						anim(lifeTempVar1,0,lifeTempVar2);
-					}
-
-					break;
-				}
-			case 0x4: // IF_DIF
-				{
-					lifeTempVar1 = evalVar();
-					lifeTempVar2 = evalVar();
-
-					if(lifeTempVar1 == lifeTempVar2)
-					{
-						currentLifePtr+=2;
-					}
-					else
-					{
-						lifeTempVar2 = *(short int*)(currentLifePtr);
-						currentLifePtr += lifeTempVar2*2;
-						currentLifePtr += 2;
-					}
-
-					break;
-				}
-			case 0xC: // RETURN
-				{
-					exitLife = 1;
-					break;
-				}
-			case 0xD: // ?
-				{
-					lifeTempVar1 = *(short int*)(currentLifePtr);
-					currentLifePtr+=2;
-
-					anim(lifeTempVar1, 1, -1);
-
-					break;
-				}
-			case 0xF: // MOVE
-				{
-					lifeTempVar1 = *(short int*)(currentLifePtr);
-					currentLifePtr+=2;
-
-					lifeTempVar2 = *(short int*)(currentLifePtr);
-					currentLifePtr+=2;
-
-					setMoveMode(lifeTempVar1,lifeTempVar2);
-
-					break;
-				}
-			case 0x11: // MESSAGE
-				{
-					lifeTempVar1 = *(short int*)(currentLifePtr);
-					currentLifePtr+=2;
-
-					//makeMessage(lifeTempVar1);
-
-					break;
-				}
-			case 0x19: // SWITCH
-				{
-					switchVal = evalVar();
-					break;
-				}
-			case 0x1A: // CASE
-				{
-					lifeTempVar1 = *(short int*)(currentLifePtr);
-					currentLifePtr+=2;
-
-					if(lifeTempVar1 == switchVal)
-					{
-						currentLifePtr+=2;
-					}
-					else
-					{
-						lifeTempVar2 = *(short int*)(currentLifePtr);
-						currentLifePtr += lifeTempVar2*2;
-						currentLifePtr += 2;
-					}
-		
-					break;
-				}
-			case 0x1F: // LIFE
-				{
-					currentProcessedActorPtr->life = *(short int*)(currentLifePtr);
-					currentLifePtr+=2;
-					break;
-				}
-			case 0x20: // DELETE TODO
-				{
-					currentLifePtr+=2;
-					break;
-				}
-			case 0x2F: // STAGE TODO
-				{
-					currentLifePtr+=10;
-					break;
-				}
-			case 0x33: // CAMERA_TARGET
-				{
-					lifeTempVar1 = *(short int*)(currentLifePtr);
-					currentLifePtr+=2;
-
-					if(lifeTempVar1 != currentCameraTarget)
-					{
-						lifeTempVar2 = objectTable[lifeTempVar1].ownerIdx;
-
-						if(lifeTempVar1 != -1)
-						{
-							currentCameraTarget = lifeTempVar1;
-							genVar9 = lifeTempVar2;
-
-							lifeTempVar3 = actorTable[genVar9].room;
-
-							if(lifeTempVar3 != currentDisplayedRoom)
-							{
-								needChangeRoom = 1;
-//								newRoom = lifeTempVar3;
-							}
-						}
-						else
-						{
-							printf("Partialy unimplemented life opcode 0x33\n");
-							exit(1);
-						}
-					}
-
-					break;
-				}
-			case 0x36: // TEST_COL
-				{
-					lifeTempVar1 = *(short int*)(currentLifePtr);
-					currentLifePtr+=2;
-
-					if(lifeTempVar1)
-					{
-						currentProcessedActorPtr->dynFlags |= 1;
-					}
-					else
-					{
-						currentProcessedActorPtr->dynFlags &= 0xFFFE;
-					}
-
-					break;
-				}
-			case 0x40: // LIGHT
-				{
-					lifeTempVar1 = 2-((*(short int*)(currentLifePtr))<<1);
-					currentLifePtr+=2;
-
-					if(!defines.lightVar)
-					{
-						if(lightVar1 != lifeTempVar1)
-						{
-							lightVar1 = lifeTempVar1;
-							lightVar2 = 1;
-						}
-					}
-
-					break;
-				}
-			case 0x41: // SHAKING
-				{
-					//shakingState = shakingAmplitude = *(short int*)(currentLifePtr);
-					currentLifePtr+=2;
-
-/*					if(shakingState==0)
-					{
-						stopShaking();
-					} */
-
-					break;
-				}
-			case 0x4D: // ? shaking related
-				{
-//					mainLoopVar1 = shakeVar1 = *(short int*)(currentLifePtr);
-					currentLifePtr+=2;
-
-/*					if(mainLoopVar1)
-					{
-						//setupShaking(-600);
-					}
-					else
-					{
-						//setupShaking(1000);
-					} */
-
-					break;
-				}
-			case 0x51: // ? fade out music and play another music ?
-				{
-					lifeTempVar1 = *(short int*)(currentLifePtr);
-					currentLifePtr+=2;
-
-					/*if(currentMusic!=-1)
-					{
-						soundFunc1(0,0,0x8000); // fade out music
-						startChrono(&musicChrono); // fade out music timer
-						currentMusic = -2; // fade out mode
-						genVar8 = lifeTempVar1; // next music to play
-					}
-					else
-					{
-						changeMusic(lifeTempVar1);
-					}*/
-
-					break;
-				}
-			default:
-				{
-					printf("Unknown opcode %X in processLife\n",currentOpcode & 0x7FFF);
-					exit(1);
-				}
-			}
-		}
-
-		if(var_6 != -1)
-		{
-			currentProcessedActorIdx = currentLifeActorIdx;
-			currentProcessedActorPtr = currentLifeActorPtr;
-		}
-
-	}
-
-	currentLifeNum = -1;
 }
 
 void mainDraw(int mode)
@@ -3044,6 +2387,7 @@ void mainDraw(int mode)
 
 				renderModel(actorPtr->field_22 + actorPtr->field_5A, actorPtr->field_24 + actorPtr->field_5C, actorPtr->field_26 + actorPtr->field_5E,
 							actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
+
 			}
 		}
 	}
@@ -3588,7 +2932,7 @@ void processActor1(void)
 	}
 	else // not the end of anim
 	{
-		if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->field_7A == 0))
+		if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->speedChange.param == 0))
 		{
 			currentProcessedActorPtr->field_22 += currentProcessedActorPtr->field_5A;
 			currentProcessedActorPtr->x += currentProcessedActorPtr->field_5A;
@@ -3599,7 +2943,7 @@ void processActor1(void)
 			currentProcessedActorPtr->field_5A = 0;
 			currentProcessedActorPtr->field_5E = 0;
 
-			//startActorRotation(0,currentProcessedActorPtr.speed,60,&currentProcessedActorPtr.field_76);
+			startActorRotation(0,currentProcessedActorPtr->speed,60,&currentProcessedActorPtr->speedChange);
 		}
 
 		currentProcessedActorPtr->END_ANIM = 0;
@@ -3785,6 +3129,245 @@ void startGame(int startupFloor, int startupRoom, int allowSystemMenu)
 	fadeOut(8,0);*/
 }
 
+int parseAllSaves(int arg)
+{
+	return(0);
+	// TODO : make real implementation
+}
+
+unsigned int currentSaveEntrySize;
+
+void* getSaveEntry(int index)
+{
+	currentSaveEntrySize = saveTable[index].size;
+
+	return(saveTable[index].ptr);
+}
+
+void configureHqrHero(hqrEntryStruct* hqrPtr, char* name)
+{
+	strcpy(hqrPtr->string,"        ");
+	strncpy(hqrPtr->string,name,8);
+}
+
+int initAnimInBody(int frame, char* anim, char* body)
+{
+	short int temp;
+
+	temp = *(short int*)anim;
+	anim+=2;
+
+	if(frame >= temp)
+	{
+		return(0);
+	}
+
+	short int ax = *(short int*)anim;
+	anim+=2;
+
+	short int cx = ax;
+
+	ax = ((ax+1)<<3)*frame;
+
+	anim+=ax;
+
+	animCurrentTime = *(short int*)anim;
+	animKeyframeLength = animCurrentTime;
+
+	if(!((*(short int*)body)&2))
+	{
+		return(0);
+	}
+
+	body +=14;
+
+	*(char**)(body+2) = anim;
+	*(unsigned short int*)(body+6) = timer;
+
+	body+= *(short int*)body;
+	body+=2;
+
+	ax = *(short int*)body;
+	short int bx = ax;
+
+	body+=(((ax << 1) + bx) << 1) +2;
+
+	bx = ax = *(short int*)body;
+
+	body+=bx<<1;
+
+	if(cx > ax)
+		cx = ax;
+
+	body+=10;
+
+	char* saveAnim = anim;
+
+	anim += 8;
+
+	int i;
+
+	for(i=0;i<cx;i++)
+	{
+		*(short int*)(body) = *(short int*)(anim);
+		body+=2;
+		anim+=2;
+		*(short int*)(body) = *(short int*)(anim);
+		body+=2;
+		anim+=2;
+		*(short int*)(body) = *(short int*)(anim);
+		body+=2;
+		anim+=2;
+		*(short int*)(body) = *(short int*)(anim);
+		body+=2;
+		anim+=2;
+
+		body+=8;
+	}
+
+	anim = saveAnim;
+
+	anim+=2;
+
+	animRot2 = *(short int*)anim;
+	anim+=2;
+	animRot3 = *(short int*)anim;
+	anim+=2;
+	animRot1 = *(short int*)anim;
+	anim+=2;
+
+	return(1);
+
+}
+
+int loadSave(int saveNumber)
+{
+	char buffer[256];
+	FILE* fHandle;
+
+	sprintf(buffer,"SAVE%d.ITD",saveNumber);
+
+	fHandle = fopen(buffer,"rb");
+
+	if(!fHandle)
+	{
+		return(0);
+	}
+
+	initEngine();
+	initVars();
+
+	fseek(fHandle,8,SEEK_SET);
+
+	unsigned int var28;
+	fread(&var28,4,1,fHandle);
+
+	var28 = ((var28 & 0xFF) << 24) | ((var28 & 0xFF00) << 8) | (( var28 & 0xFF0000) >> 8) | ((var28 & 0xFF000000) >> 24);
+
+	fseek(fHandle,var28,SEEK_SET);
+
+	int var_14 = 0;
+	char* ptr;
+
+	do
+	{
+		ptr = (char*)getSaveEntry(var_14);
+
+		if(ptr)
+		{
+			fread(ptr,currentSaveEntrySize,1,fHandle);
+		}
+		var_14++;
+	}while(ptr);
+
+	//timerFreeze = 1;
+
+	int var_E = currentCamera;
+
+	loadFloor(currentEtage);
+	currentCamera = -1;
+	loadRoom(currentDisplayedRoom);
+	int var_16 = currentMusic;
+	currentMusic = -1;
+//	changeMusic(var_16);
+
+	fseek(fHandle,12,SEEK_SET);
+	unsigned int offsetToVars;
+	fread(&offsetToVars,4,1,fHandle);
+	offsetToVars = ((offsetToVars & 0xFF) << 24) | ((offsetToVars & 0xFF00) << 8) | (( offsetToVars & 0xFF0000) >> 8) | ((offsetToVars & 0xFF000000) >> 24);
+	fseek(fHandle,offsetToVars,SEEK_SET);
+
+	unsigned short int tempVarSize;
+	fread(&tempVarSize,2,1,fHandle);
+	varSize = tempVarSize;
+
+	fread(vars,varSize,1,fHandle);
+
+	configureHqrHero(listBody,listBodySelect[defines.hero]);
+	configureHqrHero(listAnim,listAnimSelect[defines.hero]);
+
+	fseek(fHandle,16,SEEK_SET);
+	unsigned int offsetToActors;
+	fread(&offsetToActors,4,1,fHandle);
+	offsetToVars = ((offsetToActors & 0xFF) << 24) | ((offsetToActors & 0xFF00) << 8) | (( offsetToActors & 0xFF0000) >> 8) | ((offsetToActors & 0xFF000000) >> 24);
+	fseek(fHandle,offsetToVars,SEEK_SET);
+
+	fread(actorTable,8000,1,fHandle);
+	fclose(fHandle);
+
+	int i;
+
+	for(i=0;i<50;i++)
+	{
+		if(actorTable[i].field_0 != -1 && actorTable[i].bodyNum != -1)
+		{
+			char* bodyPtr = HQR_Get(listBody,actorTable[i].bodyNum);
+
+			if(actorTable[i].ANIM != -1)
+			{
+				char* animPtr = HQR_Get(listAnim,actorTable[i].ANIM);
+				initAnimInBody(actorTable[i].FRAME,animPtr,bodyPtr);
+			}
+		}
+	}
+
+	startGameVar1 = var_E;
+
+	return(1);
+}
+
+int restoreSave(int arg0, int arg1)
+{
+//	restoreSaveVar1 = arg0;
+
+	if(arg1==0)
+	{
+		flushScreen();
+		flipScreen();
+		make3dTatouUnk1(0x40,0);
+	}
+
+	int selectedSave = parseAllSaves(0);
+
+	if(arg1==0)
+	{
+	//	fadeOut(8,0);
+	}
+
+	if(selectedSave == -1)
+	{
+		return(0);
+	}
+
+	if(arg1==0)
+	{
+		//freeScene();
+	}
+
+	return(loadSave(selectedSave));
+
+}
+
 int main(int argc, char** argv)
 {
 	int startupMenuResult;
@@ -3865,17 +3448,17 @@ int main(int argc, char** argv)
 				{
 					makeProtection();
 					protectionToBeDone = 0;
-				}
+				}*/
 
 				if(restoreSave(12,0))
 				{
-					if(!protectionState)
+				/*	if(!protectionState)
 					{
 						freeAll();
 						exit(-1);
-					}
+					}*/
 
-					mainSub1();
+//					mainSub1();
 
 					mainVar1 = 2;
 
@@ -3883,16 +3466,16 @@ int main(int argc, char** argv)
 
 					mainLoop(1);
 
-					freeScene();
+//					freeScene();
 
-					fadeOut();
+					fadeOut(8,0);
 
-					if(giveUp == 0)
+				/*	if(giveUp == 0)
 					{
 						freeAll();
 						exit(-1);
-					}
-				}*/
+					} */
+				}
 
 				break;
 			}

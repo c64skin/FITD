@@ -21,6 +21,12 @@
 #include "input.h"
 #include "version.h"
 #include "cosTable.h"
+#include "hqr.h"
+
+// scripting
+#include "track.h"
+#include "life.h"
+#include "evalVar.h"
 
 #include "osystem.h"
 

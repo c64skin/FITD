@@ -329,6 +329,15 @@ void rotateModel(int x,int y,int z,int alpha,int beta,int gamma,int time)
 	setupPointTransformSM(alpha,beta,gamma);
 }
 
+void playSound(int num)
+{
+	char buffer[256];
+
+	sprintf(buffer,"LISTSAMP/%04X.VOC",num);
+
+	osystem.playSample(buffer);
+}
+
 ////////////////////////
 
 int make3dTatou(void)
@@ -383,11 +392,11 @@ int make3dTatou(void)
 		else // eclair
 		{
 		/*	soundVar2 = -1;
-			soundVar1 = -1;
+			soundVar1 = -1; */
 
 			playSound(defines.field_8);
 
-			soundVar2 = -1;
+       /*			soundVar2 = -1;
 			soundVar1 = -1;*/
 
 			paletteFill(palette,63,63,63);
@@ -409,7 +418,7 @@ int make3dTatou(void)
 			{
 				process_events();
 
-				time+=deltaTime;
+				time+=deltaTime-25;
 
 				if(time>16000)
 					break;

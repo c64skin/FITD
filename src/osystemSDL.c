@@ -19,6 +19,7 @@
 
 #include "SDL.h"
 #include "SDL_thread.h"
+#include "SDL_sound.h"
 #include "osystem.h"
 
 char *tempBuffer;
@@ -81,6 +82,10 @@ OSystem::OSystem()	// that's the constructor of the system dependent
 	}
 
     atexit(SDL_Quit);
+
+	Sound_Init();
+
+//	atexit(Sound_Quit);
 
 /*    if (TTF_Init() < 0)
 	{
@@ -294,3 +299,82 @@ void OSystem::crossFade(char *buffer, char *palette)
     SDL_FreeSurface(tempSurface);
 }
 
+int posInStream = 0;
+volatile bool deviceStatus = false;
+
+void my_audio_callback(void *userdata, Uint8 *stream, int len)
+{
+	Sound_Sample *sample = (Sound_Sample *)userdata;
+	Uint8* input = (Uint8*)sample->buffer;
+
+	if(posInStream+len < sample->buffer_size)
+	{
+		memcpy(stream,input+posInStream,len);
+		posInStream+=len;
+	}
+	else
+	{
+		len = sample->buffer_size - posInStream;
+		memcpy(stream,input+posInStream,len);
+		posInStream+=len;
+	}
+}
+
+void OSystem::playSample(char* sampleName)
+{
+	Sound_Sample *sample;
+	Sound_AudioInfo info;
+
+	info.channels = 0;
+	info.format = 0;
+	info.rate = 0;
+
+	sample = Sound_NewSampleFromFile(sampleName,&info,5000);
+	Sound_DecodeAll(sample);
+
+	if(deviceStatus)
+	{
+		SDL_CloseAudio();
+	}
+
+	posInStream = 0;
+	{
+		SDL_AudioSpec *desired, *obtained;
+		SDL_AudioSpec *hardware_spec;
+
+		/* Allocate a desired SDL_AudioSpec */
+		desired = (SDL_AudioSpec*)malloc(sizeof(SDL_AudioSpec));
+
+		/* Allocate space for the obtained SDL_AudioSpec */
+		obtained = (SDL_AudioSpec*)malloc(sizeof(SDL_AudioSpec));
+
+		/* 22050Hz - FM Radio quality */
+		desired->freq=sample->actual.rate;
+
+		/* 16-bit signed audio */
+		desired->format=sample->actual.format;
+
+		/* Mono */
+		desired->channels=sample->actual.channels;
+
+		/* Large audio buffer reduces risk of dropouts but increases response time */
+		desired->samples=512;
+
+		/* Our callback function */
+		desired->callback=my_audio_callback;
+
+		desired->userdata=(void*)sample;
+
+		/* Open the audio device */
+		if ( SDL_OpenAudio(desired, obtained) < 0 ){
+		fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+		exit(-1);
+		}
+		/* desired spec is no longer needed */
+		free(desired);
+		hardware_spec=obtained;
+		/* Start playing */
+		SDL_PauseAudio(0);
+		deviceStatus = true;
+	}
+}

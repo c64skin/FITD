@@ -52,6 +52,12 @@ struct definesStruct // warning ! Used to read data from a file. Alignement chec
 	short int field_58;
 };
 
+struct saveEntry
+{
+	void* ptr;
+	unsigned int size;
+};
+
 struct textEntryStruct
 {
 	short int index;
@@ -152,10 +158,7 @@ struct actorStruct
 	rotateStruct rotate;
 	short int field_72;
 	short int speed;
-	short int field_76;
-	short int field_78;
-	short int field_7A;
-	short int field_7C;
+	rotateStruct speedChange;
 	short int COL[3];
 	short int COL_BY;
 	short int HARD_DEC;
@@ -170,7 +173,7 @@ struct actorStruct
 	short int field_98;
 	short int field_9A;
 	short int field_9C;
-	short int field_9E;
+//	short int field_9E;
 };
 
 struct objectStruct
@@ -291,7 +294,7 @@ extern char* screenSm5;
 
 extern actorStruct actorTable[50];
 
-extern int currentCameraTarget;
+extern short int currentCameraTarget;
 
 extern int fileSize;
 
@@ -310,7 +313,7 @@ extern int varSize;
 
 extern char* messageVar1[5]; // may be bigger
 
-extern int currentMusic;
+extern short int currentMusic;
 extern int action;
 
 extern boxStruct genVar2[15]; // recheckSize
@@ -322,26 +325,26 @@ extern int genVar5;
 extern int genVar6;
 extern int genVar7;
 extern int genVar8;
-extern int genVar9;
-extern int giveUp;
-extern int inHand;
-extern int lightVar1;
+extern short int genVar9;
+extern short int giveUp;
+extern short int inHand;
+extern short int lightVar1;
 extern int lightVar2;
-extern int numObjInInventory;
+extern short int numObjInInventory;
 extern int soundVar1;
 extern int soundVar2;
-extern int statusScreenAllowed;
+extern short int statusScreenAllowed;
 
 extern char* etageVar0;
 extern char* etageVar1;
 
 extern int changeFloor;
-extern int currentCamera;
-extern int currentEtage;
+extern short int currentCamera;
+extern short int currentEtage;
 extern int needChangeRoom;
 
 extern char* cameraPtr;
-extern int currentDisplayedRoom;
+extern short int currentDisplayedRoom;
 extern int mainVar1;
 extern int roomVar0;
 extern int roomVar1;
@@ -414,5 +417,10 @@ extern char* animVar3;
 extern char* animVar4;
 
 extern int paletteVar;
+
+extern char* listBodySelect[];
+extern char* listAnimSelect[];
+
+extern saveEntry saveTable[];
 
 #endif
