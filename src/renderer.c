@@ -295,9 +295,9 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 
 	/////////////////////////
 	// DEBUG
-		transX = 0;
+	/*	transX = 0;
 		transY = 0;
-		transZ = 0;
+		transZ = 0;*/
 
 	/////////////////////////
 
@@ -870,6 +870,8 @@ void renderStyle1(char* buffer)
 
 	int numPoint = *(short int*)buffer;
 	buffer+=2;
+
+	numPoint &= 0xF;
 
 	int color = *(short int*)buffer;
 	buffer+=2;
