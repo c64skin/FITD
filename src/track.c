@@ -298,6 +298,56 @@ void processTrack(void)
 
 			switch(trackMacro)
 			{
+			case 0: // warp
+				{
+					int roomNumber = *(short int*)(trackPtr);
+					trackPtr += 2;
+
+					if(currentProcessedActorPtr->room != roomNumber)
+					{
+						if(genVar9 == currentProcessedActorIdx)
+						{
+							needChangeRoom = 1;
+							newRoom = roomNumber;
+						}
+
+						currentProcessedActorPtr->room = roomNumber;
+					}
+
+					currentProcessedActorPtr->zv.ZVX1 -= currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+					currentProcessedActorPtr->zv.ZVX2 -= currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+					currentProcessedActorPtr->zv.ZVY1 -= currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+					currentProcessedActorPtr->zv.ZVY2 -= currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+					currentProcessedActorPtr->zv.ZVZ1 -= currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+					currentProcessedActorPtr->zv.ZVZ2 -= currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+
+					currentProcessedActorPtr->worldX = currentProcessedActorPtr->roomX = *(short int*)(trackPtr);
+					trackPtr += 2;
+					currentProcessedActorPtr->worldY = currentProcessedActorPtr->roomY = *(short int*)(trackPtr);
+					trackPtr += 2;
+					currentProcessedActorPtr->worldZ = currentProcessedActorPtr->roomZ = *(short int*)(trackPtr);
+					trackPtr += 2;
+
+					char* ptr = etageVar0 + *(unsigned int*)(etageVar0 + currentProcessedActorPtr->room * 4);
+
+					currentProcessedActorPtr->worldX -= (*(short int*)(cameraPtr+4) - *(short int*)(ptr+4)) * 10;
+					currentProcessedActorPtr->worldY += (*(short int*)(cameraPtr+6) - *(short int*)(ptr+6)) * 10;
+					currentProcessedActorPtr->worldZ += (*(short int*)(cameraPtr+8) - *(short int*)(ptr+8)) * 10;
+
+					currentProcessedActorPtr->zv.ZVX1 += currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+					currentProcessedActorPtr->zv.ZVX2 += currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX;
+					currentProcessedActorPtr->zv.ZVY1 += currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+					currentProcessedActorPtr->zv.ZVY2 += currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY;
+					currentProcessedActorPtr->zv.ZVZ1 += currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+					currentProcessedActorPtr->zv.ZVZ2 += currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ;
+
+					currentProcessedActorPtr->speed = 0;
+					currentProcessedActorPtr->field_72 = 0;
+					currentProcessedActorPtr->rotate.param = 0;
+					currentProcessedActorPtr->positionInTrack += 5;
+
+					break;
+				}
 			case 1: // goToPosition
 				{
 					int roomNumber = *(short int*)(trackPtr);

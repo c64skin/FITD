@@ -674,7 +674,7 @@ processOpcode:
 					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
 
-//					take(lifeTempVar1, 1);
+					take(lifeTempVar1);
 
 					break;
 				}

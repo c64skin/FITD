@@ -1,5 +1,80 @@
 #include "common.h"
 
+int getPosRelTable[] = {4,1,8,2,4,1,8,0};
+
+int getPosRel(actorStruct* actor1, actorStruct* actor2)
+{
+	int beta1 = actor1->beta;
+	int counter = 3;
+
+	if(beta1 >= 0x80 && beta1 < 0x180)
+	{
+		counter = 2;
+	}
+
+	if(beta1 >= 0x180 && beta1 < 0x280)
+	{
+		counter = 1;
+	}
+
+	if(beta1 >= 0x280 && beta1 < 0x380)
+	{
+		counter = 0;
+	}
+
+	ZVStruct localZv;
+
+	copyZv(&actor2->zv, &localZv);
+
+	if(actor1->room != actor2->room)
+	{
+		getZvRelativePosition(&localZv, actor2->room, actor1->room);
+	}
+
+	int centerX = (localZv.ZVX1 + localZv.ZVX2) / 2;
+	int centerZ = (localZv.ZVZ1 + localZv.ZVZ2) / 2;
+
+	if(actor1->zv.ZVZ1 >= centerZ && actor1->zv.ZVZ2 <= centerZ)
+	{
+		if(actor1->zv.ZVX2 < centerX)
+		{
+			counter++;
+		}
+		else
+		{
+			if(actor1->zv.ZVX1 <= centerX)
+			{
+				return(0);
+			}
+			else
+			{
+				counter+=3;
+			}
+		}
+	}
+	else
+	{
+		if(actor1->zv.ZVX2 < centerX || actor1->zv.ZVX1 > centerX)
+		{
+			return(0);
+		}
+
+		if(actor1->zv.ZVZ2 < centerZ )
+		{
+			counter+=2;
+		}
+		else
+		{
+			if(actor1->zv.ZVZ1 <= centerZ)
+			{
+				return(0);
+			}
+		}
+	}
+
+	return(getPosRelTable[counter]);
+}
+
 int calcDist(int X1, int Y1, int Z1, int X2, int Y2, int Z2)
 {
 	int Xdist = abs(X1 - X2);
@@ -208,6 +283,25 @@ int evalVar(void)
 
 					break;
 				}
+			case 0x12: // POSREL
+				{
+					int objNum;
+
+					objNum = *(short int*)currentLifePtr;
+					currentLifePtr+=2;
+
+					int temp = *(short int*)currentLifePtr;
+					currentLifePtr+=2;
+
+					if(objectTable[objNum].ownerIdx == -1)
+					{
+						return 0;
+					}
+
+					return(getPosRel(actorPtr, &actorTable[objectTable[objNum].ownerIdx]));
+
+					break;
+				}
 			case 0x14:
 				{
 					return(button);
@@ -271,7 +365,7 @@ int evalVar(void)
 					return(actorPtr->roomY);
 					break;
 				}
-			case 0x23: // TODO
+			case 0x23: // TODO: music
 				{
 					return(1);
 					break;
@@ -286,6 +380,23 @@ int evalVar(void)
 			case 0x25:
 				{
 					return(actorPtr->stage);
+					break;
+				}
+			case 0x26: // THROW
+				{
+					int objNum;
+
+					objNum = *(short int*)currentLifePtr;
+					currentLifePtr+=2;
+
+					if(objectTable[objNum].flags2 & 0x1000)
+					{
+						return 1;
+					}
+					else
+					{
+						return 0;
+					}
 					break;
 				}
 			default:

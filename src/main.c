@@ -6,6 +6,20 @@
 
 char scaledScreen[640*400];
 
+int currentFoundBodyIdx;
+char* currentFoundBody;
+int numInventoryActions;
+short int inventoryActionTable[5];
+//short int inventory[30];
+
+int statusLeft;
+int statusTop;
+int statusRight;
+int statusBottom;
+
+int statusVar1;
+
+
 void sysInitSub1(char* var0, char* var1)
 {
 	screenSm1 = var0;
@@ -1983,13 +1997,13 @@ void setupPointRotate(int alpha, int beta, int gamma)
 	pointRotateEnable = true;
 
 	pointRotateCosX = cosTable[alpha&0x3FF];
-	pointRotateSinX = cosTable[((alpha&0x3FF) + 0x200) & 0x7FE];
+	pointRotateSinX = cosTable[((alpha&0x3FF) + 0x100) & 0x3FF];
 
 	pointRotateCosY = cosTable[beta&0x3FF];
-	pointRotateSinY = cosTable[((beta&0x3FF) + 0x200) & 0x7FE];
+	pointRotateSinY = cosTable[((beta&0x3FF) + 0x100) & 0x3FF];
 
 	pointRotateCosZ = cosTable[gamma&0x3FF];
-	pointRotateSinZ = cosTable[((gamma&0x3FF) + 0x200) & 0x7FE];
+	pointRotateSinZ = cosTable[((gamma&0x3FF) + 0x100) & 0x3FF];
 }
 
 void pointRotate(int x, int y, int z, int* destX, int* destY, int* destZ)
@@ -3606,19 +3620,413 @@ int processActor1Sub1(int actorIdx, ZVStruct* zvPtr)
 	return(currentCollisionSlot);
 }
 
-void foundObject(int objIdx, int param)
+void cleanFoundObjectScreen()
 {
-	printf("Found object %d\n", objIdx);
+	// 160 120 whidth = ,240,120
+	memset(screen,0,320*200);
 }
 
-void hardColSuB1(ZVStruct* zvPtr, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
+void drawFoundObect(int menuState,int objectName,int zoomFactor)
 {
+	cleanFoundObjectScreen();
+
+	rotateModel(0,0,0,60,statusVar1,0,zoomFactor);
+
+	renderModel(0,0,0,0,0,0, HQR_Get(listBody, currentFoundBodyIdx));
+
+	drawText(160,currentMenuTop,20,1);
+	drawText(160,currentMenuTop+16,objectName,1);
+	drawText(160,currentMenuTop+16,objectName,1);
+
+	switch(menuState)
+	{
+	case 0:
+		{
+			drawSlectedText(130,currentMenuBottom-16,21,1,4);
+			drawText(190,currentMenuBottom-16,22,4);
+			break;
+		}
+	case 1:
+		{
+			drawText(130,currentMenuBottom-16,21,4);
+			drawSlectedText(190,currentMenuBottom-16,22,1,4);
+			break;
+		}
+	case 2:
+		{
+			drawSlectedText(160,currentMenuBottom-16,10,1,4);
+			break;
+		}
+	}
+}
+
+void take(int objIdx)
+{
+	objectStruct* objPtr = &objectTable[objIdx];
+
+	if(numObjInInventory == 0)
+	{
+		inventory[0] = objIdx;
+	}
+	else
+	{
+		int i;
+
+		for(i=numObjInInventory;i>0;i--)
+		{
+			inventory[i+1] = inventory[i];
+		}
+
+		inventory[1] = objIdx;
+	}
+
+	numObjInInventory++;
+
+	action = 0x800;
+
+//	updateInHand(objIdx);
+
+	if(objPtr->ownerIdx != -1)
+	{
+		updateAllActorAndObjectsSub1(objIdx);
+	}
+
+	objPtr->flags2 &= 0xBFFF;
+	objPtr->flags2 |= 0x8000;
+
+	objPtr->room = -1;
+	objPtr->stage = -1;
+}
+
+int input5;
+
+void foundObject(int objIdx, int param)
+{
+	int var_C = 0;
+	int var_6 = 1;
+
+	if(objIdx < 0)
+		return;
+
+	objectStruct* objPtr = &objectTable[objIdx];
+
+	if( param != 0 && !(objPtr->flags2 & 0xC000))
+	{
+		return;
+	}
+
+	if(objPtr->trackNumber)
+	{
+		if(timer - objPtr->trackNumber < 300) // prevent from reopening the window every frame
+			return;
+	}
+
+	objPtr->trackNumber = 0;
+
+	//freezeTime();
+//	setupShaking(1000); // probably to remove the shaking when in foundObject screen
+
+	int var_2 = 0;
+
+	int i;
+
+	for(i=0;i<numObjInInventory;i++)
+	{
+		var_2 += objectTable[inventory[i]].positionInTrack;
+	}
+
+	if(objPtr->positionInTrack + var_2 > defines.field_4 || numObjInInventory +1 == 30)
+	{
+		var_6 = 3;
+	}
+
+	currentFoundBodyIdx = objPtr->foundBody;
+	currentFoundBody = HQR_Get(listBody,currentFoundBodyIdx);
+
+	setupSMCode(160,100,128,300,298);
+
+	int var_A = 15000;
+	int var_8 = -200;
+	statusVar1 = 0;
+
+	copyToScreen(unkScreenVar,screen);
+
+	drawAITDBox(160,100,240,120);
+
+	drawFoundObect(var_6, objPtr->foundName, var_A);
+	flipScreen();
+
+	input5 = 1;
+
+	while(!var_C)
+	{
+		readKeyboard();
+		process_events();
+
+		input3 = input2;
+		input4 = inputKey;
+		button = input1;
+
+		if(!input5)
+		{
+			if(input3 == 1)
+			{
+				if(var_6 != 2)
+				{
+					var_6 = 0;
+				}
+
+				var_C = 1;
+
+				if(var_6 != 2)
+				{
+					if(input4&4)
+					{
+						var_6 = 0;
+					}
+
+					if(input4&8)
+					{
+						var_6 = 1;
+					}
+				}
+
+				if(input3 == 28 || button !=0)
+				{
+					var_C = 1;
+				}
+			}
+		}
+		else
+		{
+			if(!input3 && !input4 && !button)
+				input5 = 0;
+		}
+
+		statusVar1 -= 8;
+
+		var_A += var_8; // zoom / dezoom
+
+		if(var_A> 8000) // zoom management
+			var_8 = -var_8;
+
+		if(var_A< 25000)
+			var_8 = -var_8;
+
+		drawFoundObect(var_6,objPtr->foundName,var_A);
+		flipScreen();
+
+//		menuWaitVSync();
+	}
+
+	//unfreezeTime();
+
+	if(var_6 == 1)
+	{
+		take(objIdx);
+	}
+	else
+	{
+		objPtr->trackNumber = timer;
+	}
+
+	while(input2 && input1)
+	{
+		readKeyboard();
+	}
+
+	input4 = 0;
+	input3 = 0;
+	button = 0;
+
+//	if(mainLoopVar1 != 0)
+	{
+		//setupShaking(-600);
+	}
+
+	mainVar1 = 1;
+}
+
+void hardColSuB1Sub1(int flag)
+{
+	switch(flag)
+	{
+	case 1:
+	case 2:
+		{
+			hardColVar2 = 0;
+			break;
+		}
+	case 4:
+	case 8:
+		{
+			hardColVar1 = 0;
+			break;
+		}
+	default:
+		{
+			break;
+		}
+	}
+}
+
+void hardColSuB1(ZVStruct* zvPtr1, ZVStruct* zvPtr2, ZVStruct* zvPtr3)
+{
+	int flag;
+
+	if(zvPtr1->ZVX2 > zvPtr3->ZVX1)
+	{
+		if(zvPtr3->ZVX2 > zvPtr1->ZVX1)
+		{
+			flag = 0;
+		}
+		else
+		{
+			flag = 8;
+		}
+	}
+	else
+	{
+		flag = 4;
+	}
+
+	if(zvPtr1->ZVZ2 > zvPtr3->ZVZ1)
+	{
+		if(zvPtr1->ZVX1 < zvPtr3->ZVX2)
+		{
+			flag |= 0; // really stupid, but it's actualy written like that in the original code
+		}
+		else
+		{
+			flag |= 2;
+		}
+	}
+	else
+	{
+		flag |= 1;
+	}
+
+	int var_8;
+
+	if( flag == 5 || flag == 9 || flag == 6 || flag == 10 )
+	{
+		var_8 = 2;
+	}
+	else
+	{
+		if(!flag)
+		{
+			var_8 = 0;
+
+			hardColVar2 = 0;
+			hardColVar1 = 0;
+
+			return;
+		}
+		else
+		{
+			var_8 = 1;
+		}
+	}
+
+	int halfX = (zvPtr2->ZVX1 + zvPtr2->ZVX2) / 2;
+	int halfZ = (zvPtr2->ZVZ1 + zvPtr2->ZVZ2) / 2;
+
+	int var_A;
+
+	if(zvPtr3->ZVX1 > halfX)
+	{
+		var_A = 4;
+	}
+	else
+	{
+		if(zvPtr3->ZVX2 < halfX)
+		{
+			var_A = 0;
+		}
+		else
+		{
+			var_A = 8;
+		}
+	}
+
+	if(zvPtr3->ZVZ1 > halfZ)
+	{
+		var_A |= 1;
+	}
+	else
+	{
+		if(zvPtr3->ZVZ2 < halfZ)
+		{
+			var_A |= 0; // once again, not that much usefull
+		}
+		else
+		{
+			var_A |= 2;
+		}
+	}
+
+	int var_6;
+
+	if( var_A == 5 || var_A == 9 || var_A == 6 || var_A == 10 )
+	{
+		var_6 = 2;
+	}
+	else
+	{
+		if(!var_A)
+		{
+			var_6 = 0;
+		}
+		else
+		{
+			var_6 = 1;
+		}
+	}
+
+	if(var_8 == 1)
+	{
+		hardColSuB1Sub1(flag);
+		return;
+	}
+
+	if(var_6 == 1 && (var_A & flag))
+	{
+		hardColSuB1Sub1(var_A);
+		return;
+	}
+
+	if(var_A == flag || flag == 15)
+	{
+		int Xmod = (zvPtr2->ZVX1 - zvPtr1->ZVX1); // recheck
+		int Zmod = abs(zvPtr2->ZVZ1 - zvPtr1->ZVZ1);
+
+		if(Xmod > Zmod)
+		{
+			hardColVar2 = 0;
+		}
+		else
+		{
+			hardColVar1 = 0;
+		}
+	}
+	else
+	{
+		if(!var_6 || (var_6 == 1 && !(var_A & flag)))
+		{
+			hardColVar2 = 0;
+			hardColVar1 = 0;
+		}
+		else
+		{
+			hardColSuB1Sub1(flag&var_A);
+		}
+	}
 }
 
 int checkForHardCol(ZVStruct* zvPtr, char* dataPtr)
 {
-	return(0);
-	dataPtr += *(short int*)(dataPtr);
+	dataPtr += *(short int*)(dataPtr); // skip to data
 
 	int hardColVar = 0;
 
@@ -3641,7 +4049,8 @@ int checkForHardCol(ZVStruct* zvPtr, char* dataPtr)
 				short int Z1 = *(short int*)(dataPtr+8);
 				short int Z2 = *(short int*)(dataPtr+10);
 
-				hardColTable[hardColVar++] = dataPtr;
+				if(Z1 < zvPtr->ZVZ2 && zvPtr->ZVZ1 < Z2)
+					hardColTable[hardColVar++] = dataPtr;
 			}
 		}
 
@@ -3781,13 +4190,13 @@ void processActor1(void)
 
 	}
 
-	if(currentProcessedActorPtr->field_60.param)
+	if(currentProcessedActorPtr->field_60.param) // currently falling ?
 	{
 		if(currentProcessedActorPtr->field_60.param != -1)
 		{
 			var_4E = processActor1Sub2(&currentProcessedActorPtr->speedChange) - var_4A;
 		}
-		else
+		else // stop falling
 		{
 			var_4E = currentProcessedActorPtr->field_60.newAngle - var_4A;
 
@@ -3820,7 +4229,7 @@ void processActor1(void)
 		zvLocal.ZVZ1 += var_50;
 		zvLocal.ZVZ2 += var_50;
 
-		if(currentProcessedActorPtr->dynFlags & 1)
+		if(currentProcessedActorPtr->dynFlags & 1) // hard collision enabled for actor ?
 		{
 			int i;
 
@@ -3857,9 +4266,9 @@ void processActor1(void)
 				}
 			}
 		}
-		else
+		else // no hard collision -> just update the flag without performing the position update
 		{
-			if(checkForHardCol(&zvLocal,etageVar0+currentProcessedActorPtr->room*4))
+			if(checkForHardCol(&zvLocal,etageVar0+*(unsigned int*)(etageVar0+currentProcessedActorPtr->room*4)))
 			{
 				currentProcessedActorPtr->HARD_COL = 1;
 			}
@@ -3883,7 +4292,7 @@ void processActor1(void)
 
 			ZVStruct* touchedZv = &actorTouchedPtr->zv;
 
-			if(actorTouchedPtr->flags & 0x80)
+			if(actorTouchedPtr->flags & 0x80) // takable
 			{
 				if(currentProcessedActorPtr->trackMode == 1 && defines.field_1E == 0)
 				{
@@ -3892,11 +4301,11 @@ void processActor1(void)
 			}
 			else
 			{
-				if(actorTouchedPtr->flags & 0x10)
+				if(actorTouchedPtr->flags & 0x10) // can be pushed ?
 				{
 					ZVStruct localZv2;
 
-					int var_8 = 1;
+					bool isPushPossible = true;
 
 					copyZv(touchedZv, &localZv2);
 
@@ -3908,19 +4317,19 @@ void processActor1(void)
 
 					if(!checkForHardCol(&localZv2, etageVar0 + *(unsigned int*)(etageVar0 + actorTouchedPtr->room * 4)))
 					{
-						int var_54 = processActor1Sub1(var_56, &localZv2);
-
-						if(var_54)
-							var_8 = 0;
+						if(processActor1Sub1(var_56, &localZv2))
+						{
+							isPushPossible = false;
+						}
 					}
 					else
 					{
-						var_8 = 0;
+						isPushPossible = false;
 					}
 
-					if(!var_8)
+					if(!isPushPossible)
 					{
-						if(!var_52 || !var_50)
+						if(!var_52 || !var_50) //if we're trying to move
 						{
 							if(actorTouchedPtr->room != currentProcessedActorPtr->room)
 							{
@@ -3940,7 +4349,7 @@ void processActor1(void)
 							}
 						}
 					}
-					else
+					else // push succeed
 					{
 						if(actorTouchedPtr->flags & 8)
 						{
@@ -3949,33 +4358,32 @@ void processActor1(void)
 						
 						actorTouchedPtr->flags |= 1;
 
-						actorTouchedPtr->worldX += var_52;
-						actorTouchedPtr->worldY += var_50;
+						actorTouchedPtr->worldX += var_52; // apply push to object
+						actorTouchedPtr->worldZ += var_50;
 
 						actorTouchedPtr->roomX += var_52;
-						actorTouchedPtr->roomY += var_50;
+						actorTouchedPtr->roomZ += var_50;
 
 						copyZv(&localZv2,touchedZv);
-
 					}
 				}
-				else
+				else // can be pushed
 				{
 					if(currentProcessedActorPtr->dynFlags & 1)
 					{
-						if(var_52 || var_50)
+						if(var_52 || var_50) // if moving
 						{
-							if(actorTouchedPtr->room == currentProcessedActorPtr->room)
+							if(actorTouchedPtr->room == currentProcessedActorPtr->room) // same room -> easy case
 							{
 								hardColVar1 = var_52;
 								hardColVar2 = var_50;
 
-								hardColSuB1(zvPtr, &zvLocal, touchedZv);
+								hardColSuB1(zvPtr, &zvLocal, touchedZv); // manage as hard collision
 
 								var_52 = hardColVar1;
 								var_50 = hardColVar2;
 							}
-							else
+							else // different room
 							{
 								ZVStruct localZv3;
 
@@ -3986,7 +4394,7 @@ void processActor1(void)
 								hardColVar1 = var_52;
 								hardColVar2 = var_50;
 
-								hardColSuB1(zvPtr, &zvLocal, &localZv3);
+								hardColSuB1(zvPtr, &zvLocal, &localZv3); // manage as hard collision
 
 								var_52 = hardColVar1;
 								var_50 = hardColVar2;
@@ -4126,19 +4534,6 @@ void processActor1(void)
 		currentProcessedActorPtr->END_ANIM = 0;
 	}
 }
-
-int currentFoundBodyIdx;
-char* currentFoundBody;
-int numInventoryActions;
-short int inventoryActionTable[5];
-//short int inventory[30];
-
-int statusLeft;
-int statusTop;
-int statusRight;
-int statusBottom;
-
-int statusVar1;
 
 void drawInventoryActions(int arg)
 {
