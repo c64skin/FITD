@@ -88,7 +88,7 @@ void flip()
 	osystem.Flip((unsigned char*)unkScreenVar);
 }
 
-static void process_events( void )
+void process_events( void )
 {
     /* Our SDL event placeholder. */
     SDL_Event event;
@@ -160,6 +160,8 @@ int make3dTatou(void)
 	//make3dTatouUnk1(8,0);
 
 	startChrono(&localChrono);
+
+	return(0);
 
 	do
 	{

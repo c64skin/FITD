@@ -6,7 +6,7 @@
 
 void sysInit(void)
 {
-		int i;
+	int i;
 
 	time_t ltime;
 	FILE* fHandle;
@@ -134,6 +134,249 @@ void startGame(int startupEtage, int startupRoom, int allowSystemMenu)
 	fadeout(8,0); */
 }
 
+void drawPartOfAITDBox(int left, int top, int index, char* gfxData)
+{
+	char* outPtr;
+	char* inPtr;
+
+	int width;
+	int height;
+
+	int offset;
+
+	int i;
+	int j;
+
+	outPtr = screen + top*320 + left;
+	inPtr = gfxData + *(short int*)(index * 2 + gfxData); // alignement unsafe
+
+	inPtr +=4;
+
+	width = *(short int*)(inPtr); // alignement unsafe
+	inPtr+=2;
+	height = *(short int*)(inPtr); // alignement unsafe
+	inPtr+=2;
+
+	offset = 320 - width;
+
+	for(i=0;i<height;i++)
+	{
+		for(j=0;j<width;j++)
+		{
+			*(outPtr++) = *(inPtr++);
+		}
+
+		outPtr+=offset;
+	}
+}
+
+void drawAITDBox(int x, int y, int width, int height)
+{
+	int top;
+	int right;
+	int left;
+	int bottom;
+
+	int currentLeftPosition;
+	int currentTopPosition;
+
+	int halfWidth;
+	int halfHeight;
+
+	//	setClipSize(0,0,319,199);
+
+	halfWidth = width/2;
+	currentLeftPosition = left = x - halfWidth;
+
+	halfHeight = height/2;
+	currentTopPosition = top = y - halfHeight;
+
+	right = x + halfWidth;
+	bottom = y + halfHeight;
+
+	drawPartOfAITDBox(currentLeftPosition,currentTopPosition,0,aitdBoxGfx); // draw top left corner
+    
+	while(1) // draw top bar
+	{
+		currentLeftPosition += 20;
+
+		if(right - 20 <= currentLeftPosition)
+			break;
+
+		drawPartOfAITDBox(currentLeftPosition,currentTopPosition,4,aitdBoxGfx);
+	}
+
+	drawPartOfAITDBox(currentLeftPosition,currentTopPosition,1,aitdBoxGfx); // draw top right corner
+
+	currentLeftPosition = left;
+
+	while(1) // draw left bar
+	{
+		currentTopPosition += 20;
+
+		if(bottom - 20 <= currentTopPosition)
+			break;
+
+		drawPartOfAITDBox(currentLeftPosition,currentTopPosition,6,aitdBoxGfx);
+	}
+
+	currentLeftPosition = right - 8;
+	currentTopPosition = top + 20;
+
+	while(bottom - 20 > currentTopPosition)
+	{
+		drawPartOfAITDBox(currentLeftPosition,currentTopPosition,7,aitdBoxGfx);
+
+		currentTopPosition += 20;
+	}
+
+	currentLeftPosition = left;
+
+	drawPartOfAITDBox(currentLeftPosition,currentTopPosition,2,aitdBoxGfx); // draw bottom left corner
+
+	while(1) // draw bottom bar
+	{
+		currentLeftPosition += 20;
+
+		if(right-20 <= currentLeftPosition)
+			break;
+
+		drawPartOfAITDBox(currentLeftPosition,currentTopPosition+12,5,aitdBoxGfx);
+	}
+
+	drawPartOfAITDBox(currentLeftPosition,currentTopPosition,3,aitdBoxGfx); // draw bottom right corner
+
+	drawPartOfAITDBox(x-20,currentTopPosition+12,8,aitdBoxGfx); // draw "in the dark"
+
+	currentMenuLeft = left + 8;
+	currentMenuTop = top + 8;
+	currentMenuRight = right - 9;
+	currentMenuBottom = bottom - 9;
+
+//	fillBox(currentMenuLeft,currentMenuTop,currentMenuRight,currentMenuBottom);
+//	setClipSize(currentMenuLeft,currentMenuTop,currentMenuRight,currentMenuBottom);
+
+}
+
+void drawStartupMenu(int selectedEntry)
+{
+	int currentY = 76;
+	int currentTextNum = 0;
+
+	drawAITDBox(160,100,320,80);
+
+	while(currentTextNum<3)
+	{
+		if(currentTextNum == selectedEntry) // hilight selected entry
+		{
+//			fillBox(10,currentY,309,currentY+16,100);
+//			drawSlectedText(160,currentY,currentTextNum+11,15,4);
+		}
+		else
+		{
+//			drawText(160,currentY,currentTextNum+11,4);
+		}
+
+		currentY+=16; // next line
+		currentTextNum++; // next text
+	}
+}
+
+void flipScreen()
+{
+	int i;
+	char paletteRGBA[256*4];
+
+	memcpy(unkScreenVar,screen,320*200);
+
+	for(i=0;i<256;i++)
+	{
+		paletteRGBA[i*4] = palette[i*3];
+		paletteRGBA[i*4+1] = palette[i*3+1];
+		paletteRGBA[i*4+2] = palette[i*3+2];
+		paletteRGBA[i*4+3] = 0xFF;
+	}
+	osystem.setPalette(paletteRGBA);
+	osystem.Flip((unsigned char*)unkScreenVar);
+
+	FILE* fileHandle;
+	fileHandle = fopen("dump.raw","wb+");
+	fwrite(screen,320,200,fileHandle);
+	fclose(fileHandle);
+}
+
+
+int processStartupMenu(void)
+{
+	int currentSelectedEntry = 0;
+	unsigned int chrono;
+	int selectedEntry = -1;
+
+//	flushScreen();
+
+	drawStartupMenu(0);
+	flipScreen();
+//	make3dTatouUnk1(16,0);
+	startChrono(&chrono);
+
+	while(evalChrono(&chrono) <= 0x10000 || ( evalChrono(&chrono) > 0x10000 && selectedEntry==-1)) // exit loop only if time out or if choice made
+	{
+		process_events();
+
+	/*	if(inputKey&1) // up key
+		{
+			currentSelectedEntry--;
+
+			if(currentSelectedEntry<0)
+			{
+				currentSelectedEntry = 2;
+			}
+
+			drawStartupMenu(currentSelectedEntry);
+
+			menuWaitVSync();
+
+			startChrono(&chrono);
+
+			while(!inputKey)
+			{
+			}
+		} */
+
+		/*
+		if(inputKey&2) // down key
+		{
+			currentSelectedEntry++;
+
+			if(currentSelectedEntry>2)
+			{
+				currentSelectedEntry = 0;
+			}
+
+			drawStartupMenu(currentSelectedEntry);
+
+			menuWaitVSync();
+
+			startChrono(&chrono);
+
+			while(!inputKey)
+			{
+			}
+		} */
+
+/*		if(input2 == 28 || (input1 != 28 && input1!=0)) // select current entry
+		{
+			selectedEntry = currentSelectedEntry;
+		}*/
+	}
+
+	if(selectedEntry==2) // if exit game, do not fade
+	{
+//		fadeOut(16,0);
+	}
+
+	return(selectedEntry);
+}
 
 int main(int argc, char** argv)
 {
@@ -156,10 +399,10 @@ int main(int argc, char** argv)
 	}
 
 /*	while(1)
-	{
+	{*/
 		startupMenuResult = processStartupMenu();
 
-		switch(startupMenuResult)
+/*		switch(startupMenuResult)
 		{
 		case -1: // timeout
 			{

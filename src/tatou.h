@@ -8,6 +8,9 @@ int make3dTatou(void);
 void paletteFill(void* palette, unsigned char r, unsigned char g, unsigned b);
 void fadeIn(void* palette);
 void flip();
+void startChrono(unsigned int* chrono);
+int evalChrono(unsigned int* chrono);
+void process_events( void );
 
 //////////////
 #endif

@@ -83,4 +83,9 @@ extern char rgbaBuffer[320*200*4];
 
 extern volatile int timer;
 
+extern int currentMenuLeft;
+extern int currentMenuTop;
+extern int currentMenuRight;
+extern int currentMenuBottom;
+
 #endif
