@@ -3505,19 +3505,20 @@ int changeCameraSub1(int x1, int x2, int z1, int z2, char* ptr, short int param)
 
 		for(j=0;j<var1;j++)
 		{
-			int var2= *(short int*)dest;
+			int zoneX1= *(unsigned short int*)dest;
 			dest+=2;
-			int var3= *(short int*)(etageVar1 + *(short int*)dest);
+			int zoneZ1= *(unsigned short int*)dest;
 			dest+=2;
-			int var4= *(short int*)(etageVar1 + *(short int*)dest);
-			int var5= *(short int*)(etageVar1 + *(short int*)(dest+2));
+			int zoneX2= *(unsigned short int*)dest;
+			dest+=2;
+			int zoneZ2= *(unsigned short int*)dest;
 
-			if(changeCameraSub1Sub1(xMid,zMid,xMid-10000,zMid,var2,var3,var4,var5))
+			if(changeCameraSub1Sub1(xMid,zMid,xMid-10000,zMid,zoneX1,zoneZ1,zoneX2,zoneZ2))
 			{
 				flag |= 1;
 			}
 
-			if(changeCameraSub1Sub1(xMid,zMid,xMid+10000,zMid,var2,var3,var4,var5))
+			if(changeCameraSub1Sub1(xMid,zMid,xMid+10000,zMid,zoneX1,zoneZ1,zoneX2,zoneZ2))
 			{
 				flag |= 2;
 			}
