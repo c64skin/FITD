@@ -906,4 +906,8 @@ fi
 INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 AC_SUBST([INSTALL_STRIP_PROGRAM])])
 
+m4_include([m4/acx_pthread.m4])
+m4_include([m4/ax_check_gl.m4])
+m4_include([m4/ax_check_glu.m4])
+m4_include([m4/ax_lang_compiler_ms.m4])
 m4_include([acinclude.m4])

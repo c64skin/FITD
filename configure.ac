@@ -68,8 +68,6 @@ DATAPATH="$datadir/fitd"
 
 # HAVE_HOME is defined if the HOME env.var points to the user's home dir.
 
-LIBS="$LIBS -lGL -lGLU"
-
 AC_MSG_CHECKING(system)
 case "$host_os" in
     linux*)
@@ -213,14 +211,10 @@ else
 fi
 
 # ---------------------------------------------------------------------
-# Random Optimisations
-# ---------------------------------------------------------------------
-
-# ---------------------------------------------------------------------
 # SDL
 # ---------------------------------------------------------------------
 AC_LANG_C
-SDL_VERSION=1.2.0
+SDL_VERSION=1.2.7
 AM_PATH_SDL($SDL_VERSION,
     :,
     AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
@@ -229,6 +223,24 @@ CFLAGS="$CFLAGS $SDL_CFLAGS"
 SDL_LIBS="$SDL_LIBS -lSDL_mixer"
 LIBS="$LIBS $SDL_LIBS"
 AC_LANG_CPLUSPLUS
+
+# ---------------------------------------------------------------------
+# OpenGL
+# ---------------------------------------------------------------------
+
+AX_CHECK_GL
+
+CFLAGS="$CFLAGS $GL_CFLAGS"
+LIBS="$LIBS $GL_LIBS"
+
+# ---------------------------------------------------------------------
+# GLU
+# ---------------------------------------------------------------------
+
+AX_CHECK_GLU
+
+CFLAGS="$CFLAGS $GLU_CFLAGS"
+LIBS="$LIBS $GLU_LIBS"
 
 # ---------------------------------------------------------------------
 # zlib

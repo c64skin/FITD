@@ -6,6 +6,9 @@
 /* Cygwin */
 #undef CYGWIN
 
+/* Use the Apple OpenGL framework. */
+#undef HAVE_APPLE_OPENGL_FRAMEWORK
+
 /* HOME env.var exists */
 #undef HAVE_HOME
 
@@ -21,6 +24,9 @@
 
 /* Do we have midi support? */
 #undef HAVE_MIDI
+
+/* Define if you have POSIX threads libraries and header files. */
+#undef HAVE_PTHREAD
 
 /* Define to 1 if you have the <sstream> header file. */
 #undef HAVE_SSTREAM
@@ -45,6 +51,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <windows.h> header file. */
+#undef HAVE_WINDOWS_H
 
 /* Define to 1 if you have the <zlib.h> header file. */
 #undef HAVE_ZLIB_H
@@ -75,6 +84,10 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* Define to the necessary symbol if this constant uses a non-standard name on
+   your system. */
+#undef PTHREAD_CREATE_JOINABLE
 
 /* The size of a `int', as computed by sizeof. */
 #undef SIZEOF_INT
