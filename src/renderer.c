@@ -351,6 +351,7 @@ int computeModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr, 
 	}
 
 	//(*ptr) = si;
+	tempOutPtr = si;
 
 	{
 		numPointInPoly = numOfPoints;
@@ -570,7 +571,7 @@ void primFunctionDefault(int primType,char** ptr,char** out)
 	exit(1);
 }
 
-void primType0(int primType, char** ptr, char** out) // line untested
+void primType0(int primType, char** ptr, char** out) // line tested
 {
 	primVar1 = *(out);
 	*(short int*)(*out) = *(short int*)(*ptr);
@@ -736,6 +737,104 @@ void primType1(int primType, char** ptr, char** out)
 	}
 }
 
+void primType2(int primType, char** ptr, char** out)
+{
+	primVar1 = *out;
+
+	*(short int*)(*out) = *(short int*)(*ptr);
+	*out+=2;
+	*ptr+=3;
+
+	int ax = *(short int*)(*ptr);
+	*ptr+=2;
+
+	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
+	ax+=2;
+	*out+=2;
+	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Y
+	ax+=2;
+	*out+=2;
+	int ax2 = *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Z
+	ax+=2;
+	*out+=2;
+
+	primVar2 = *out;
+
+	if(ax2<=0)
+	{
+		*out = primVar1; // do not add the prim
+	}
+	else
+	{
+		numOfPolyToRender++;
+
+		*out = renderVar2;
+
+		*(short int*)(*out) = ax2;
+		*out+=2;
+		*(short int*)(*out) = ax2;
+		*out+=2;
+		*(short int*)(*out) = primType;
+		*out+=2;
+
+		*(char**)(*out) = primVar1;
+		*out+=4;
+
+		renderVar2 = *out;
+		*out = primVar2;
+	}
+
+}
+
+void primType3(int primType, char** ptr, char** out)
+{
+	primVar1 = *out;
+
+	*(short int*)(*out) = *(short int*)(*ptr);
+	*out+=2;
+	*ptr+=3;
+
+	int ax = *(short int*)(*ptr);
+	*ptr+=2;
+
+	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // X
+	ax+=2;
+	*out+=2;
+	*(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Y
+	ax+=2;
+	*out+=2;
+	int ax2 = *(short int*)(*out) = *(short int*)(((char*)renderPointList) + ax); // Z
+	ax+=2;
+	*out+=2;
+
+	primVar2 = *out;
+
+	if(ax2<=0)
+	{
+		*out = primVar1; // do not add the prim
+	}
+	else
+	{
+		numOfPolyToRender++;
+
+		*out = renderVar2;
+
+		*(short int*)(*out) = ax2;
+		*out+=2;
+		*(short int*)(*out) = ax2;
+		*out+=2;
+		*(short int*)(*out) = 3;
+		*out+=2;
+
+		*(char**)(*out) = primVar1;
+		*out+=4;
+
+		renderVar2 = *out;
+		*out = primVar2;
+	}
+
+}
+
 void line(int x1, int y1, int x2, int y2, char c);
 
 void renderStyle0(char* buffer)
@@ -783,8 +882,8 @@ typedef void (*primFunction)(int primType,char** ptr, char** out);
 primFunction primFunctionTable[]={
 	primType0,
 	primType1,
-	primFunctionDefault,
-	primFunctionDefault,
+	primType2,
+	primType3,
 	primFunctionDefault,
 	primFunctionDefault,
 	primFunctionDefault,
