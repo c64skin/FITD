@@ -2225,7 +2225,7 @@ addObject:				int actorIdx = copyObjectToActor(	currentObject->field_2, currentO
 								genVar9 = currentProcessedActorIdx;
 							}
 
-							currentProcessedActorPtr->flags = (currentObject->flags & 0x20) / 0x20; // recheck
+							currentProcessedActorPtr->dynFlags = (currentObject->flags & 0x20) / 0x20; // recheck
 							currentProcessedActorPtr->life = currentObject->life;
 							currentProcessedActorPtr->lifeMode = currentObject->lifeMode;
 
@@ -2355,16 +2355,17 @@ void setupCamera()
 
 short int computeDistanceToPoint(int x1, int z1, int x2, int z2)
 {
+	int axBackup = x1;
 	x1 -= x2;
-	if(x1 < 0)
+	if((short int)x1 < 0)
 	{
-		x1 = -x1;
+		x1 = -(short int)x1;
 	}
 
 	z1 -= z2;
-	if(z1 < 0)
+	if((short int)z1 < 0)
 	{
-		z1 = -z1;
+		z1 = -(short int)z1;
 	}
 
 	if((x1+z1)> 0xFFFF)
@@ -2387,8 +2388,6 @@ void startActorRotation(short int beta, short int newBeta, short int param, rota
 
 short int updateActorRotation(rotateStruct* rotatePtr)
 {
-	return(rotatePtr->newAngle);
-
 	if(!rotatePtr->param)
 		return(rotatePtr->newAngle);
 
@@ -2412,13 +2411,13 @@ short int updateActorRotation(rotateStruct* rotatePtr)
 		else
 		{
 			int angle = ((rotatePtr->newAngle&0x3FF)+0x400) - (rotatePtr->oldAngle&0x3FF);
-			return (angle*timeDif)/rotatePtr->param;
+			return ((angle*timeDif)/rotatePtr->param) + angle;
 		}
 	}
 	else
 	{
-		int angle = ((rotatePtr->newAngle&0x3FF)+0x400) - ((rotatePtr->oldAngle&0x3FF)+0x400);
-		return ((rotatePtr->oldAngle&0x3FF)+0x400) + ((angle*timeDif)/rotatePtr->param);
+		short int angle = ((rotatePtr->newAngle&0x3FF)) - ((rotatePtr->oldAngle&0x3FF)+0x400);
+		return (((rotatePtr->oldAngle&0x3FF)+0x400) + ((angle*timeDif)/rotatePtr->param));
 	}
 }
 
@@ -2515,8 +2514,19 @@ int anim(int animNum,int arg_2, int arg_4)
 			return(1);
 		}
 
-		if(!currentProcessedActorPtr->flags & 1)
+		if(!(currentProcessedActorPtr->flags & 1))
 		{
+			if(currentProcessedActorPtr->flags & 8)
+			{
+				deleteSub(currentProcessedActorIdx);
+			}
+
+			currentProcessedActorPtr->flags |= 1;
+
+			initAnimInBody(currentProcessedActorPtr->FRAME, HQR_Get(listAnim,animNum), HQR_Get(listBody, currentProcessedActorPtr->bodyNum));
+
+			currentProcessedActorPtr->field_40 = arg_2;
+			currentProcessedActorPtr->field_42 = arg_4;
 		}
 		else
 		{
@@ -2565,25 +2575,25 @@ void drawProjectedLine(int x1, int y1, int z1, int x2, int y2, int z2,int c)
 void drawZv(actorStruct* actorPtr)
 {
 	// bottom
-	drawProjectedLine(actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
-	drawProjectedLine(actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
-	drawProjectedLine(actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
-	drawProjectedLine(actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
+	drawProjectedLine(actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,10);
+	drawProjectedLine(actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,10);
+	drawProjectedLine(actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,10);
+	drawProjectedLine(actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,10);
 
 	// top
-	drawProjectedLine(actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
-	drawProjectedLine(actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
-	drawProjectedLine(actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
-	drawProjectedLine(actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
+	drawProjectedLine(actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,10);
+	drawProjectedLine(actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,10);
+	drawProjectedLine(actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,10);
+	drawProjectedLine(actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,10);
 
-	drawProjectedLine(	actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,
-						actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
-	drawProjectedLine(	actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,
-						actorPtr->zv.ZVX1+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
-	drawProjectedLine(	actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,
-						actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ2+actorPtr->modZ,10);
-	drawProjectedLine(	actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY2+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,
-						actorPtr->zv.ZVX2+actorPtr->modX,actorPtr->zv.ZVY1+actorPtr->modY,actorPtr->zv.ZVZ1+actorPtr->modZ,10);
+	drawProjectedLine(	actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,
+						actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,10);
+	drawProjectedLine(	actorPtr->zv.ZVX1,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,
+						actorPtr->zv.ZVX1,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,10);
+	drawProjectedLine(	actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ2,
+						actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ2,10);
+	drawProjectedLine(	actorPtr->zv.ZVX2,actorPtr->zv.ZVY2,actorPtr->zv.ZVZ1,
+						actorPtr->zv.ZVX2,actorPtr->zv.ZVY1,actorPtr->zv.ZVZ1,10);
 
 
 }
@@ -2617,11 +2627,10 @@ void drawConverZone(char* src, int param)
 		{
 			int zoneX1= *(short int*)dest;
 			dest+=2;
-			int zoneX2= *(short int*)dest;
-			dest+=2;
 			int zoneZ1= *(short int*)dest;
 			dest+=2;
-			int zoneZ2= *(short int*)dest;
+			int zoneX2= *(short int*)dest;
+			int zoneZ2= *(short int*)(dest+2);
 
 			drawProjectedLine(zoneX1*10,0,zoneZ1*10,zoneX1*10,0,zoneZ2*10,20);
 			drawProjectedLine(zoneX1*10,0,zoneZ2*10,zoneX2*10,0,zoneZ2*10,20);
@@ -2983,7 +2992,7 @@ short int processAnim(int frame, char* animPtr, char* bodyPtr)
 		tempBx+=2;
 
 		animCurrentTime = bx;
-		animKeyframeLength = bp;
+		animKeyframeLength = bx;
 
 		animRot2 = *(short int*)(tempBx);
 		animRot3 = *(short int*)(tempBx+2);
@@ -3072,7 +3081,7 @@ void processActor1(void)
 		currentProcessedActorPtr->END_FRAME = 0;
 		if(currentProcessedActorPtr->speed == 0)
 		{
-		//	var_42 = processActor1Sub1(currentProcessedActorIdx, &currentProcessedActorPtr->zv);
+			//var_42 = processActor1Sub1(currentProcessedActorIdx, &currentProcessedActorPtr->zv);
 
 			if(var_42)
 			{
@@ -3091,7 +3100,6 @@ void processActor1(void)
 				var_40 --;
 			}
 
-			var_4C = 0;
 			var_4A = 0;
 			var_48 = 0;
 			var_52 = 0;
@@ -3099,7 +3107,19 @@ void processActor1(void)
 		}
 		else
 		{
-			// TODO
+			var_4C = currentProcessedActorPtr->modX;
+			var_4A = currentProcessedActorPtr->modY;
+			var_48 = currentProcessedActorPtr->modZ;
+
+			animRot3 = 0;
+			animRot2 = 0;
+
+			//animRot1 = processActor1Sub2(&currentProcessedActorPtr->speedChange);
+
+			walkStep(0,animRot1,currentProcessedActorPtr->beta);
+
+			var_52 = animMoveX - var_4C;
+			var_50 = animMoveY - var_48;
 		}
 
 		var_4E = 0;
@@ -3144,20 +3164,20 @@ void processActor1(void)
 		zvLocal.ZVZ1 += var_50;
 		zvLocal.ZVZ2 += var_50;
 
-		if(currentProcessedActorPtr->dynFlags & 1)
+		/*if(currentProcessedActorPtr->dynFlags & 1)
 		{
 		}
 		else
 		{
-/*			if(checkForHardCol(&zvLocal,etageVar0+currentProcessedActorPtr->room*4))
+			if(checkForHardCol(&zvLocal,etageVar0+currentProcessedActorPtr->room*4))
 			{
 				currentProcessedActorPtr->HARD_COL = 1;
 			}
 			else
 			{
 				currentProcessedActorPtr->HARD_COL = 0;
-			}*/
-		}
+			}
+		}*/
 
 		// TODO -> actor/actor collision
 
@@ -3218,28 +3238,27 @@ void processActor1(void)
 		if(currentProcessedActorPtr->FRAME >= currentProcessedActorPtr->field_4C) // end of anim ?
 		{
 			currentProcessedActorPtr->END_ANIM = 1; // end of anim
-			currentProcessedActorPtr->FRAME = 0;
+			currentProcessedActorPtr->FRAME = 0; // restart anim
 
-/*			if((currentProcessedActorPtr->field_40 & 1) && (currentProcessedActorPtr->field_44 == -1)) // is another anim waiting ?
+			if(!(currentProcessedActorPtr->field_40 & 1) && (currentProcessedActorPtr->field_44 == -1)) // is another anim waiting ?
 			{
 				currentProcessedActorPtr->field_40 &= 0xFFFD;
 
 				anim(currentProcessedActorPtr->field_42, 1, -1);
-			} */
-
-			currentProcessedActorPtr->worldX += currentProcessedActorPtr->modX;
-			currentProcessedActorPtr->roomX += currentProcessedActorPtr->modX;
-
-			currentProcessedActorPtr->worldZ += currentProcessedActorPtr->modZ;
-			currentProcessedActorPtr->roomZ += currentProcessedActorPtr->modZ;
-
-			currentProcessedActorPtr->modX = 0;
-			currentProcessedActorPtr->modZ = 0;
+			}
 		}
+		currentProcessedActorPtr->worldX += currentProcessedActorPtr->modX;
+		currentProcessedActorPtr->roomX += currentProcessedActorPtr->modX;
+
+		currentProcessedActorPtr->worldZ += currentProcessedActorPtr->modZ;
+		currentProcessedActorPtr->roomZ += currentProcessedActorPtr->modZ;
+
+		currentProcessedActorPtr->modX = 0;
+		currentProcessedActorPtr->modZ = 0;
 	}
 	else // not the end of anim
 	{
-	//	if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->speedChange.param == 0))
+		if((currentProcessedActorPtr->ANIM == -1) && (currentProcessedActorPtr->speed != 0) && (currentProcessedActorPtr->speedChange.param == 0))
 		{
 			currentProcessedActorPtr->worldX += currentProcessedActorPtr->modX;
 			currentProcessedActorPtr->roomX += currentProcessedActorPtr->modX;
@@ -3691,11 +3710,10 @@ int changeCameraSub1(int x1, int x2, int z1, int z2, char* ptr, short int param)
 		{
 			int zoneX1= *(short int*)dest;
 			dest+=2;
-			int zoneX2= *(short int*)dest;
-			dest+=2;
 			int zoneZ1= *(short int*)dest;
 			dest+=2;
-			int zoneZ2= *(short int*)dest;
+			int zoneX2= *(short int*)dest;
+			int zoneZ2= *(short int*)(dest+2);
 
 			if(changeCameraSub1Sub1(xMid,zMid,xMid-10000,zMid,zoneX1,zoneZ1,zoneX2,zoneZ2))
 			{
@@ -3795,6 +3813,26 @@ void checkIfCameraChangeIsRequired(void)
 
 }
 
+
+// TODO
+void processActor2()
+{
+	/*char * ptr;
+
+	ptr =processActor2Sub(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+							currentProcessedActorPtr->roomY + currentProcessedActorPtr->modY,
+							currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
+							etageVar0 + currentProcessedActorPtr->room*4 + etageVar0 );
+
+
+	if(!ptr)
+	{
+		return;
+	}*/
+
+
+}
+
 void mainLoop(int allowSystemMenu)
 {
 	while(1)
@@ -3880,8 +3918,7 @@ void mainLoop(int allowSystemMenu)
 
 					if(flag & 0x40)
 					{
-						printf("Flag!\n");
-//						processActor2();
+						processActor2();
 					}
 
 					if(currentProcessedActorPtr->field_8E)

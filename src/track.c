@@ -147,8 +147,8 @@ int computeAngleModificatorToPositionSub1(int ax)
 
 	makeRotationMtx(ax,0,1000,&yOut,&xOut);
 
-	yOut *= angleCompX;
-	xOut *= angleCompZ;
+	yOut *= angleCompZ;
+	xOut *= angleCompX;
 
 	yOut -= xOut;
 
@@ -233,10 +233,10 @@ void processTrack(void)
 
 					if(distanceToPoint >= 400) // not yet at position
 					{
-						currentProcessedActorPtr->beta = GetAngle(currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+						currentProcessedActorPtr->beta = 0x100 + GetAngle(currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
 																			x,z );
-				/*		int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
+					/*	int angleModif = computeAngleModificatorToPosition(	currentProcessedActorPtr->roomX + currentProcessedActorPtr->modX,
 																			currentProcessedActorPtr->roomZ + currentProcessedActorPtr->modZ,
 																			currentProcessedActorPtr->beta,
 																			x,z );
@@ -254,7 +254,7 @@ void processTrack(void)
 						}
 						else
 						{
-							currentProcessedActorPtr->beta = -updateActorRotation(&currentProcessedActorPtr->rotate);
+							currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
 						}*/
 					}
 					else // reached position

@@ -62,6 +62,11 @@ int evalVar(void)
 					return(actorPtr->ANIM);
 					break;
 				}
+			case 0x6:
+				{
+					return(actorPtr->END_ANIM);
+					break;
+				}
 			case 0x9:
 				{
 					return(actorPtr->bodyNum);

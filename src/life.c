@@ -105,7 +105,7 @@ processOpcode:
 					exitLife = 1;
 					break;
 				}
-			case 0xD: // ?
+			case 0xD: // anim2
 				{
 					lifeTempVar1 = *(short int*)(currentLifePtr);
 					currentLifePtr+=2;
@@ -316,6 +316,13 @@ processOpcode:
 						//setupShaking(1000);
 					} */
 
+					break;
+				}
+			case 0x4E:
+				{
+					//TODO
+
+					currentLifePtr+=4;
 					break;
 				}
 			case 0x51: // ? fade out music and play another music ?
