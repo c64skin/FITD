@@ -689,9 +689,6 @@ void primType1(int primType, char** ptr, char** out) // poly
 
 	*out = saveDi;
 
-	// debug: dummy
-	//min = 0;
-	
 	if(min<=0) // behind camera
 	{
 		*out = primVar1; // do not add the prim
@@ -716,11 +713,11 @@ void primType1(int primType, char** ptr, char** out) // poly
 
 		int prod = prod2 - prod1;
 
-/*		if(prod<0)
+	/*	if(prod<0)
 		{
 			*out = primVar1; // do not add the prim
 		}
-		else */
+		else*/
 		{
 			numOfPolyToRender++;
 
@@ -817,6 +814,7 @@ void primType3(int primType, char** ptr, char** out)
 
 	primVar2 = *out;
 
+	ax2 = 0;
 	if(ax2<=0)
 	{
 		*out = primVar1; // do not add the prim
@@ -873,6 +871,9 @@ void renderStyle1(char* buffer)
 	int numPoint = *(short int*)buffer;
 	buffer+=2;
 
+	if(numPoint>4)
+		numPoint = 3;
+
 	int color = *(short int*)buffer;
 	buffer+=2;
 
@@ -888,10 +889,13 @@ void renderStyle1(char* buffer)
 
 			if(*ptr>min)
 				min = *ptr;
+
+			ptr++;
+			ptr++;
 		}
 	}
 
-	if(max>=0 && min <200)
+	if(max>=0 && min <320)
 		fillpoly((short *)buffer,numPoint,color);
 
 }
@@ -1031,10 +1035,14 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 	{
 		unsigned char primType = *(ptr++);
 
-		if(primType>3)
+		if(primType==1)
+		{
+			primFunctionTable[primType](primType,&ptr,&out);
+		}
+		else
+		{
 			break;
-
-		primFunctionTable[primType](primType,&ptr,&out);
+		}
 	}
 
 	// TODO: poly sorting by depth
@@ -1092,11 +1100,12 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 		char* bufferSource = *(char**)(source);
 		source+=4;
 
-		renderFunctions[renderType](bufferSource);
+		if(renderType == 0 || renderType == 1)
+			renderFunctions[renderType](bufferSource);
 	}
 
 //DEBUG
-	for(i=0;i<numPointInPoly;i++)
+/*	for(i=0;i<numPointInPoly;i++)
 	{
 		int x;
 		int y;
@@ -1106,9 +1115,9 @@ int renderModel(int x,int y,int z,int alpha,int beta,int gamma,void* modelPtr)
 
 		if(x>=0 && x < 319 && y>=0 && y<199)
 		{
-	//		screen[y*320+x] = 15;
+			screen[y*320+x] = 15;
 		}
-	}
+	} */
 //
 
 	return(0);
