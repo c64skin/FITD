@@ -171,8 +171,6 @@ void rotateModel(int x,int y,int z,int alpha,int beta,int gamma,int time)
 	int x2;
 	int y2;
 
-	time = 0x22D8;
-
 	makeRotationMtx(alpha+0x200,-time,0,&x1,&y1);
 	makeRotationMtx(beta+0x200,y1,0,&x2,&y2);
 
@@ -252,12 +250,11 @@ int make3dTatou(void)
 			copyPalette(tatouPal,palette);
 			fadeIn(palette);
 
-		//	while(input2==0 && input1 == 0 && inputKey == 0) // boucle de rotation du tatou
-			while(1)
+			while(input2==0 && input1 == 0 && inputKey == 0) // boucle de rotation du tatou
 			{
 				process_events();
 
-				time = 0;
+				time+=deltaTime;
 
 				if(time>16000)
 					break;
