@@ -1,10 +1,11 @@
 EFENCE = -lefence
 
-OBJECTS = cosTable.o fileAccess.o input.o main.o osystemSDL.o pak.o renderer.o \
-screen.o tatou.o threadCode.o unpack.o vars.o videoMode.o
+OBJECTS = cosTable.o evalVar.o fileAccess.o hqr.o input.o life.o lines.o\
+main.o osystemSDL.o pak.o polys.o renderer.o \
+screen.o tatou.o threadCode.o track.o unpack.o vars.o videoMode.o
 TARGETS = AITDrecode
-AITD_LDFLAGS = `sdl-config --libs` -g $(EFENCE)
-CXXFLAGS = `sdl-config --cflags` -g -Wall
+AITD_LDFLAGS = `sdl-config --libs` -DUNIX -lSDL_sound -g $(EFENCE)
+CXXFLAGS = `sdl-config --cflags` -DUNIX -lSDL_sound -g -Wall
 CXX = g++
 CC = gcc
 

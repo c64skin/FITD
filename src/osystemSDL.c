@@ -322,6 +322,9 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len)
 
 void OSystem::playSample(char* sampleName)
 {
+#ifdef UNIX
+	return;
+#endif
 	Sound_Sample *sample;
 	Sound_AudioInfo info;
 
