@@ -68,7 +68,7 @@ void deleteSub(int actorIdx);
 void stopAnim(int actorIdx);
 void makeMessage(int messageIdx);
 int drawTextOverlay(void);
-short int processAnim(int frame, char* animPtr, char* bodyPtr);
+short int setInterAnimObjet(int frame, char* animPtr, char* bodyPtr);
 
 void getZvRot(char* bodyPtr, ZVStruct* zvPtr, int alpha, int beta, int gamma);
 

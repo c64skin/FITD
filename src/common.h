@@ -1,7 +1,9 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#ifndef _WIN32
 #include "config.h"
+#endif
 
 #ifdef MACOSX
 #define UNIX
@@ -68,8 +70,74 @@ typedef signed long int s32;
 // 250
 #define NUM_MAX_TEXT_ENTRY  1000
 
+//////////////////
 
-///////////////
+enum enumCVars
+{
+  SAMPLE_PAGE,
+  BODY_FLAMME,
+  MAX_WEIGHT_LOADABLE,
+	TEXTE_CREDITS,
+	SAMPLE_TONNERRE,
+	INTRO_DETECTIVE,
+	INTRO_HERITIERE,
+	WORLD_NUM_PERSO,
+	CHOOSE_PERSO,
+	SAMPLE_CHOC,
+	SAMPLE_PLOUF,
+	REVERSE_OBJECT,
+	KILLED_SORCERER,
+	LIGHT_OBJECT,
+	FOG_FLAG,
+	DEAD_PERSO,
+  JET_SARBACANE,
+  TIR_CANON,
+  JET_SCALPEL,
+  POIVRE,
+  DORTOIR,
+  EXT_JACK,
+  NUM_MATRICE_PROTECT_1,
+  NUM_MATRICE_PROTECT_2,
+  NUM_PERSO,
+  TYPE_INVENTAIRE,
+  PROLOGUE,
+  POIGNARD,
+  MATRICE_FORME,
+  MATRICE_COULEUR,
+
+  UNKNOWN_CVAR // for table padding, shouldn't be called !
+};
+
+typedef enum enumCVars enumCVars;
+
+extern enumCVars AITD1KnownCVars[];
+extern enumCVars AITD2KnownCVars[];
+
+extern enumCVars* currentCVarTable;
+
+int getCVarsIdx(enumCVars);
+
+//////////////////////
+
+#define	SAMPLE_PAGE				0
+#define	BODY_FLAMME				1
+#define	MAX_WEIGHT_LOADABLE		2
+#define	TEXTE_CREDITS			3
+#define	SAMPLE_TONNERRE			4
+#define	INTRO_DETECTIVE			5
+#define	INTRO_HERITIERE			6
+#define	WORLD_NUM_PERSO			7
+#define	CHOOSE_PERSO			8
+#define	SAMPLE_CHOC				9
+#define	SAMPLE_PLOUF			10
+#define	REVERSE_OBJECT			11
+#define	KILLED_SORCERER			12
+#define	LIGHT_OBJECT			13
+#define	FOG_FLAG				14
+#define	DEAD_PERSO				15
+
+
+//////////////////
 
 typedef unsigned char uint8;
 typedef unsigned short uint16;
@@ -87,6 +155,13 @@ typedef unsigned long U32;
 typedef signed char S8;
 typedef signed short S16;
 typedef signed long S32;
+
+#define TYPE_MASK 0x1D1
+
+#define ANIM_ONCE             0
+#define ANIM_REPEAT           1
+#define ANIM_UNINTERRUPTABLE  2
+#define ANIM_RESET            4
 
 // temp triangulation stuff
 //#include <bool.h>

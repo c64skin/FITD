@@ -1,6 +1,20 @@
 #include "common.h"
 
+int groundLevel;
 short int specialTable[4] = {144, 192, 48, 112};
+
+short int numObjInInventoryTable[2];
+short int inHandTable[2];
+short int currentInHand = 0;
+
+int numSequenceParam = 0;
+
+sequenceParamStruct sequenceParams[NUM_MAX_SEQUENCE_PARAM];
+
+void resetRotateParam(void)
+{
+  currentProcessedActorPtr->rotate.param = 0;
+}
 
 void throwObj(int animThrow, int frameThrow, int arg_4, int objToThrowIdx, int throwRotated, int throwForce, int animNext)
 {
@@ -72,10 +86,6 @@ int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, i
   actorStruct* currentActorPtr;
   int i;
   ZVStruct* actorZvPtr;
-  
-#ifdef MACOSX
-  return 0;
-#endif
 
   memcpy(localSpecialTable, specialTable, 8);
 
@@ -105,9 +115,9 @@ int createFlow( int mode, int X, int Y, int Z, int stage, int room, int alpha, i
 
   if(currentDisplayedRoom != room)
   {
-    currentActorPtr->worldX -= (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[room].worldX)*10;
-    currentActorPtr->worldY += (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[room].worldY)*10;
-    currentActorPtr->worldZ += (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[room].worldZ)*10;
+    currentActorPtr->worldX -= (s16)((roomDataTable[currentDisplayedRoom].worldX - roomDataTable[room].worldX)*10);
+    currentActorPtr->worldY += (s16)((roomDataTable[currentDisplayedRoom].worldY - roomDataTable[room].worldY)*10);
+    currentActorPtr->worldZ += (s16)((roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[room].worldZ)*10);
   }
 
   currentActorPtr->alpha = alpha;
@@ -197,9 +207,9 @@ void getHardClip()
   short int numEntry;
   int i;
 
-  etageData += READ_LE_U16(etageData);
+  etageData += *(short int*)etageData;
 
-  numEntry = READ_LE_U16(etageData);
+  numEntry = *(short int*)etageData;
   etageData += 2;
 
   for(i=0;i<numEntry;i++)
@@ -330,9 +340,9 @@ void setStage(int newStage, int newRoomLocal, int X, int Y, int Z)
   {
     if(currentDisplayedRoom != newRoomLocal)
     {
-      currentProcessedActorPtr->worldX -= (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[newRoomLocal].worldX)*10;
-      currentProcessedActorPtr->worldY += (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[newRoomLocal].worldY)*10;
-      currentProcessedActorPtr->worldZ += (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[newRoomLocal].worldZ)*10;
+      currentProcessedActorPtr->worldX -= (s16)((roomDataTable[currentDisplayedRoom].worldX - roomDataTable[newRoomLocal].worldX)*10);
+      currentProcessedActorPtr->worldY += (s16)((roomDataTable[currentDisplayedRoom].worldY - roomDataTable[newRoomLocal].worldY)*10);
+      currentProcessedActorPtr->worldZ += (s16)((roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[newRoomLocal].worldZ)*10);
     }
 
 //    objModifFlag1 = 1;
@@ -353,41 +363,41 @@ void setupRealZv(ZVStruct* zvPtr)
 
   for(i=0;i<numOfPoints;i++)
   {
-    if(zvPtr->ZVX1 > READ_LE_S16(ptr))
+    if(zvPtr->ZVX1 > (*ptr))
     {
-      zvPtr->ZVX1 = READ_LE_S16(ptr);
+      zvPtr->ZVX1 = *(ptr);
     }
     else
     {
-      if(zvPtr->ZVX2 < READ_LE_S16(ptr))
+      if(zvPtr->ZVX2 < (*ptr))
       {
-        zvPtr->ZVX2 = READ_LE_S16(ptr);
+        zvPtr->ZVX2 = *(ptr);
       }
     }
     ptr++;
 
-    if(zvPtr->ZVY1 > READ_LE_S16(ptr))
+    if(zvPtr->ZVY1 > (*ptr))
     {
-      zvPtr->ZVY1 = READ_LE_S16(ptr);
+      zvPtr->ZVY1 = *(ptr);
     }
     else
     {
-      if(zvPtr->ZVY2 < READ_LE_S16(ptr))
+      if(zvPtr->ZVY2 < (*ptr))
       {
-        zvPtr->ZVY2 = READ_LE_S16(ptr);
+        zvPtr->ZVY2 = *(ptr);
       }
     }
     ptr++;
 
-    if(zvPtr->ZVZ1 > READ_LE_S16(ptr))
+    if(zvPtr->ZVZ1 > (*ptr))
     {
-      zvPtr->ZVZ1 = READ_LE_S16(ptr);
+      zvPtr->ZVZ1 = *(ptr);
     }
     else
     {
-      if(zvPtr->ZVZ2 < READ_LE_S16(ptr))
+      if(zvPtr->ZVZ2 < (*ptr))
       {
-        zvPtr->ZVZ2 = READ_LE_S16(ptr);
+        zvPtr->ZVZ2 = *(ptr);
       }
     }
     ptr++;
@@ -439,14 +449,14 @@ void processLife(int lifeNum)
 
     var_6 = -1;
 
-    currentOpcode = READ_LE_S16(currentLifePtr);
+    currentOpcode = *(short int*)(currentLifePtr);
     currentLifePtr+=2;
 
-//    printf("%d:opcode: %04X\n",lifeNum, currentOpcode);
+    printf("%d:opcode: %04X\n",lifeNum, currentOpcode);
 
     if(currentOpcode & 0x8000)
     {
-        var_6 = READ_LE_S16(currentLifePtr);
+        var_6 = *(short int*)(currentLifePtr);
         currentLifePtr+=2;
 
         if(var_6==-1)
@@ -466,109 +476,134 @@ void processLife(int lifeNum)
           }
           else
           {
-            switch(currentOpcode & 0x7FFF)
+            int opcodeLocated;
+
+            if(gameId == AITD1)
             {
-            case 0x1:
+              opcodeLocated = AITD1LifeMacroTable[currentOpcode & 0x7FFF];
+            }
+            else
+            {
+              opcodeLocated = AITD2LifeMacroTable[currentOpcode & 0x7FFF];
+            }
+
+            switch(opcodeLocated)
+            {
+////////////////////////////////////////////////////////////////////////
+            case LM_BODY:
               {
-                objectTable[var_6].field_26 = READ_LE_S16(currentLifePtr);
-                currentLifePtr+=2;
-                objectTable[var_6].field_2C = READ_LE_S16(currentLifePtr);
-                currentLifePtr+=2;
-                objectTable[var_6].field_2A = 0;
+                objectTable[var_6].body = evalVar();
                 break;
               }
-            case 0x3:
+            case LM_BODY_RESET:
               {
-                objectTable[var_6].field_2 = evalVar();
+                objectTable[var_6].body = evalVar();
+                objectTable[var_6].anim = evalVar();
                 break;
               }
-            case 0xD:
+            case LM_TYPE:
               {
-                objectTable[var_6].field_26 = READ_LE_S16(currentLifePtr);
-                currentLifePtr+=2;
-                objectTable[var_6].field_2C = -1;
-                objectTable[var_6].field_2A = 1;
-                break;
-              }
-            case 0xF: // MOVE
-              {
-                objectTable[var_6].stage = READ_LE_S16(currentLifePtr);
+                lifeTempVar1 = (*(short int*)(currentLifePtr)) & TYPE_MASK;
                 currentLifePtr+=2;
 
-                objectTable[var_6].room = READ_LE_S16(currentLifePtr);
+                lifeTempVar2 = objectTable[var_6].flags;
+
+                objectTable[var_6].flags = (objectTable[var_6].flags & (~TYPE_MASK)) + lifeTempVar1;
+                break;
+              }
+////////////////////////////////////////////////////////////////////////
+            case LM_ANIM_ONCE:
+              {
+                objectTable[var_6].anim = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+                objectTable[var_6].animInfo = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+                objectTable[var_6].animType = ANIM_ONCE;
+                if(gameId >= JACK)
+                  objectTable[var_6].frame = 0;
+                break;
+              }
+            case LM_ANIM_REPEAT:
+              {
+                objectTable[var_6].anim = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+                objectTable[var_6].animInfo = -1;
+                objectTable[var_6].animType = ANIM_REPEAT;
+                if(gameId >= JACK)
+                  objectTable[var_6].frame = 0;
+                break;
+              }
+            case LM_ANIM_ALL_ONCE:
+              {
+                objectTable[var_6].anim = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+                objectTable[var_6].animInfo = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+                objectTable[var_6].animType = ANIM_ONCE | ANIM_UNINTERRUPTABLE;
+                if(gameId >= JACK)
+                  objectTable[var_6].frame = 0;
+                break;
+              }
+            case	LM_ANIM_RESET:
+              {
+                ASSERT(gameId >= JACK);
+                objectTable[var_6].anim = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+                objectTable[var_6].animInfo = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+                objectTable[var_6].animType = ANIM_ONCE | ANIM_RESET ;
+                objectTable[var_6].frame = 0 ;
+                break ;
+              }
+////////////////////////////////////////////////////////////////////////
+            case LM_MOVE: // MOVE
+              {
+                objectTable[var_6].stage = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+
+                objectTable[var_6].room = *(short int*)(currentLifePtr);
                 currentLifePtr+=2;
 
                 objectTable[var_6].lifeMode = 0;
                 break;
               }
-            case 0x18: // LIFE_MODE
+            case LM_ANGLE:
               {
-                lifeTempVar1 = READ_LE_S16(currentLifePtr);
+                objectTable[var_6].alpha = *(short int*)(currentLifePtr);
                 currentLifePtr+=2;
 
+                objectTable[var_6].beta = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
 
-                if(lifeTempVar1 != objectTable[var_6].lifeMode)
-                {
-                  objectTable[var_6].lifeMode = lifeTempVar1;
-                  //objModifFlag1 = 1;
-                }
+                objectTable[var_6].gamma = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+
                 break;
               }
-            case 0x1F:
+            case LM_STAGE: // stage
               {
-                objectTable[var_6].life = READ_LE_S16(currentLifePtr);
-                currentLifePtr+=2;
-                break;
-              }
-            case 0x28:
-              {
-                lifeTempVar1 = (READ_LE_S16(currentLifePtr)) & 0x1D1;
+                objectTable[var_6].stage = *(short int*)(currentLifePtr);
                 currentLifePtr+=2;
 
-                lifeTempVar2 = objectTable[var_6].flags;
-
-                objectTable[var_6].flags = (objectTable[var_6].flags & 0xFE2E) + lifeTempVar1;
-                break;
-              }
-            case 0x2F: // stage
-              {
-                objectTable[var_6].stage = READ_LE_S16(currentLifePtr);
+                objectTable[var_6].room = *(short int*)(currentLifePtr);
                 currentLifePtr+=2;
 
-                objectTable[var_6].room = READ_LE_S16(currentLifePtr);
+                objectTable[var_6].x = *(short int*)(currentLifePtr);
                 currentLifePtr+=2;
 
-                objectTable[var_6].x = READ_LE_S16(currentLifePtr);
+                objectTable[var_6].y = *(short int*)(currentLifePtr);
                 currentLifePtr+=2;
 
-                objectTable[var_6].y = READ_LE_S16(currentLifePtr);
-                currentLifePtr+=2;
-
-                objectTable[var_6].z = READ_LE_S16(currentLifePtr);
+                objectTable[var_6].z = *(short int*)(currentLifePtr);
                 currentLifePtr+=2;
 
                 //objModifFlag1 = 1;
 
                 break;
               }
-            case 0x30: // FOUND_NAME
+            case LM_TEST_COL:
               {
-                objectTable[var_6].foundName = READ_LE_S16(currentLifePtr);
-                currentLifePtr+=2;
-
-                break;
-              }
-            case 0x31: // FOUND_FLAG
-              {
-                objectTable[var_6].flags2 &= 0xE000;
-                objectTable[var_6].flags2 |= READ_LE_S16(currentLifePtr);
-                currentLifePtr+=2;
-
-                break;
-              }
-            case 0x36:
-              {
-                if(READ_LE_S16(currentLifePtr))
+                if(*(short int*)(currentLifePtr))
                 {
                   objectTable[var_6].flags |= 0x20;
                 }
@@ -581,26 +616,60 @@ void processLife(int lifeNum)
 
                 break;
               }
-            case 0x43:
+////////////////////////////////////////////////////////////////////////
+            case LM_LIFE:
               {
-                objectTable[var_6].positionInTrack = READ_LE_S16(currentLifePtr);
+                objectTable[var_6].life = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+                break;
+              }
+            case LM_LIFE_MODE: // LIFE_MODE
+              {
+                lifeTempVar1 = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+
+
+                if(lifeTempVar1 != objectTable[var_6].lifeMode)
+                {
+                  objectTable[var_6].lifeMode = lifeTempVar1;
+                  //objModifFlag1 = 1;
+                }
+                break;
+              }
+            case LM_FOUND_NAME: // FOUND_NAME
+              {
+                objectTable[var_6].foundName = *(short int*)(currentLifePtr);
                 currentLifePtr+=2;
 
                 break;
               }
-            case 0x4A:
+            case LM_FOUND_BODY: // FOUND_BODY
               {
-                objectTable[var_6].alpha = READ_LE_S16(currentLifePtr);
-                currentLifePtr+=2;
-
-                objectTable[var_6].beta = READ_LE_S16(currentLifePtr);
-                currentLifePtr+=2;
-
-                objectTable[var_6].gamma = READ_LE_S16(currentLifePtr);
+                objectTable[var_6].foundBody = *(short int*)(currentLifePtr);
                 currentLifePtr+=2;
 
                 break;
               }
+            case LM_FOUND_FLAG: // FOUND_FLAG
+              {
+                objectTable[var_6].flags2 &= 0xE000;
+                objectTable[var_6].flags2 |= *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+
+                break;
+              }
+            case LM_FOUND_WEIGHT:
+              {
+                objectTable[var_6].positionInTrack = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+
+                break;
+              }
+            case  LM_START_CHRONO: // arrive in original interpreter too
+              {
+                break;
+              }
+////////////////////////////////////////////////////////////////////////
             default:
               {
                 printf("Unsupported opcode %X when actor isn't in floor\n",currentOpcode & 0x7FFF);
@@ -613,19 +682,207 @@ void processLife(int lifeNum)
     }
     else
     {
+      int opcodeLocated;
 processOpcode:
-      switch(currentOpcode & 0x7FFF)
+
+      if(gameId == AITD1)
       {
-      case 0x0: // DO_MOVE
+        opcodeLocated = AITD1LifeMacroTable[currentOpcode & 0x7FFF];
+      }
+      else
+      {
+        opcodeLocated = AITD2LifeMacroTable[currentOpcode & 0x7FFF];
+      }
+
+      switch(opcodeLocated)
+      {
+      case LM_BODY:
         {
-          processTrack();
+          lifeTempVar1 = evalVar();
+
+          objectTable[currentProcessedActorPtr->field_0].body = lifeTempVar1;
+
+          if(currentProcessedActorPtr->bodyNum != lifeTempVar1)
+          {
+            currentProcessedActorPtr->bodyNum = lifeTempVar1;
+
+            if(currentProcessedActorPtr->flags & 1)
+            {
+              if((currentProcessedActorPtr->ANIM != -1) && (currentProcessedActorPtr->bodyNum != -1))
+              {
+                char* pAnim = HQR_Get(listAnim,currentProcessedActorPtr->ANIM);
+                char* pBody;
+
+                if(gameId >= JACK)
+                {
+/*                  if (bFlagDecal)
+                    gereDecal(); */
+                }
+
+                pBody = HQR_Get(listBody,currentProcessedActorPtr->bodyNum);
+
+            /*    if(gameId >= JACK)
+                {
+                  setInterAnimObject2(currentProcessedActorPtr->FRAME, pAnim, pBody, TRUE, Objet->AnimDecal);
+                }
+                else */
+                {
+                  setInterAnimObjet(currentProcessedActorPtr->FRAME, pAnim, pBody);
+                }
+              }
+            }
+            else
+            {
+              mainVar1 = 1;
+            }
+          }
           break;
         }
-      case 0x1: // ANIM
+      case LM_BODY_RESET:
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
+          int param1;
+          int param2;
+
+          param1 = evalVar();
+          param2 = evalVar();
+
+          objectTable[currentProcessedActorPtr->field_0].body = param1;
+          objectTable[currentProcessedActorPtr->field_0].anim = param2;
+
+          currentProcessedActorPtr->bodyNum = param1;
+
+          if(currentProcessedActorPtr->flags&1)
+          {
+            char* pAnim = HQR_Get(listAnim,currentProcessedActorPtr->ANIM);
+            char* pBody;
+
+            if(gameId >= JACK)
+            {
+/*                  if (bFlagDecal)
+                gereDecal(); */
+            }
+
+            pBody = HQR_Get(listBody,currentProcessedActorPtr->bodyNum);
+
+            initAnimInBody(0, pAnim, pBody);
+            anim(param2,4,-1);
+          }
+          else
+          {
+            mainVar1 = 1;
+          }
+          break;
+        }
+      case LM_DO_REAL_ZV:
+        {
+          doRealZv(currentProcessedActorPtr);
+          break;
+        }
+      case LM_DEF_ZV: // DEF_ZV
+        {
+          currentProcessedActorPtr->zv.ZVX1 = currentProcessedActorPtr->roomX + *(short int*)currentLifePtr + currentProcessedActorPtr->modX;
+          currentLifePtr+=2;
+          currentProcessedActorPtr->zv.ZVX2 = currentProcessedActorPtr->roomX + *(short int*)currentLifePtr + currentProcessedActorPtr->modX;
+          currentLifePtr+=2;
+
+          currentProcessedActorPtr->zv.ZVY1 = currentProcessedActorPtr->roomY + *(short int*)currentLifePtr + currentProcessedActorPtr->modY;
+          currentLifePtr+=2;
+          currentProcessedActorPtr->zv.ZVY2 = currentProcessedActorPtr->roomY + *(short int*)currentLifePtr + currentProcessedActorPtr->modY;
+          currentLifePtr+=2;
+
+          currentProcessedActorPtr->zv.ZVZ1 = currentProcessedActorPtr->roomZ + *(short int*)currentLifePtr + currentProcessedActorPtr->modZ;
+          currentLifePtr+=2;
+          currentProcessedActorPtr->zv.ZVZ2 = currentProcessedActorPtr->roomZ + *(short int*)currentLifePtr + currentProcessedActorPtr->modZ;
+          currentLifePtr+=2;
+
+          break;
+        }
+      case LM_DEF_ABS_ZV:
+        {
+          currentProcessedActorPtr->zv.ZVX1 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+          currentProcessedActorPtr->zv.ZVX2 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+
+          currentProcessedActorPtr->zv.ZVY1 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+          currentProcessedActorPtr->zv.ZVY2 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+
+          currentProcessedActorPtr->zv.ZVZ1 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+          currentProcessedActorPtr->zv.ZVZ2 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+
+          break;
+        }
+      case LM_DO_ROT_ZV: // DO_ROT_ZV
+        {
+          getZvRot(HQR_Get(listBody, currentProcessedActorPtr->bodyNum),&currentProcessedActorPtr->zv,
+            currentProcessedActorPtr->alpha,
+            currentProcessedActorPtr->beta,
+            currentProcessedActorPtr->gamma);
+          
+          currentProcessedActorPtr->zv.ZVX1 += currentProcessedActorPtr->roomX;
+          currentProcessedActorPtr->zv.ZVX2 += currentProcessedActorPtr->roomX;
+          currentProcessedActorPtr->zv.ZVY1 += currentProcessedActorPtr->roomY;
+          currentProcessedActorPtr->zv.ZVY2 += currentProcessedActorPtr->roomY;
+          currentProcessedActorPtr->zv.ZVZ1 += currentProcessedActorPtr->roomZ;
+          currentProcessedActorPtr->zv.ZVZ2 += currentProcessedActorPtr->roomZ;
+
+          break;
+        }
+      case LM_DO_CARRE_ZV: // DO_CARRE_ZV
+        {
+          getZvCube(HQR_Get(listBody,currentProcessedActorPtr->bodyNum),&currentProcessedActorPtr->zv);
+
+          currentProcessedActorPtr->zv.ZVX1 += currentProcessedActorPtr->roomX;
+          currentProcessedActorPtr->zv.ZVX2 += currentProcessedActorPtr->roomX;
+          currentProcessedActorPtr->zv.ZVY1 += currentProcessedActorPtr->roomY;
+          currentProcessedActorPtr->zv.ZVY2 += currentProcessedActorPtr->roomY;
+          currentProcessedActorPtr->zv.ZVZ1 += currentProcessedActorPtr->roomZ;
+          currentProcessedActorPtr->zv.ZVZ2 += currentProcessedActorPtr->roomZ;
+
+          break;
+        }
+      case LM_TYPE: // TYPE
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr) & 0x1D1;
+          currentLifePtr+=2;
+
+          lifeTempVar2 = currentProcessedActorPtr->flags;
+
+          currentProcessedActorPtr->flags = (currentProcessedActorPtr->flags & 0xFE2E) + lifeTempVar1;
+
+          if(lifeTempVar2 & 1)
+          {
+            if(!(lifeTempVar1 & 1))
+            {
+              stopAnim(currentProcessedActorIdx);
+            }
+          }
+
+          if(lifeTempVar1 & 1)
+          {
+            if(!(lifeTempVar2 & 8))
+            {
+              deleteSub(currentProcessedActorIdx);
+            }
+          }
+
+          break;
+        }
+      case LM_GET_HARD_CLIP: //GET_HARD_CLIP
+        {
+          getHardClip();
+          break;
+        }
+////////////////////////////////////////////////////////////////////////
+      case LM_ANIM_ONCE:
+        {
+          lifeTempVar1 = *(short int*)currentLifePtr;
           currentLifePtr +=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
+          lifeTempVar2 = *(short int*)currentLifePtr;
           currentLifePtr +=2;
 
           if(lifeTempVar1==-1)
@@ -640,445 +897,419 @@ processOpcode:
 
           break;
         }
-      case 0x2: // ANIM_ALL
+      case LM_ANIM_REPEAT:
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr +=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
-          currentLifePtr +=2;
-
-          anim(lifeTempVar1, 2, lifeTempVar2);
-
-          break;
-        }
-      case 0x3: // BODY
-        {
-          lifeTempVar1 = evalVar();
-
-          objectTable[currentProcessedActorPtr->field_0].field_2 = lifeTempVar1;
-
-          if(currentProcessedActorPtr->bodyNum != lifeTempVar1)
-          {
-            currentProcessedActorPtr->bodyNum = lifeTempVar1;
-
-            if(currentProcessedActorPtr->flags & 1)
-            {
-              if(currentProcessedActorPtr->ANIM != -1 && currentProcessedActorPtr->bodyNum != -1 )
-              {
-                processAnim(currentProcessedActorPtr->FRAME, HQR_Get(listAnim,currentProcessedActorPtr->ANIM),HQR_Get(listBody,currentProcessedActorPtr->bodyNum));
-              }
-            }
-            else
-            {
-              mainVar1 = 1;
-            }
-          }
-          break;
-        }
-      case 0x4: // IF_DIF
-        {
-          lifeTempVar1 = evalVar();
-          lifeTempVar2 = evalVar();
-
-          if(lifeTempVar1 == lifeTempVar2)
-          {
-            currentLifePtr+=2;
-          }
-          else
-          {
-            lifeTempVar2 = READ_LE_S16(currentLifePtr);
-            currentLifePtr += lifeTempVar2*2;
-            currentLifePtr += 2;
-          }
-
-          break;
-        }
-      case 0x5: // IF_EQU
-        {
-          lifeTempVar1 = evalVar();
-          lifeTempVar2 = evalVar();
-
-          if(lifeTempVar1 != lifeTempVar2)
-          {
-            currentLifePtr+=2;
-          }
-          else
-          {
-            lifeTempVar2 = READ_LE_S16(currentLifePtr);
-            currentLifePtr += lifeTempVar2*2;
-            currentLifePtr += 2;
-          }
-
-          break;
-        }
-      case 0x6: // IF_INF
-        {
-          lifeTempVar1 = evalVar();
-          lifeTempVar2 = evalVar();
-
-          if(lifeTempVar1 >= lifeTempVar2)
-          {
-            currentLifePtr+=2;
-          }
-          else
-          {
-            lifeTempVar2 = READ_LE_S16(currentLifePtr);
-            currentLifePtr += lifeTempVar2*2;
-            currentLifePtr += 2;
-          }
-
-          break;
-        }
-      case 0x7: // IF_INFEQU
-        {
-          lifeTempVar1 = evalVar();
-          lifeTempVar2 = evalVar();
-
-          if(lifeTempVar1 > lifeTempVar2)
-          {
-            currentLifePtr+=2;
-          }
-          else
-          {
-            lifeTempVar2 = READ_LE_S16(currentLifePtr);
-            currentLifePtr += lifeTempVar2*2;
-            currentLifePtr += 2;
-          }
-
-          break;
-        }
-      case 0x8: // IF_SUP
-        {
-          lifeTempVar1 = evalVar();
-          lifeTempVar2 = evalVar();
-
-          if(lifeTempVar1 <= lifeTempVar2)
-          {
-            currentLifePtr+=2;
-          }
-          else
-          {
-            lifeTempVar2 = READ_LE_S16(currentLifePtr);
-            currentLifePtr += lifeTempVar2*2;
-            currentLifePtr += 2;
-          }
-
-          break;
-        }
-      case 0x9: // IF_SUPEQU
-        {
-          lifeTempVar1 = evalVar();
-          lifeTempVar2 = evalVar();
-
-          if(lifeTempVar1 < lifeTempVar2)
-          {
-            currentLifePtr+=2;
-          }
-          else
-          {
-            lifeTempVar2 = READ_LE_S16(currentLifePtr);
-            currentLifePtr += lifeTempVar2*2;
-            currentLifePtr += 2;
-          }
-
-          break;
-        }
-      case 0xA: // GOTO
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr += lifeTempVar1*2;
-          currentLifePtr += 2;  
-          break;
-        }
-      case 0xB: // RETURN
-        {
-          exitLife = 1;
-          break;
-        }
-      case 0xC: // END
-        {
-          exitLife = 1;
-          break;
-        }
-      case 0xD: // anim2
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
+          lifeTempVar1 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
           anim(lifeTempVar1, 1, -1);
 
           break;
         }
-      case 0xE:
+      case LM_ANIM_ALL_ONCE:
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar3 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar4 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar5 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar6 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar7 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          
-          animMove(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6,lifeTempVar7);
+          lifeTempVar1 = *(short int*)currentLifePtr;
+          currentLifePtr +=2;
+          lifeTempVar2 = *(short int*)currentLifePtr;
+          currentLifePtr +=2;
+
+          anim(lifeTempVar1, 2, lifeTempVar2);
 
           break;
         }
-      case 0xF: // MOVE
+      case LM_ANIM_RESET:
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
+          int param1;
+          int param2;
+
+          param1 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
+          param2 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
-          setMoveMode(lifeTempVar1,lifeTempVar2);
+          if(param1==-1)
+          {
+            currentProcessedActorPtr->ANIM = -1;
+            currentProcessedActorPtr->field_44 = -2;
+          }
+          else
+          {
+            anim(param1,4,param2);
+          }
 
           break;
         }
-      case 0x10: // HIT
+      case LM_ANIM_HYBRIDE_ONCE:
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
+          // TODO
+          currentLifePtr+=4;
+          break;
+        }
+      case LM_ANIM_HYBRIDE_REPEAT:
+        {
+          // TODO
+          currentLifePtr+=4;
+          break;
+        }
+////////////////////////////////////////////////////////////////////////
+      case LM_HIT:
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
+          lifeTempVar2 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
-          lifeTempVar3 = READ_LE_S16(currentLifePtr);
+          lifeTempVar3 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
-          lifeTempVar4 = READ_LE_S16(currentLifePtr);
+          lifeTempVar4 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
           lifeTempVar5 = evalVar();
-          lifeTempVar6 = READ_LE_S16(currentLifePtr);
+          lifeTempVar6 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
           hit(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6);
 
           break;
         }
-      case 0x11: // MESSAGE
+      case LM_FIRE: // FIRE
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
+          if(gameId == AITD1)
+          {
+            int fireAnim;
+            int shootFrame;
+            int emitPoint;
+            int zvSize;
+            int hitForce;
+            int nextAnim;
+
+            fireAnim = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+            shootFrame = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+            emitPoint = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+            zvSize = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+            hitForce = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+            nextAnim = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+
+            fire(fireAnim,shootFrame,emitPoint,zvSize,hitForce,nextAnim);
+          }
+          else // use an emitter model
+          {
+            int fireAnim;
+            int shootFrame;
+            int emitPoint;
+            int emitModel;
+            int zvSize;
+            int hitForce;
+            int nextAnim;
+
+            fireAnim = evalVar();
+            shootFrame = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+            emitPoint = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+            emitModel = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+            zvSize = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+            hitForce = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+            nextAnim = evalVar();
+
+            fire(fireAnim,shootFrame,emitPoint,zvSize,hitForce,nextAnim); // todo: implement emit model
+          }
+          
+          break;
+        }
+      case LM_FIRE_UP_DOWN: // TODO AITD3 only
+        {
+          evalVar();
+          currentLifePtr+=12;
+          evalVar();
+          break;
+        }
+      case LM_HIT_OBJECT: // HIT_OBJECT
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar2 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
-          makeMessage(lifeTempVar1);
+          currentProcessedActorPtr->animActionType = 8;
+          currentProcessedActorPtr->animActionParam = lifeTempVar1;
+          currentProcessedActorPtr->hitForce = lifeTempVar2;
+          currentProcessedActorPtr->field_98 = -1;
+          break;
+        }
+      case LM_STOP_HIT_OBJECT: // cancel hit obj
+        {
+          if(currentProcessedActorPtr->animActionType == 8)
+          {
+            currentProcessedActorPtr->animActionType = 0;
+            currentProcessedActorPtr->animActionParam = 0;
+            currentProcessedActorPtr->hitForce = 0;
+            currentProcessedActorPtr->field_98 = -1;
+          }
 
           break;
         }
-      case 0x12: // MESSAGE_VALUE
+      case LM_THROW: // throw
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
+          lifeTempVar1 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr); // unused param ?
+          lifeTempVar2 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar3 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar4 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar5 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar6 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar7 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
-          makeMessage(lifeTempVar1);
+          throwObj(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6,lifeTempVar7);
 
           break;
         }
-      case 0x13: // VAR
+////////////////////////////////////////////////////////////////////////
+      case LM_MOVE:
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
+          lifeTempVar1 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
-          vars[lifeTempVar1] = evalVar();
+          lifeTempVar2 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          setMoveMode(lifeTempVar1,lifeTempVar2);
+
           break;
         }
-      case 0x14: // INC_VAR
+      case LM_RESET_MOVE_MANUAL:
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          vars[lifeTempVar1]++;
+          resetRotateParam();
           break;
         }
-      case 0x15: // DEC_VAR
+      case LM_CONTINUE_TRACK:
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
+          char* ptr;
 
-          vars[lifeTempVar1]--;
+          ptr = HQR_Get(listTrack,currentProcessedActorPtr->trackNumber);
+
+          ptr += currentProcessedActorPtr->positionInTrack *2;
+
+          if(*(short int*)ptr == 5)
+          {
+            currentProcessedActorPtr->positionInTrack++;
+          }
           break;
         }
-      case 0x16: // ADD_VAR
+      case LM_DO_MOVE:
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          vars[lifeTempVar1]+=evalVar();
+          if(gameId == AITD1)
+          {
+            processTrack();
+          }
+          else
+          {
+            processTrack2();
+          }
           break;
         }
-      case 0x17: // SUB_VAR
+      case LM_ANIM_MOVE:
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
+          lifeTempVar1 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
+          lifeTempVar2 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar3 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar4 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar5 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar6 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar7 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          
+          animMove(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6,lifeTempVar7);
 
-          vars[lifeTempVar1]-=evalVar();
           break;
         }
-      case 0x18: // LIFE_MODE
+      case LM_MANUAL_ROT: // MANUAL_ROT
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
+          if(gameId == AITD1)
+          {
+            manualRot(240);
+          }
+          else
+          {
+            manualRot(90);
+          }
+          break;
+        }
+      case LM_SET_BETA: // SET_BETA
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar2 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
-          lifeTempVar2 = currentProcessedActorPtr->lifeMode;
+          if(currentProcessedActorPtr->beta != lifeTempVar1)
+          {
+            if(currentProcessedActorPtr->rotate.param == 0 || currentProcessedActorPtr->rotate.newAngle != lifeTempVar1)
+            {
+              startActorRotation(currentProcessedActorPtr->beta, lifeTempVar1, lifeTempVar2, &currentProcessedActorPtr->rotate);
+            }
+
+            currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
+          }
+
+          break;
+        }
+      case LM_SET_ALPHA: // SET_ALPHA
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar2 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          if(currentProcessedActorPtr->alpha != lifeTempVar1)
+          {
+            if(currentProcessedActorPtr->rotate.param == 0 || lifeTempVar1!= currentProcessedActorPtr->rotate.newAngle)
+            {
+              startActorRotation(currentProcessedActorPtr->alpha, lifeTempVar1, lifeTempVar2, &currentProcessedActorPtr->rotate);
+            }
+
+            currentProcessedActorPtr->alpha = updateActorRotation(&currentProcessedActorPtr->rotate);
+          }
+
+          break;
+        }
+      case LM_ANGLE: // ANGLE
+        {
+          currentProcessedActorPtr->alpha = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+          currentProcessedActorPtr->beta = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+          currentProcessedActorPtr->gamma = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+
+          break;
+        }
+      case LM_COPY_ANGLE:
+        {
+          // TODO !
+          currentLifePtr+=2;
+          break;
+        }
+      case LM_STAGE: // STAGE
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar2 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar3 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar4 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar5 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          setStage(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5);
+
+          break;
+        }
+      case LM_TEST_COL: // TEST_COL
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          if(lifeTempVar1)
+          {
+            currentProcessedActorPtr->dynFlags |= 1;
+          }
+          else
+          {
+            currentProcessedActorPtr->dynFlags &= 0xFFFE;
+          }
+
+          break;
+        }
+      case LM_UP_COOR_Y: // UP_COOR_Y
+        {
+          startActorRotation(0,-2000,-1,&currentProcessedActorPtr->field_60);
+          break;
+        }
+////////////////////////////////////////////////////////////////////////
+      case LM_LIFE: // LIFE
+        {
+          currentProcessedActorPtr->life = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          break;
+        }
+      case LM_STAGE_LIFE:
+        {
+          objectTable[currentProcessedActorPtr->field_0].field_24 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          break;
+        }
+      case LM_LIFE_MODE: // LIFE_MODE
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          if(gameId == AITD1)
+          {
+            lifeTempVar2 = currentProcessedActorPtr->lifeMode;
+          }
+          else
+          {
+            lifeTempVar2 = currentProcessedActorPtr->lifeMode & 3;
+          }
 
           if(lifeTempVar1 != lifeTempVar2)
           {
             currentProcessedActorPtr->lifeMode = lifeTempVar1;
-//            objModifFlag1 = 1;
+            //objModifFlag1 = 1;
           }
           break;
         }
-      case 0x19: // SWITCH
+      case LM_DELETE: // DELETE
         {
-          switchVal = evalVar();
-          break;
-        }
-      case 0x1A: // CASE
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          if(lifeTempVar1 == switchVal)
+          if(gameId == AITD1)
           {
+            lifeTempVar1 = *(short int*)(currentLifePtr);
             currentLifePtr+=2;
           }
           else
           {
-            lifeTempVar2 = READ_LE_S16(currentLifePtr);
-            currentLifePtr += lifeTempVar2*2;
-            currentLifePtr += 2;
+            lifeTempVar1 = evalVar();
           }
-    
-          break;
-        }
-      // 0x1B should be BREAK, but is never found in byte compiled scripts
-      case 0x1C: //START_CHRONO
-        {
-          startChrono(&currentProcessedActorPtr->CHRONO);
-          break;
-        }
-      case 0x1D: // MULTI_CASE
-        {
-          int i;
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          lifeTempVar2 = 0;
-
-          for(i=0;i<lifeTempVar1;i++)
-          {
-            if(READ_LE_S16(currentLifePtr) == switchVal)
-            {
-              lifeTempVar2 = 1;
-            }
-            currentLifePtr+=2;
-          }
-
-          if(!lifeTempVar2)
-          {
-            lifeTempVar2 = READ_LE_S16(currentLifePtr);
-            currentLifePtr += lifeTempVar2*2;
-            currentLifePtr += 2;
-          }
-          else
-          {
-            currentLifePtr+=2;
-          }
-          break;
-        }
-      case 0x1E: // FOUND
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          foundObject(lifeTempVar1, 1);
-
-          break;
-        }
-      case 0x1F: // LIFE
-        {
-          currentProcessedActorPtr->life = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          break;
-        }
-      case 0x20: // DELETE
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
 
           deleteObject(lifeTempVar1);
 
           if(objectTable[lifeTempVar1].foundBody != -1)
           {
-            objectTable[lifeTempVar1].flags2 &= 0x7FFF;
+            if(gameId == AITD1) // TODO: check, really usefull ?
+            {
+              objectTable[lifeTempVar1].flags2 &= 0x7FFF;
+            }
             objectTable[lifeTempVar1].flags2 |= 0x4000;
           }
 
           break;
         }
-      case 0x21: // TAKE
+      case LM_SPECIAL: // SPECIAL
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          take(lifeTempVar1);
-
-          break;
-        }
-      case 0x22: // IN_HAND
-        {
-          inHand = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          break;
-        }
-      case 0x23: // READ
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          fadeOut(0x20,0);
-
-          printf("ReadBook\n");
-//          readBook(lifeTempVar2+1, lifeTempVar1);
-
-          fadeOut(4,0);
-
-          mainVar1 = 2;
-
-          break;
-        }
-      case 0x24: // ANIM_SAMPLE
-        {
-          lifeTempVar1 = evalVar();
-
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar3 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          if(currentProcessedActorPtr->END_FRAME != 0)
-          {
-            if(currentProcessedActorPtr->ANIM == lifeTempVar2)
-            {
-              if(currentProcessedActorPtr->FRAME == lifeTempVar3)
-              {
-                playSound(lifeTempVar1);
-              }
-            }
-          }
-          break;
-        }
-      case 0x25: // SPECIAL
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr) & 0x1D1;
+          lifeTempVar1 = *(short int*)(currentLifePtr) & 0x1D1;
           currentLifePtr+=2;
 
           switch(lifeTempVar1)
@@ -1134,137 +1365,401 @@ processOpcode:
           }
           break;
         }
-      case 0x26:
+////////////////////////////////////////////////////////////////////////
+      case LM_START_CHRONO: //START_CHRONO
         {
-          doRealZv(currentProcessedActorPtr);
+          startChrono(&currentProcessedActorPtr->CHRONO);
           break;
         }
-      case 0x27:
+////////////////////////////////////////////////////////////////////////
+      case LM_FOUND: // FOUND
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          foundObject(lifeTempVar1, 1);
+
+          break;
+        }
+      case LM_TAKE: // TAKE
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          take(lifeTempVar1);
+
+          break;
+        }
+      case LM_IN_HAND: // IN_HAND
+        {
+          if(gameId == AITD1)
+          {
+            inHand = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+          }
+          else
+          {
+            if(gameId == JACK)
+            {
+              inHandTable[currentInHand] = *(short int*)(currentLifePtr);
+              currentLifePtr+=2;
+            }
+            else
+            {
+              inHandTable[currentInHand] = evalVar();
+            }
+          }
+          break;
+        }
+      case LM_DROP: // DROP
+        {
+          lifeTempVar1 = evalVar();
+          lifeTempVar2 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          printf("Drop\n");
+          // drop(lifeTempVar1, lifeTempVar2);
+
+          break;
+        }
+      case LM_PUT:
+        {
+          int x;
+          int y;
+          int z;
+          int room;
+          int stage;
+          int alpha;
+          int beta;
+          int gamma;
+          int idx;
+
+          idx = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          x = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          y = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          z = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          room = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          stage = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          alpha = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          beta = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          gamma = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          put(x,y,z,room,stage,alpha,beta,gamma,idx);
+
+          break;
+        }
+      case LM_PUT_AT: // PUT_AT
+        {
+          int objIdx1;
+          int objIdx2;
+
+          objIdx1 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+
+          objIdx2 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+
+          putAt(objIdx1,objIdx2);
+          break;
+        }
+      case LM_FOUND_NAME: // FOUND_NAME
+        {
+          objectTable[currentProcessedActorPtr->field_0].foundName = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          break;
+        }
+      case LM_FOUND_BODY: // FOUND_BODY
+        {
+          objectTable[currentProcessedActorPtr->field_0].foundBody = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          break;
+        }
+      case LM_FOUND_FLAG: // FOUND_FLAG
+        {
+          objectTable[currentProcessedActorPtr->field_0].flags2 &= 0xE000;
+          objectTable[currentProcessedActorPtr->field_0].flags2 |= *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          break;
+        }
+      case LM_FOUND_WEIGHT: // FOUND_WEIGHT
+        {
+          objectTable[currentProcessedActorPtr->field_0].positionInTrack = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          break;
+        }
+      case LM_FOUND_LIFE: // FOUND_LIFE
+        {
+          objectTable[currentProcessedActorPtr->field_0].foundLife = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          break;
+        }
+      case LM_READ: // READ
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar2 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          fadeOut(0x20,0);
+
+          printf("ReadBook\n");
+//          readBook(lifeTempVar2+1, lifeTempVar1);
+
+          if(gameId == AITD1)
+          {
+            fadeOut(4,0);
+          }
+
+          mainVar1 = 2;
+
+          break;
+        }
+      case LM_READ_ON_PICTURE: // TODO
+        {
+          currentLifePtr+=16;
+          break;
+        }
+////////////////////////////////////////////////////////////////////////
+      case LM_ANIM_SAMPLE: // ANIM_SAMPLE
+        {
+          lifeTempVar1 = evalVar();
+
+          lifeTempVar2 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar3 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          if(currentProcessedActorPtr->END_FRAME != 0)
+          {
+            if(currentProcessedActorPtr->ANIM == lifeTempVar2)
+            {
+              if(currentProcessedActorPtr->FRAME == lifeTempVar3)
+              {
+                playSound(lifeTempVar1);
+                //setSampleFreq(0);
+              }
+            }
+          }
+          break;
+        }
+      case	LM_2D_ANIM_SAMPLE:
+        {
+          int sampleNumber;
+          int animNumber;
+          int frameNumber;
+
+          sampleNumber = evalVar();
+          animNumber = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          frameNumber = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          
+          break; // TODO: implement
+        }
+      case LM_SAMPLE:
+        {
+          int sampleNumber;
+
+          if(gameId == AITD1)
+          {
+            sampleNumber = evalVar();
+          }
+          else
+          {
+            if(gameId == JACK)
+            {
+              sampleNumber = evalVar();
+            }
+            else
+            {
+              sampleNumber = *(short int*)(currentLifePtr);
+              currentLifePtr+=2;
+            }
+          }
+
+          playSound(sampleNumber);
+          //setSampleFreq(0);
+          break;
+        }
+      case LM_REP_SAMPLE: // sample TODO!
+        {
+          if(gameId == AITD1)
+          {
+            evalVar();
+            currentLifePtr+=2;
+          }
+          else
+          {
+            currentLifePtr+=4;
+          }
+          break;
+        }
+		  case LM_STOP_SAMPLE: // todo
+        {
+				  break ;
+        }
+      case LM_SAMPLE_THEN: //todo
+        {
+          if(gameId == AITD1)
+          {
+            playSound(evalVar());
+            genVar7 = evalVar();
+          }
+          else
+          {
+            int newSample;
+
+            if(gameId == JACK)
+            {
+              newSample = evalVar();
+              genVar7 = evalVar();
+            }
+            else
+            {
+              newSample = *(short int*)currentLifePtr;
+              currentLifePtr+=2;
+
+              genVar7 = *(short int*)currentLifePtr;
+              currentLifePtr+=2;
+            }
+
+            playSound(newSample);
+          }
+          // setSampleFreq(0);
+          break;
+        }
+      case LM_SAMPLE_THEN_REPEAT: //todo
         {
           playSound(evalVar());
+          genVar7 = evalVar() | 0x4000;
+         // setSampleFreq(0);
           break;
         }
-      case 0x28: // TYPE
+////////////////////////////////////////////////////////////////////////
+      case LM_MUSIC: // MUSIC
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr) & 0x1D1;
-          currentLifePtr+=2;
-
-          lifeTempVar2 = currentProcessedActorPtr->flags;
-
-          currentProcessedActorPtr->flags = (currentProcessedActorPtr->flags & 0xFE2E) + lifeTempVar1;
-
-          if(lifeTempVar2 & 1)
-          {
-            if(!(lifeTempVar1 & 1))
-            {
-              stopAnim(currentProcessedActorIdx);
-            }
-          }
-
-          if(lifeTempVar1 & 1)
-          {
-            if(!(lifeTempVar2 & 8))
-            {
-              deleteSub(currentProcessedActorIdx);
-            }
-          }
-
-          break;
-        }
-      case 0x2A: // MANUAL_ROT
-        {
-          manualRot(240);
-          break;
-        }
-      case 0x2B: // TODO
-        {
-          currentLifePtr+=2;
-          break;
-        }
-      case 0x2C: // MUSIC
-        {
-          int newMusicIdx = READ_LE_S16(currentLifePtr);
+          int newMusicIdx = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
           playMusic(newMusicIdx);
           break;
         }
-      case 0x2D: // SET_BETA
+      case LM_NEXT_MUSIC: // TODO
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
+          int musicIdx = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
-          if(currentProcessedActorPtr->beta != lifeTempVar1)
+          if(currentMusic == -1)
           {
-            if(currentProcessedActorPtr->rotate.param == 0 || currentProcessedActorPtr->rotate.newAngle != lifeTempVar1)
-            {
-              startActorRotation(currentProcessedActorPtr->beta, lifeTempVar1, lifeTempVar2, &currentProcessedActorPtr->rotate);
-            }
-
-            currentProcessedActorPtr->beta = updateActorRotation(&currentProcessedActorPtr->rotate);
+            playMusic(musicIdx);
+          }
+          else
+          {
+            nextMusic = musicIdx;
           }
 
           break;
         }
-      case 0x2E: // DO_ROT_ZV
+      case LM_FADE_MUSIC: // ? fade out music and play another music ?
         {
-          getZvRot(HQR_Get(listBody, currentProcessedActorPtr->bodyNum),&currentProcessedActorPtr->zv,
-            currentProcessedActorPtr->alpha,
-            currentProcessedActorPtr->beta,
-            currentProcessedActorPtr->gamma);
-          
-          currentProcessedActorPtr->zv.ZVX1 += currentProcessedActorPtr->roomX;
-          currentProcessedActorPtr->zv.ZVX2 += currentProcessedActorPtr->roomX;
-          currentProcessedActorPtr->zv.ZVY1 += currentProcessedActorPtr->roomY;
-          currentProcessedActorPtr->zv.ZVY2 += currentProcessedActorPtr->roomY;
-          currentProcessedActorPtr->zv.ZVZ1 += currentProcessedActorPtr->roomZ;
-          currentProcessedActorPtr->zv.ZVZ2 += currentProcessedActorPtr->roomZ;
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          if(currentMusic!=-1)
+          {
+            fadeMusic(0,0,0x8000);    // fade out music
+            startChrono(&musicChrono); // fade out music timer
+            currentMusic = -2;         // waiting next music
+            nextMusic = lifeTempVar1;    // next music to play
+          }
+          else
+          {
+            playMusic(lifeTempVar1);
+          }
 
           break;
         }
-      case 0x2F: // STAGE
+      case LM_RND_FREQ: // TODO
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar3 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar4 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar5 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          setStage(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5);
-
-          break;
-        }
-      case 0x30: // FOUND_NAME
-        {
-          objectTable[currentProcessedActorPtr->field_0].foundName = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          break;
-        }
-      case 0x31: // FOUND_FLAG
-        {
-          objectTable[currentProcessedActorPtr->field_0].flags2 &= 0xE000;
-          objectTable[currentProcessedActorPtr->field_0].flags2 |= READ_LE_S16(currentLifePtr);
           currentLifePtr+=2;
           break;
         }
-      case 0x32: // FOUND_LIFE
+////////////////////////////////////////////////////////////////////////
+      case LM_LIGHT: // LIGHT
         {
-          objectTable[currentProcessedActorPtr->field_0].foundLife = READ_LE_S16(currentLifePtr);
+          lifeTempVar1 = 2-((*(short int*)(currentLifePtr))<<1);
           currentLifePtr+=2;
+
+          if(gameId >= JACK ||(!CVars[getCVarsIdx(KILLED_SORCERER)]))
+          {
+            if(lightVar1 != lifeTempVar1)
+            {
+              lightVar1 = lifeTempVar1;
+              lightVar2 = 1;
+            }
+          }
 
           break;
         }
-      case 0x33: // CAMERA_TARGET
+      case LM_SHAKING: // SHAKING 
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
+          printf("Shaking\n");
+          //shakingState = shakingAmplitude = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+/*          if(shakingState==0)
+          {
+            stopShaking();
+          } */
+          break;
+        }
+      case LM_PLUIE:
+        {
+          // TODO
+          break;
+        }
+      case LM_WATER: // ? shaking related
+        {
+          // TODO: Warning, AITD1/AITD2 diff
+          printf("Shaking related\n");
+//          mainLoopVar1 = shakeVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+/*          if(mainLoopVar1)
+          {
+            //setupShaking(-600);
+          }
+          else
+          {
+            //setupShaking(1000);
+          } */
+
+          break;
+        }
+      case LM_CAMERA_TARGET: // CAMERA_TARGET
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
           if(lifeTempVar1 != currentCameraTarget) // same stage
@@ -1273,15 +1768,42 @@ processOpcode:
 
             if(lifeTempVar2 != -1)
             {
-              currentCameraTarget = lifeTempVar1;
-              genVar9 = lifeTempVar2;
-
-              lifeTempVar3 = actorTable[genVar9].room;
-
-              if(lifeTempVar3 != currentDisplayedRoom)
+              if(gameId == AITD1)
               {
-                needChangeRoom = 1;
-                newRoom = lifeTempVar3;
+                currentCameraTarget = lifeTempVar1;
+                genVar9 = lifeTempVar2;
+
+                lifeTempVar3 = actorTable[genVar9].room;
+
+                if(lifeTempVar3 != currentDisplayedRoom)
+                {
+                  needChangeRoom = 1;
+                  newRoom = lifeTempVar3;
+                }
+              }
+              else
+              {
+                // security case, the target actor may be still be in list while already changed of stage
+                // TODO: check if AITD1 could use the same code (quite probable as it's only security)
+                if(objectTable[lifeTempVar1].stage != currentEtage)
+                {
+                  changeFloor = 1;
+                  newFloor = actorTable[lifeTempVar2].stage;
+                  newRoom = actorTable[lifeTempVar2].room;
+                }
+                else
+                {
+                  currentCameraTarget = lifeTempVar1;
+                  genVar9 = lifeTempVar2;
+
+                  lifeTempVar3 = actorTable[genVar9].room;
+
+                  if(lifeTempVar3 != currentDisplayedRoom)
+                  {
+                    needChangeRoom = 1;
+                    newRoom = lifeTempVar3;
+                  }
+                }
               }
             }
             else // different stage
@@ -1305,396 +1827,437 @@ processOpcode:
 
           break;
         }
-      case 0x34: // DROP
+      case LM_PICTURE: // displayScreen
         {
-          lifeTempVar1 = evalVar();
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          printf("Drop\n");
-          // drop(lifeTempVar1, lifeTempVar2);
-
-          break;
-        }
-      case 0x35: // FIRE
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar3 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar4 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar5 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar6 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          fire(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6);
-          
-          break;
-        }
-      case 0x36: // TEST_COL
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          if(lifeTempVar1)
+          if(gameId == AITD1)
           {
-            currentProcessedActorPtr->dynFlags |= 1;
-          }
-          else
-          {
-            currentProcessedActorPtr->dynFlags &= 0xFFFE;
-          }
-
-          break;
-        }
-      case 0x37: // FOUND_BODY
-        {
-          objectTable[currentProcessedActorPtr->field_0].foundBody = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          break;
-        }
-      case 0x38: // SET_ALPHA
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          if(currentProcessedActorPtr->alpha != lifeTempVar1)
-          {
-            if(currentProcessedActorPtr->rotate.param == 0 || lifeTempVar1!= currentProcessedActorPtr->rotate.newAngle)
-            {
-              startActorRotation(currentProcessedActorPtr->alpha, lifeTempVar1, lifeTempVar2, &currentProcessedActorPtr->rotate);
-            }
-
-            currentProcessedActorPtr->alpha = updateActorRotation(&currentProcessedActorPtr->rotate);
-          }
-
-          break;
-        }
-      case 0x3B:
-        {
-          int x;
-          int y;
-          int z;
-          int room;
-          int stage;
-          int alpha;
-          int beta;
-          int gamma;
-          int idx;
-
-          idx = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          x = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          y = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          z = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          room = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          stage = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          alpha = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          beta = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          gamma = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          put(x,y,z,room,stage,alpha,beta,gamma,idx);
-
-          break;
-        }
-      case 0x3C:
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          *(((short int*)(&defines))+lifeTempVar1) = evalVar();
-          break;
-        }
-      case 0x3E: // DO_CARRE_ZV
-        {
-          getZvCube(HQR_Get(listBody,currentProcessedActorPtr->bodyNum),&currentProcessedActorPtr->zv);
-
-          currentProcessedActorPtr->zv.ZVX1 += currentProcessedActorPtr->roomX;
-          currentProcessedActorPtr->zv.ZVX2 += currentProcessedActorPtr->roomX;
-          currentProcessedActorPtr->zv.ZVY1 += currentProcessedActorPtr->roomY;
-          currentProcessedActorPtr->zv.ZVY2 += currentProcessedActorPtr->roomY;
-          currentProcessedActorPtr->zv.ZVZ1 += currentProcessedActorPtr->roomZ;
-          currentProcessedActorPtr->zv.ZVZ2 += currentProcessedActorPtr->roomZ;
-
-          break;
-        }
-      case 0x3F: //todo
-        {
-          playSound(evalVar());
-          genVar7 = evalVar();
-          break;
-        }
-      case 0x40: // LIGHT
-        {
-          lifeTempVar1 = 2-((READ_LE_S16(currentLifePtr))<<1);
-          currentLifePtr+=2;
-
-          if(!defines.lightVar)
-          {
-            if(lightVar1 != lifeTempVar1)
-            {
-              lightVar1 = lifeTempVar1;
-              lightVar2 = 1;
-            }
-          }
-
-          break;
-        }
-      case 0x41: // SHAKING
-        {
-          printf("Shaking\n");
-          //shakingState = shakingAmplitude = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-/*          if(shakingState==0)
-          {
-            stopShaking();
-          } */
-          break;
-        }
-      case 0x42: // INVENTORY
-        {
-          statusScreenAllowed = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          break;
-        }
-      case 0x43: // FOUND_WEIGHT
-        {
-          objectTable[currentProcessedActorPtr->field_0].positionInTrack = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          break;
-        }
-      case 0x44: // UP_COOR_Y
-        {
-          startActorRotation(0,-2000,-1,&currentProcessedActorPtr->field_60);
-          break;
-        }
-      case 0x46: // PUT_AT
-        {
-          int objIdx1;
-          int objIdx2;
-
-          objIdx1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          objIdx2 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          putAt(objIdx1,objIdx2);
-          break;
-        }
-      case 0x47: // DEF_ZV
-        {
-          currentProcessedActorPtr->zv.ZVX1 = currentProcessedActorPtr->roomX + READ_LE_S16(currentLifePtr) + currentProcessedActorPtr->modX;
-          currentLifePtr+=2;
-          currentProcessedActorPtr->zv.ZVX2 = currentProcessedActorPtr->roomX + READ_LE_S16(currentLifePtr) + currentProcessedActorPtr->modX;
-          currentLifePtr+=2;
-
-          currentProcessedActorPtr->zv.ZVY1 = currentProcessedActorPtr->roomY + READ_LE_S16(currentLifePtr) + currentProcessedActorPtr->modY;
-          currentLifePtr+=2;
-          currentProcessedActorPtr->zv.ZVY2 = currentProcessedActorPtr->roomY + READ_LE_S16(currentLifePtr) + currentProcessedActorPtr->modY;
-          currentLifePtr+=2;
-
-          currentProcessedActorPtr->zv.ZVZ1 = currentProcessedActorPtr->roomZ + READ_LE_S16(currentLifePtr) + currentProcessedActorPtr->modZ;
-          currentLifePtr+=2;
-          currentProcessedActorPtr->zv.ZVZ2 = currentProcessedActorPtr->roomZ + READ_LE_S16(currentLifePtr) + currentProcessedActorPtr->modZ;
-          currentLifePtr+=2;
-
-          break;
-        }
-      case 0x48: // HIT_OBJECT
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          currentProcessedActorPtr->animActionType = 8;
-          currentProcessedActorPtr->animActionParam = lifeTempVar1;
-          currentProcessedActorPtr->hitForce = lifeTempVar2;
-          currentProcessedActorPtr->field_98 = -1;
-          break;
-        }
-      case 0x49: //GET_HARD_CLIP
-        {
-          getHardClip();
-          break;
-        }
-      case 0x4A: // ANGLE
-        {
-          currentProcessedActorPtr->alpha = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          currentProcessedActorPtr->beta = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          currentProcessedActorPtr->gamma = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          break;
-        }
-      case 0x4B: // sample
-        {
-          evalVar();
-          currentLifePtr+=2;
-          break;
-        }
-      case 0x4C: // throw
-        {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar2 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar3 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar4 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar5 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar6 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-          lifeTempVar7 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          throwObj(lifeTempVar1,lifeTempVar2,lifeTempVar3,lifeTempVar4,lifeTempVar5,lifeTempVar6,lifeTempVar7);
-
-          break;
-        }
-      case 0x4D: // ? shaking related
-        {
-          printf("Shaking related\n");
-//          mainLoopVar1 = shakeVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-/*          if(mainLoopVar1)
-          {
-            //setupShaking(-600);
-          }
-          else
-          {
-            //setupShaking(1000);
-          } */
-
-          break;
-        }
-      case 0x4E: // displayScreen
-        {
-          unsigned int chrono;
-          
-          loadPakToPtr("ITD_RESS", READ_LE_S16(currentLifePtr), aux);
-          currentLifePtr+=2;
-
-          copyToScreen(aux,unkScreenVar);
-          flip();
-
-          startChrono(&chrono);
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          playSound(READ_LE_S16(currentLifePtr));
-          currentLifePtr+=2;
-
-          //soundFunc(0);
-
-          do
-          {
-            unsigned int time;
-            process_events();
-            readKeyboard();
+            unsigned int chrono;
             
-            timeGlobal++;
-            timer = timeGlobal;
+            loadPakToPtr("ITD_RESS", *(short int*)currentLifePtr, aux);
+            currentLifePtr+=2;
 
-            time = evalChrono(&chrono);
+            copyToScreen(aux,unkScreenVar);
+            flip();
 
-            if(time>(unsigned int)lifeTempVar1)
-              break;
-          }while(!input2 && !input1);
+            startChrono(&chrono);
+            lifeTempVar1 = *(short int*)currentLifePtr;
+            currentLifePtr+=2;
+
+            playSound(*(short int*)currentLifePtr);
+            currentLifePtr+=2;
+
+            //soundFunc(0);
+
+            do
+            {
+              unsigned int time;
+              process_events();
+              readKeyboard();
+              
+              timeGlobal++;
+              timer = timeGlobal;
+
+              time = evalChrono(&chrono);
+
+              if(time>(unsigned int)lifeTempVar1)
+                break;
+            }while(!input2 && !input1);
+
+            unfreezeTime();
+
+            mainVar1 = 1;
+
+            break;
+          }
+          else
+          {
+            unsigned int chrono;
+            unsigned char lpalette[0x300];
+            short int ressourceIdx;
+
+            ressourceIdx = *(short int*)(currentLifePtr);
+            currentLifePtr+=2;
+
+            loadPakToPtr("ITD_RESS",ressourceIdx,aux);
+
+            copyPalette(aux+64000,lpalette);
+            
+            if(gameId < AITD3)
+            convertPaletteIfRequired(lpalette);
+
+            fadeOut(0x10,0);
+            fadeIn(lpalette);
+
+            osystem_setPalette(lpalette);
+            copyPalette(lpalette,palette);
+
+            copyToScreen(aux,screen);
+
+            startChrono(&chrono);
+
+            do
+            {
+              unsigned int time;
+              process_events();
+              readKeyboard();
+
+              osystem_CopyBlockPhys(screen,0,0,320,200);
+              osystem_startFrame();
+              flipScreen();
+              
+              timeGlobal++;
+              timer = timeGlobal;
+
+              time = evalChrono(&chrono);
+
+              if(time>100)
+                break;
+            }while(!input2 && !input1);
+
+            unfreezeTime();
+
+            currentLifePtr+=4;
+
+            break;
+          }
+        }
+      case LM_PLAY_SEQUENCE: // sequence
+        {
+          unsigned short int sequenceIdx;
+          unsigned short int fadeEntry;
+          unsigned short int fadeOut;
+
+          freezeTime();
+
+          sequenceIdx = *(unsigned short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          fadeEntry = *(unsigned short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          fadeOut = *(unsigned short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          //playSequence(sequenceIdx,fadeEntry,fadeOut);
 
           unfreezeTime();
 
-          mainVar1 = 1;
-
           break;
         }
-      case 0x50: // TODO
+      case LM_DEF_SEQUENCE_SAMPLE:
         {
-          int musicIdx = READ_LE_S16(currentLifePtr);
+          unsigned short int numParams;
+          int i;
+
+          numParams = *(short int*)(currentLifePtr);
           currentLifePtr+=2;
 
-          if(currentMusic == -1)
+          ASSERT(numParams<=NUM_MAX_SEQUENCE_PARAM);
+          
+          for(i=0;i<numParams;i++)
           {
-            playMusic(musicIdx);
-          }
-          else
-          {
-            nextMusic = musicIdx;
+            sequenceParams[i].frame = READ_LE_U16(currentLifePtr);
+            currentLifePtr+=2;
+            sequenceParams[i].sample = READ_LE_U16(currentLifePtr);
+            currentLifePtr+=2;
           }
 
+          numSequenceParam = numParams;
           break;
         }
-      case 0x51: // ? fade out music and play another music ?
+////////////////////////////////////////////////////////////////////////
+      case LM_PROTECT: // protection opcode
         {
-          lifeTempVar1 = READ_LE_S16(currentLifePtr);
-          currentLifePtr+=2;
-
-          if(currentMusic!=-1)
-          {
-            fadeMusic(0,0,0x8000);    // fade out music
-            startChrono(&musicChrono); // fade out music timer
-            currentMusic = -2;         // waiting next music
-            nextMusic = lifeTempVar1;    // next music to play
-          }
-          else
-          {
-            playMusic(lifeTempVar1);
-          }
-
+          //protection = 1;
           break;
         }
-      case 0x52: // cancel hit obj
+////////////////////////////////////////////////////////////////////////
+      case LM_INVENTORY: // INVENTORY
         {
-          if(currentProcessedActorPtr->animActionType == 8)
-          {
-            currentProcessedActorPtr->animActionType = 0;
-            currentProcessedActorPtr->animActionParam = 0;
-            currentProcessedActorPtr->hitForce = 0;
-            currentProcessedActorPtr->field_98 = -1;
-          }
-
-          break;
-        }
-      case 0x53:
-        {
-          // TODO !
+          statusScreenAllowed = *(short int*)currentLifePtr;
           currentLifePtr+=2;
           break;
         }
-      case 0x54: // ENDING
+      case LM_SET_INVENTORY:
+        {
+          int inventoryIndex = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+/*          if(indeventoyIndex != currentInHand)
+          {
+            if(currentInHand<2)
+            {
+              int i;
+
+              for(i=0;i<inventory[currentInHand];i++)
+              {
+                objectTable[inventoryTable[currentInHand][i]].flags2&=0x7FFF;
+              }
+
+              currentInHand = inventoryIndex
+            }
+          }*/
+          break;
+        }
+      case LM_SET_GROUND:
+        {
+          groundLevel = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+          break;
+        }
+      case LM_MESSAGE:
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          makeMessage(lifeTempVar1);
+
+          break;
+        }
+      case LM_MESSAGE_VALUE:
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+          lifeTempVar2 = *(short int*)(currentLifePtr); // unused param ?
+          currentLifePtr+=2;
+
+          makeMessage(lifeTempVar1);
+
+          break;
+        }
+      case LM_END_SEQUENCE: // ENDING
         {
           // TODO!
+          break;
+        }
+////////////////////////////////////////////////////////////////////////
+      case LM_VAR:
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          vars[lifeTempVar1] = evalVar();
+          break;
+        }
+      case LM_INC: // INC_VAR
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          vars[lifeTempVar1]++;
+          break;
+        }
+      case LM_DEC: // DEC_VAR
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          vars[lifeTempVar1]--;
+          break;
+        }
+      case LM_ADD: // ADD_VAR
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          vars[lifeTempVar1]+=evalVar();
+          break;
+        }
+      case LM_SUB: // SUB_VAR
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          vars[lifeTempVar1]-=evalVar();
+          break;
+        }
+      case LM_MODIF_C_VAR:
+      case LM_C_VAR:
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          CVars[lifeTempVar1] = evalVar();
+          break;
+        }
+////////////////////////////////////////////////////////////////////////
+      case LM_IF_EGAL:
+        {
+          lifeTempVar1 = evalVar();
+          lifeTempVar2 = evalVar();
+
+          if(lifeTempVar1 == lifeTempVar2)
+          {
+            currentLifePtr+=2;
+          }
+          else
+          {
+            lifeTempVar2 = *(short int*)(currentLifePtr);
+            currentLifePtr += lifeTempVar2*2;
+            currentLifePtr += 2;
+          }
+
+          break;
+        }
+      case LM_IF_DIFFERENT:
+        {
+          lifeTempVar1 = evalVar();
+          lifeTempVar2 = evalVar();
+
+          if(lifeTempVar1 != lifeTempVar2)
+          {
+            currentLifePtr+=2;
+          }
+          else
+          {
+            lifeTempVar2 = *(short int*)(currentLifePtr);
+            currentLifePtr += lifeTempVar2*2;
+            currentLifePtr += 2;
+          }
+
+          break;
+        }
+      case LM_IF_SUP_EGAL:
+        {
+          lifeTempVar1 = evalVar();
+          lifeTempVar2 = evalVar();
+
+          if(lifeTempVar1 >= lifeTempVar2)
+          {
+            currentLifePtr+=2;
+          }
+          else
+          {
+            lifeTempVar2 = *(short int*)(currentLifePtr);
+            currentLifePtr += lifeTempVar2*2;
+            currentLifePtr += 2;
+          }
+
+          break;
+        }
+      case LM_IF_SUP:
+        {
+          lifeTempVar1 = evalVar();
+          lifeTempVar2 = evalVar();
+
+          if(lifeTempVar1 > lifeTempVar2)
+          {
+            currentLifePtr+=2;
+          }
+          else
+          {
+            lifeTempVar2 = *(short int*)(currentLifePtr);
+            currentLifePtr += lifeTempVar2*2;
+            currentLifePtr += 2;
+          }
+
+          break;
+        }
+      case LM_IF_INF_EGAL:
+        {
+          lifeTempVar1 = evalVar();
+          lifeTempVar2 = evalVar();
+
+          if(lifeTempVar1 <= lifeTempVar2)
+          {
+            currentLifePtr+=2;
+          }
+          else
+          {
+            lifeTempVar2 = *(short int*)(currentLifePtr);
+            currentLifePtr += lifeTempVar2*2;
+            currentLifePtr += 2;
+          }
+
+          break;
+        }
+      case LM_IF_INF:
+        {
+          lifeTempVar1 = evalVar();
+          lifeTempVar2 = evalVar();
+
+          if(lifeTempVar1 < lifeTempVar2)
+          {
+            currentLifePtr+=2;
+          }
+          else
+          {
+            lifeTempVar2 = *(short int*)(currentLifePtr);
+            currentLifePtr += lifeTempVar2*2;
+            currentLifePtr += 2;
+          }
+
+          break;
+        }
+      case LM_GOTO:
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr += lifeTempVar1*2;
+          currentLifePtr += 2;  
+          break;
+        }
+////////////////////////////////////////////////////////////////////////
+      case LM_SWITCH: // SWITCH
+        {
+          switchVal = evalVar();
+          break;
+        }
+      case LM_CASE: // CASE
+        {
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          if(lifeTempVar1 == switchVal)
+          {
+            currentLifePtr+=2;
+          }
+          else
+          {
+            lifeTempVar2 = *(short int*)(currentLifePtr);
+            currentLifePtr += lifeTempVar2*2;
+            currentLifePtr += 2;
+          }
+    
+          break;
+        }
+      case LM_MULTI_CASE: // MULTI_CASE
+        {
+          int i;
+          lifeTempVar1 = *(short int*)(currentLifePtr);
+          currentLifePtr+=2;
+
+          lifeTempVar2 = 0;
+
+          for(i=0;i<lifeTempVar1;i++)
+          {
+            if(*(short int*)(currentLifePtr) == switchVal)
+            {
+              lifeTempVar2 = 1;
+            }
+            currentLifePtr+=2;
+          }
+
+          if(!lifeTempVar2)
+          {
+            lifeTempVar2 = *(short int*)(currentLifePtr);
+            currentLifePtr += lifeTempVar2*2;
+            currentLifePtr += 2;
+          }
+          else
+          {
+            currentLifePtr+=2;
+          }
+          break;
+        }
+////////////////////////////////////////////////////////////////////////
+      case LM_RETURN:
+        {
+          exitLife = 1;
+          break;
+        }
+      case LM_END:
+        {
+          exitLife = 1;
           break;
         }
       default:

@@ -422,7 +422,7 @@ int make3dTatou(void)
     /*  soundVar2 = -1;
       soundVar1 = -1; */
 
-      playSound(defines.field_8);
+      playSound(CVars[getCVarsIdx(SAMPLE_TONNERRE)]);
 
        /*     soundVar2 = -1;
       soundVar1 = -1;*/

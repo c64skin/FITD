@@ -32,9 +32,9 @@ int copyObjectToActor(int flag2, int var1, int foundName, short int flag, int x,
 
   if(room != currentDisplayedRoom)
   {
-    actorPtr->worldX -= (roomDataTable[currentDisplayedRoom].worldX - roomDataTable[actorPtr->room].worldX) * 10;
-    actorPtr->worldY += (roomDataTable[currentDisplayedRoom].worldY - roomDataTable[actorPtr->room].worldY) * 10;
-    actorPtr->worldZ += (roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[actorPtr->room].worldZ) * 10;
+    actorPtr->worldX -= (s16)((roomDataTable[currentDisplayedRoom].worldX - roomDataTable[actorPtr->room].worldX) * 10);
+    actorPtr->worldY += (s16)((roomDataTable[currentDisplayedRoom].worldY - roomDataTable[actorPtr->room].worldY) * 10);
+    actorPtr->worldZ += (s16)((roomDataTable[currentDisplayedRoom].worldZ - roomDataTable[actorPtr->room].worldZ) * 10);
   }
 
   actorPtr->alpha = alpha;
@@ -108,7 +108,7 @@ int copyObjectToActor(int flag2, int var1, int foundName, short int flag, int x,
       actorPtr->END_ANIM = 0;
       actorPtr->flags |= 1;
 
-      //			computeScreenBox(actorPtr->field_22 + actorPtr->field_5A, actorPtr->field_24 + actorPtr->field_5C, actorPtr->field_26 + actorPtr->field_5E, actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
+      //			computeScreenBox(actorPtr->field_22 + actorPtr->field_5A, actorPtr->field_24 + actorPtr->field_5C, actorPtr->anim + actorPtr->field_5E, actorPtr->alpha, actorPtr->beta, actorPtr->gamma, bodyPtr);
 
       if(BBox3D1<0)
         BBox3D1 = 0;

@@ -33,8 +33,6 @@ unsigned int PAK_getNumFiles(char* name)
   char bufferName[256];
   FILE* fileHandle;
   long int fileOffset;
-  long int additionalDescriptorSize;
-  pakInfoStruct pakInfo;
   char* ptr=0;
   long int size=0;
 
@@ -205,6 +203,8 @@ char* loadPak(char* name, int index)
 
   if(fileHandle) // a bit stupid, should return NULL right away
   {
+    char nameBuffer[256];
+
     fseek(fileHandle,(index+1)*4,SEEK_SET);
 
     fread(&fileOffset,4,1,fileHandle);
@@ -223,7 +223,18 @@ char* loadPak(char* name, int index)
 
     readPakInfo(&pakInfo,fileHandle);
 
-    fseek(fileHandle,pakInfo.offset,SEEK_CUR);
+    if(pakInfo.offset)
+    {
+      ASSERT(pakInfo.offset<256);
+
+      fread(nameBuffer,pakInfo.offset,1,fileHandle);
+
+      printf("Loading %s/%s\n", name,nameBuffer+2);
+    }
+    else
+    {
+      fseek(fileHandle,pakInfo.offset,SEEK_CUR);
+    }
 
     switch(pakInfo.compressionFlag)
     {

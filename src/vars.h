@@ -46,57 +46,6 @@ struct messageStruct
 
 typedef struct messageStruct messageStruct;
 
-struct definesStruct // warning ! Used to read data from a file. Alignement check required
-{
-	short int field_0;
-	short int field_2;
-	short int field_4;
-	short int field_6;
-	short int field_8;
-	short int field_A;
-	short int field_C;
-	short int field_E;
-	short int hero;
-	short int field_12;
-	short int field_14;
-	short int field_16;
-	short int lightVar;
-	short int field_1A;
-	short int field_1C;
-	short int field_1E;
-	short int field_20;
-	short int field_22;
-	short int field_24;
-	short int field_26;
-	short int field_28;
-	short int field_2A;
-	short int field_2C;
-	short int field_2E;
-	short int field_30;
-	short int field_32;
-	short int field_34;
-	short int field_36;
-	short int field_38;
-	short int field_3A;
-	short int field_3C;
-	short int field_3E;
-	short int field_40;
-	short int field_42;
-	short int field_44;
-	short int field_46;
-	short int field_48;
-	short int field_4A;
-	short int field_4C;
-	short int field_4E;
-	short int field_50;
-	short int field_52;
-	short int field_54;
-	short int field_56;
-	short int field_58;
-};
-
-typedef struct definesStruct definesStruct;
-
 struct saveEntry
 {
 	void* ptr;
@@ -258,7 +207,7 @@ typedef struct actorStruct actorStruct;
 struct objectStruct
 {
 	short int ownerIdx;
-	short int field_2;
+	short int body;
   union
   {
 	  short int flags;
@@ -280,10 +229,10 @@ struct objectStruct
 	short int lifeMode;
 	short int life;
 	short int field_24;
-	short int field_26;
-	short int field_28;
-	short int field_2A;
-	short int field_2C;
+	short int anim;
+	short int frame;
+	short int animType;
+	short int animInfo;
 	short int trackMode;
 	short int trackNumber;
 	short int positionInTrack;
@@ -334,7 +283,8 @@ extern char* screen;
 extern int screenBufferSize;
 extern int unkScreenVar2;
 
-extern definesStruct defines;
+extern int numCVars;
+extern short int* CVars;
 
 extern char* priority;
 

@@ -21,7 +21,8 @@ char* screen;
 int screenBufferSize;
 int unkScreenVar2;
 
-definesStruct defines;
+int numCVars;
+short int* CVars;
 
 char* priority;
 
@@ -251,7 +252,7 @@ saveEntry saveTable[] = {
   { &genVar9, 2 },
   { &maxObjects, 2 },
 //  { objectTable, 15600 },
-  { &defines, 90 },
+//  { &defines, 90 },
   { &inHand, 2 },
   { &numObjInInventory, 2 },
   { inventory, 60 },

@@ -76,8 +76,16 @@ int loadSave(int saveNumber)
 
   fread(vars,varSize,1,fHandle);
 
-  configureHqrHero(listBody,listBodySelect[defines.hero]);
-  configureHqrHero(listAnim,listAnimSelect[defines.hero]);
+  if(gameId == AITD1)
+  {
+    configureHqrHero(listBody,listBodySelect[getCVarsIdx(CHOOSE_PERSO)]);
+    configureHqrHero(listAnim,listAnimSelect[getCVarsIdx(CHOOSE_PERSO)]);
+  }
+  else
+  {
+    configureHqrHero(listBody,0);
+    configureHqrHero(listAnim,0);
+  }
 
   fseek(fHandle,16,SEEK_SET);
   fread(&offsetToActors,4,1,fHandle);
@@ -155,7 +163,7 @@ int makeSaveFile(int entry)
 
     if(actorTable[i].ANIM == 4 )
     {
-      defines.field_1C = 0;
+      CVars[getCVarsIdx(FOG_FLAG)] = 0;
       printTextSub6(hqrUnk,actorTable[i].FRAME);
     }
   }

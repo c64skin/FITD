@@ -30,7 +30,15 @@ int getNumberOfRoom()
   if(gameId >= AITD3)
   {
     char buffer[256];
-    sprintf(buffer,"SAL%02d",currentEtage);
+
+    if(gameId == AITD3)
+    {
+      sprintf(buffer,"SAL%02d",currentEtage);
+    }
+    else
+    {
+      sprintf(buffer,"ETAGE%02d",currentEtage);
+    }
 
     return PAK_getNumFiles(buffer);
   }
@@ -62,7 +70,6 @@ void loadRoom(int roomNumber)
   int cameraVar2;
   int oldCameraIdx;
   roomDefStruct* roomDataPtr;
-  char* var_20;
   int var_1A = 0;
   int var_10 = -1;
 

@@ -161,6 +161,11 @@ int evalVar(void)
 {
   int var1;
 
+  if(gameId >= JACK)
+  {
+    return evalVar2();
+  }
+
   var1 = *(short int*)(currentLifePtr);
   currentLifePtr+=2;
 
@@ -510,7 +515,7 @@ int evalVar(void)
         }
       case 0x24:
         {
-          int temp = *((short int*)&defines)+(*(short int*)currentLifePtr);
+          int temp = CVars[*(short int*)currentLifePtr];
           currentLifePtr+=2;
           return(temp);
           break;
@@ -882,7 +887,7 @@ int evalVar2(void)
         }
       case 0x22: // c_var
         {
-          int temp = *((short int*)&defines)+(*(short int*)currentLifePtr);
+          int temp = CVars[*(short int*)currentLifePtr];
           currentLifePtr+=2;
           return(temp);
           break;

@@ -148,7 +148,7 @@ void processAnimAction(void)
 
         ZVStruct rangeZv;
 
-        getZvNormal(HQR_Get(listBody, objPtr->field_2),&rangeZv);
+        getZvNormal(HQR_Get(listBody, objPtr->body),&rangeZv);
 
         rangeZv.ZVX1 += x;
         rangeZv.ZVX2 += x;
@@ -352,9 +352,9 @@ void processAnimAction(void)
               return;
             }
 
-            if(actorTable[currentActorCol].field_0 == defines.field_16)
+            if(actorTable[currentActorCol].field_0 == CVars[getCVarsIdx(REVERSE_OBJECT)])
             {
-              objPtr->alpha = defines.field_16;
+              objPtr->alpha = CVars[getCVarsIdx(REVERSE_OBJECT)];
               currentProcessedActorPtr->beta += 0x200;
               xtemp = x3;
               ztemp = z3;
@@ -397,7 +397,7 @@ void processAnimAction(void)
 
           if(collision2)
           {
-            playSound(defines.field_12);
+            playSound(CVars[getCVarsIdx(SAMPLE_CHOC)]);
             throwStoppedAt(x3,z3);
             return;
           }
@@ -409,7 +409,7 @@ void processAnimAction(void)
         {
           if(ptr->type == 0 || ptr->type == 10)
           {
-             playSound(defines.field_12);
+             playSound(CVars[getCVarsIdx(SAMPLE_CHOC)]);
              throwStoppedAt(x3,z3);
              return;
           }
@@ -421,7 +421,7 @@ void processAnimAction(void)
           currentProcessedActorPtr->hotPoint.y = 0;
           currentProcessedActorPtr->hotPoint.z = 0;
 
-          playSound(defines.field_12);
+          playSound(CVars[getCVarsIdx(SAMPLE_CHOC)]);
           throwStoppedAt(x3,z3);
           return;
         }

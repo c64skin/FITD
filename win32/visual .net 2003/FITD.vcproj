@@ -251,7 +251,7 @@
 				EnableFiberSafeOptimizations="TRUE"
 				OptimizeForProcessor="0"
 				OptimizeForWindowsApplication="TRUE"
-				PreprocessorDefinitions="USE_GL,INTERNAL_DEBUGGER"
+				PreprocessorDefinitions="WIN32,USE_GL,INTERNAL_DEBUGGER"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="common.h"
@@ -423,6 +423,9 @@
 				</File>
 				<File
 					RelativePath="..\..\src\save.c">
+				</File>
+				<File
+					RelativePath="..\..\src\sequence.c">
 				</File>
 				<File
 					RelativePath="..\..\src\startupMenu.c">
@@ -679,6 +682,9 @@
 					</File>
 					<File
 						RelativePath="..\..\src\life_2.h">
+					</File>
+					<File
+						RelativePath="..\..\src\lifeMacroTable.c">
 					</File>
 					<File
 						RelativePath="..\..\src\track.h">

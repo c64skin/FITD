@@ -12,6 +12,67 @@ char scaledScreen[640*400];
 
 int input5;
 
+enumCVars AITD1KnownCVars[]=
+{
+  SAMPLE_PAGE,
+  BODY_FLAMME,
+  MAX_WEIGHT_LOADABLE,
+  TEXTE_CREDITS,
+  SAMPLE_TONNERRE,
+  INTRO_DETECTIVE,
+  INTRO_HERITIERE,
+  WORLD_NUM_PERSO,
+  CHOOSE_PERSO,
+  SAMPLE_CHOC,
+  SAMPLE_PLOUF,
+  REVERSE_OBJECT,
+  KILLED_SORCERER,
+  LIGHT_OBJECT,
+  FOG_FLAG,
+  DEAD_PERSO,
+  -1
+};
+
+enumCVars AITD2KnownCVars[]=
+{
+  SAMPLE_PAGE,
+  BODY_FLAMME,
+  MAX_WEIGHT_LOADABLE,
+  SAMPLE_CHOC,
+  DEAD_PERSO,
+  JET_SARBACANE,
+  TIR_CANON,
+  JET_SCALPEL,
+  POIVRE,
+  DORTOIR,
+  EXT_JACK,
+  NUM_MATRICE_PROTECT_1,
+  NUM_MATRICE_PROTECT_2,
+  NUM_PERSO,
+  TYPE_INVENTAIRE,
+  PROLOGUE,
+  POIGNARD,
+  -1
+};
+
+enumCVars* currentCVarTable = NULL;
+
+int getCVarsIdx(enumCVars searchedType) // TODO: optimize by reversing the table....
+{
+  int i;
+
+  for(i=0;i<numCVars;i++)
+  {
+    if(currentCVarTable[i] == -1)
+    {
+      ASSERT(0);
+    }
+    
+
+    if(currentCVarTable[i] == searchedType)
+      return i;
+  }
+}
 const unsigned char defaultPalette[0x30] =
 {
   0x00,
@@ -192,21 +253,7 @@ void updateInHand(int objIdx)
     currentProcessedActorPtr->ANIM = -1;
   }
 
-  switch(gameId)
-  {
-  case JACK:
-  case AITD2:
-  case AITD3:
-    {
-      processLife2(foundLife);
-      break;
-    }
-  case AITD1:
-    {
-      processLife(foundLife);
-      break;
-    }
-  }
+  processLife(foundLife);
 
   if(var_2)
   {
@@ -366,11 +413,14 @@ void sysInit(void)
     theEnd(1,"BufferAnim");
   }
 
+  CVars = (short int*)malloc(numCVars * sizeof(short int));
+
   switch(gameId)
   {
   case JACK:
   case AITD2:
   case AITD3:
+  case TIMEGATE:
     {
       fontData = loadPakSafe("ITD_RESS",1);
       break;
@@ -419,17 +469,13 @@ void sysInit(void)
 
 ///////////////////////////////////////////////
   {
-    short int table[45];
-
-    fread(table,45,2,fHandle);
+    fread(CVars,numCVars,2,fHandle);
     fclose(fHandle);
     
-    for(i=0;i<45;i++)
+    for(i=0;i<numCVars;i++)
     {
-      table[i] = ((table[i]&0xFF)<<8) | ((table[i]&0xFF00)>>8);
+      CVars[i] = ((CVars[i]&0xFF)<<8) | ((CVars[i]&0xFF00)>>8);
     }
-
-    memcpy(&defines,table,45*2);
   }
 //////////////////////////////////////////////
 
@@ -640,8 +686,8 @@ int selectHero(void)
         loadPakToPtr("ITD_RESS",14,aux);
         selectHeroSub1(160,0,319,199);
         copyToScreen(screen,aux);
-        printText(defines.field_C+1,165,5,314,194,2,15);
-        defines.hero = 1;
+        printText(CVars[getCVarsIdx(INTRO_HERITIERE)]+1,165,5,314,194,2,15);
+        CVars[getCVarsIdx(CHOOSE_PERSO)] = 1;
         break;
       }
     case 1:
@@ -651,8 +697,8 @@ int selectHero(void)
         loadPakToPtr("ITD_RESS",14,aux);
         selectHeroSub1(0,0,159,199);
         copyToScreen(screen,aux);
-        printText(defines.field_A+1,5,5,154,194,2,15);
-        defines.hero = 0;
+        printText(CVars[getCVarsIdx(INTRO_DETECTIVE)]+1,5,5,154,194,2,15);
+        CVars[getCVarsIdx(CHOOSE_PERSO)] = 0;
         break;
       }
     }
@@ -1021,7 +1067,7 @@ pageChange: if(lastPageReached)
 
                 if(mode==2)
                 {
-                  playSound(defines.field_0);
+                  playSound(CVars[getCVarsIdx(SAMPLE_PAGE)]);
 //                        soundVar2 = -1;
 //                        soundVar1 = -1;
                 }
@@ -1063,7 +1109,7 @@ pageChange: if(lastPageReached)
         if(!lastPageReached)
         {
           currentPage++;
-          playSound(defines.field_0);
+          playSound(CVars[getCVarsIdx(SAMPLE_PAGE)]);
 //                soundVar2 = -1;
         }
         else
@@ -1108,13 +1154,13 @@ int makeIntroScreens(void)
 
   }while(input2 == 0 && input1 == 0);
 
-  playSound(defines.field_0);
+  playSound(CVars[getCVarsIdx(SAMPLE_PAGE)]);
 /*  soundVar2 = -1;
   soundVar1 = -1;
   soundVar2 = -1;
   soundVar1 = 0; */
 //  readVar = 1;
-  printText(defines.field_6+1,48, 2,260,197,1,26);
+  printText(CVars[getCVarsIdx(TEXTE_CREDITS)]+1,48, 2,260,197,1,26);
 
   return(0);
 }
@@ -1126,6 +1172,7 @@ void initEngine(void)
   unsigned long int objectDataSize;
   FILE* fHandle;
   int i;
+  int choosePersoBackup;
 
   fHandle = fopen("OBJETS.ITD","rb");
   if(!fHandle)
@@ -1151,7 +1198,7 @@ void initEngine(void)
     objectTable[i].ownerIdx = READ_LE_U16(pObjectData);
     pObjectData+=2;
 
-    objectTable[i].field_2 = READ_LE_U16(pObjectData);
+    objectTable[i].body = READ_LE_U16(pObjectData);
     pObjectData+=2;
 
     objectTable[i].flags = READ_LE_U16(pObjectData);
@@ -1205,16 +1252,16 @@ void initEngine(void)
     objectTable[i].field_24 = READ_LE_U16(pObjectData);
     pObjectData+=2;
 
-    objectTable[i].field_26 = READ_LE_U16(pObjectData);
+    objectTable[i].anim = READ_LE_U16(pObjectData);
     pObjectData+=2;
 
-    objectTable[i].field_28 = READ_LE_U16(pObjectData);
+    objectTable[i].frame = READ_LE_U16(pObjectData);
     pObjectData+=2;
 
-    objectTable[i].field_2A = READ_LE_U16(pObjectData);
+    objectTable[i].animType = READ_LE_U16(pObjectData);
     pObjectData+=2;
 
-    objectTable[i].field_2C = READ_LE_U16(pObjectData);
+    objectTable[i].animInfo = READ_LE_U16(pObjectData);
     pObjectData+=2;
 
     objectTable[i].trackMode = READ_LE_U16(pObjectData);
@@ -1243,7 +1290,7 @@ void initEngine(void)
     fprintf(fHandle,"Object %d:", i);
 
     fprintf(fHandle,"\t body:%03d",objectTable[i].field_2);
-    fprintf(fHandle,"\t anim:%03d",objectTable[i].field_26);
+    fprintf(fHandle,"\t anim:%03d",objectTable[i].anim);
     fprintf(fHandle,"\t stage:%01d",objectTable[i].stage);
     fprintf(fHandle,"\t room:%02d",objectTable[i].room);
     fprintf(fHandle,"\t lifeMode: %01d",objectTable[i].lifeMode);
@@ -1278,7 +1325,10 @@ void initEngine(void)
 
   varSize = fileSize;
 
-  i = defines.hero; // backup hero selection
+  if(gameId == AITD1)
+  {
+    choosePersoBackup = CVars[getCVarsIdx(CHOOSE_PERSO)]; // backup hero selection
+  }
 
   fHandle = fopen("DEFINES.ITD","rb");
   if(!fHandle)
@@ -1288,21 +1338,20 @@ void initEngine(void)
 
 ///////////////////////////////////////////////
   {
-    short int table[45];
-    int i;
-
-    fread(table,45,2,fHandle);
+    fread(CVars,numCVars,2,fHandle);
     fclose(fHandle);
     
-    for(i=0;i<45;i++)
+    for(i=0;i<numCVars;i++)
     {
-      table[i] = ((table[i]&0xFF)<<8) | ((table[i]&0xFF00)>>8);
+      CVars[i] = ((CVars[i]&0xFF)<<8) | ((CVars[i]&0xFF00)>>8);
     }
-
-    memcpy(&defines,table,45*2);
   }
+//////////////////////////////////////////////
 
-  defines.hero = i;
+  if(gameId == AITD1)
+  {
+    CVars[getCVarsIdx(CHOOSE_PERSO)] = choosePersoBackup;
+  }
 
   listLife = HQR_InitRessource("LISTLIFE", 10000, 100);
   listTrack = HQR_InitRessource("LISTTRAK", 1000, 10); 
@@ -1311,8 +1360,8 @@ void initEngine(void)
 
   if(gameId == AITD1)
   {
-    listBody = HQR_InitRessource(listBodySelect[defines.hero],100000, 50); // was calculated from free mem size
-    listAnim = HQR_InitRessource(listAnimSelect[defines.hero],100000, 50); // was calculated from free mem size
+    listBody = HQR_InitRessource(listBodySelect[CVars[getCVarsIdx(CHOOSE_PERSO)]],100000, 50); // was calculated from free mem size
+    listAnim = HQR_InitRessource(listAnimSelect[CVars[getCVarsIdx(CHOOSE_PERSO)]],100000, 50); // was calculated from free mem size
   }
   else
   {
@@ -1328,7 +1377,10 @@ void initEngine(void)
     actorTable[i].field_0 = -1;
   }
 
-  currentCameraTarget = defines.field_E;
+  if(gameId == AITD1)
+  {
+    currentCameraTarget = CVars[getCVarsIdx(WORLD_NUM_PERSO)];
+  }
 }
 
 void initVarsSub1(void)
@@ -1393,37 +1445,40 @@ void loadCamera(int cameraIdx)
   sprintf(name,"CAMERA%02d",currentEtage);
   //strcat(name,".PAK");
 
-  if(defines.lightVar==1)
+  if(gameId == AITD1)
   {
-    switch(currentEtage)
+    if(CVars[getCVarsIdx(LIGHT_OBJECT)]==1)
     {
-    case 6:
+      switch(currentEtage)
       {
-        if(cameraIdx == 0)
+      case 6:
         {
-          useSpecial = 17;
+          if(cameraIdx == 0)
+          {
+            useSpecial = 17;
+          }
+          if(cameraIdx == 5)
+          {
+            useSpecial = 18;
+          }
+          break;
         }
-        if(cameraIdx == 5)
+      case 7:
         {
-          useSpecial = 18;
+          if(cameraIdx == 1)
+          {
+            useSpecial = 16;
+          }
+          break;
         }
-        break;
-      }
-    case 7:
-      {
-        if(cameraIdx == 1)
-        {
-          useSpecial = 16;
-        }
-        break;
       }
     }
-  }
 
-  if(useSpecial != -1)
-  {
-    strcpy(name,"ITD_RESS");
-    cameraIdx = useSpecial;
+    if(useSpecial != -1)
+    {
+      strcpy(name,"ITD_RESS");
+      cameraIdx = useSpecial;
+    }
   }
 
   if(!loadPakToPtr(name,cameraIdx,aux))
@@ -1572,7 +1627,7 @@ void updateAllActorAndObjectsSub1(int index) // remove actor
 
     if(actorPtr->ANIM == 4 )
     {
-      defines.field_1C = 0;
+      CVars[getCVarsIdx(FOG_FLAG)] = 0;
     }
 
     printTextSub6(hqrUnk,actorPtr->FRAME);
@@ -1586,11 +1641,11 @@ void updateAllActorAndObjectsSub1(int index) // remove actor
       objectPtr->ownerIdx = -1;
       actorPtr->field_0 = -1;
 
-      objectPtr->field_2 = actorPtr->bodyNum;
-      objectPtr->field_26 = actorPtr->ANIM;
-      objectPtr->field_28 = actorPtr->FRAME;
-      objectPtr->field_2A = actorPtr->field_40;
-      objectPtr->field_2C = actorPtr->field_42;
+      objectPtr->body = actorPtr->bodyNum;
+      objectPtr->anim = actorPtr->ANIM;
+      objectPtr->frame = actorPtr->FRAME;
+      objectPtr->animType = actorPtr->field_40;
+      objectPtr->animInfo = actorPtr->field_42;
       objectPtr->flags = actorPtr->flags &0xFFF7;
       objectPtr->flags |= actorPtr->dynFlags << 5; // ???!!!?
       objectPtr->life = actorPtr->life;
@@ -2009,7 +2064,7 @@ void updateAllActorAndObjectsAITD2()
 
             if(!di)
             {
-              if(currentObject->field_2 != -1)
+              if(currentObject->body != -1)
               {
                 if(checkRoomAitd2Only(currentObject->room))
                 {
@@ -2035,15 +2090,15 @@ void updateAllActorAndObjectsAITD2()
 
             //int var_C = currentObject->flags & 0xFFDF;
             //int var_E = currentObject->field_2;
-            //int var_A = currentObject->field_26;
+            //int var_A = currentObject->anim;
 
-addObject:        actorIdx = copyObjectToActor( currentObject->field_2, currentObject->field_6, currentObject->foundName,
+addObject:        actorIdx = copyObjectToActor( currentObject->body, currentObject->field_6, currentObject->foundName,
                               currentObject->flags & 0xFFDF,
                               currentObject->x, currentObject->y, currentObject->z,
                               currentObject->stage, currentObject->room,
                               currentObject->alpha, currentObject->beta, currentObject->gamma,
-                              currentObject->field_26,
-                              currentObject->field_28, currentObject->field_2A, currentObject->field_2C);
+                              currentObject->anim,
+                              currentObject->frame, currentObject->animType, currentObject->animInfo);
 
             currentObject->ownerIdx = actorIdx;
 
@@ -2202,15 +2257,15 @@ void updateAllActorAndObjects()
 
             //int var_C = currentObject->flags & 0xFFDF;
             //int var_E = currentObject->field_2;
-            //int var_A = currentObject->field_26;
+            //int var_A = currentObject->anim;
 
-addObject:        actorIdx = copyObjectToActor( currentObject->field_2, currentObject->field_6, currentObject->foundName,
+addObject:        actorIdx = copyObjectToActor( currentObject->body, currentObject->field_6, currentObject->foundName,
                               currentObject->flags & 0xFFDF,
                               currentObject->x, currentObject->y, currentObject->z,
                               currentObject->stage, currentObject->room,
                               currentObject->alpha, currentObject->beta, currentObject->gamma,
-                              currentObject->field_26,
-                              currentObject->field_28, currentObject->field_2A, currentObject->field_2C);
+                              currentObject->anim,
+                              currentObject->frame, currentObject->animType, currentObject->animInfo);
 
             currentObject->ownerIdx = actorIdx;
 
@@ -3429,10 +3484,13 @@ void mainDraw(int mode)
 
       if(BBox3D1<=319 && BBox3D2<=199 && BBox3D3>=0 && BBox3D4>=0) // is the character on screen ?
       {
-        if(actorPtr->field_0 == defines.field_1A)
+        if(gameId == AITD1)
         {
-          mainVar3 = (BBox3D3 + BBox3D1) / 2;
-          mainVar2 = (BBox3D4 + BBox3D2) / 2;
+          if(actorPtr->field_0 == CVars[getCVarsIdx(LIGHT_OBJECT)])
+          {
+            mainVar3 = (BBox3D3 + BBox3D1) / 2;
+            mainVar2 = (BBox3D4 + BBox3D2) / 2;
+          }
         }
 
 #ifdef INTERNAL_DEBUGGER
@@ -3710,7 +3768,7 @@ void foundObject(int objIdx, int param)
     var_2 += objectTable[inventory[i]].positionInTrack;
   }
 
-  if(objPtr->positionInTrack + var_2 > defines.field_4 || numObjInInventory +1 == 30)
+  if(objPtr->positionInTrack + var_2 > CVars[getCVarsIdx(MAX_WEIGHT_LOADABLE)] || numObjInInventory +1 == 30)
   {
     var_6 = 3;
   }
@@ -4194,7 +4252,7 @@ void processActor1(void)
     var_4A = currentProcessedActorPtr->modY;
     var_48 = currentProcessedActorPtr->modZ;
 
-    currentProcessedActorPtr->END_FRAME = processAnim(currentProcessedActorPtr->FRAME, HQR_Get(listAnim, currentProcessedActorPtr->ANIM), HQR_Get(listBody, currentProcessedActorPtr->bodyNum));
+    currentProcessedActorPtr->END_FRAME = setInterAnimObjet(currentProcessedActorPtr->FRAME, HQR_Get(listAnim, currentProcessedActorPtr->ANIM), HQR_Get(listBody, currentProcessedActorPtr->bodyNum));
 
     walkStep(animRot2,animRot1,currentProcessedActorPtr->beta);
 
@@ -4311,7 +4369,7 @@ void processActor1(void)
 
       if(actorTouchedPtr->bitField.tackable) // takable
       {
-        if(currentProcessedActorPtr->trackMode == 1 && defines.field_1E == 0)
+        if(currentProcessedActorPtr->trackMode == 1 /*&& ((gameId == AITD1 && defines.field_1E == 0) || (gameId >= JACK && defines.field_6 == 0))*/) // TODO: check if character isn't dead...
         {
           foundObject(actorTouchedPtr->field_0, 0);
         }
@@ -5191,6 +5249,8 @@ void detectGame(void)
   if(fileExists("LISTBOD2.PAK"))
   {
     gameId = AITD1;
+    numCVars = 45;
+    currentCVarTable = AITD1KnownCVars;
 
     printf("Detected Alone in the Dark 1\n");
     return;
@@ -5198,6 +5258,8 @@ void detectGame(void)
   if(fileExists("PERE.PAK"))
   {
     gameId = JACK;
+    numCVars = 70;
+    currentCVarTable = AITD2KnownCVars;
 
     printf("Detected Jack in the Dark\n");
     return;
@@ -5205,6 +5267,8 @@ void detectGame(void)
   if(fileExists("MER.PAK"))
   {
     gameId = AITD2;
+    numCVars = 70;
+    currentCVarTable = AITD2KnownCVars;
 
     printf("Detected Alone in the Dark 2\n");
     return;
@@ -5212,8 +5276,19 @@ void detectGame(void)
   if(fileExists("AN1.PAK"))
   {
     gameId = AITD3;
+    numCVars = 70;
+    currentCVarTable = AITD2KnownCVars;
 
     printf("Detected Alone in the Dark 3\n");
+    return;
+  }
+  if(fileExists("PURSUIT.PAK"))
+  {
+    gameId = TIMEGATE;
+    numCVars = 70; // TODO: figure this
+    currentCVarTable = AITD2KnownCVars; // TODO: figure this
+
+    printf("Detected Time Gate\n");
     return;
   }
 
@@ -5272,6 +5347,11 @@ int main(int argc, char** argv)
       startGame(0,0,1);
       break;
     }
+  case TIMEGATE:
+    {
+      startGame(0,0,1);
+      break;
+    }
   }
 
   while(1)
@@ -5282,7 +5362,7 @@ int main(int argc, char** argv)
     {
     case -1: // timeout
       {
-        defines.hero = rand()&1;
+        CVars[getCVarsIdx(CHOOSE_PERSO)] = rand()&1;
       /*  startGame(7,1,0);
 
         if(!make3dTatou())
@@ -5309,7 +5389,10 @@ int main(int argc, char** argv)
           while(input2)
             readKeyboard();
 
-          defines.hero = 0;
+          if(gameId == AITD1)
+          {
+            CVars[getCVarsIdx(CHOOSE_PERSO)] = 0;
+          }
 
           switch(gameId)
           {

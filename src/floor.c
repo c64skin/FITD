@@ -71,7 +71,15 @@ void loadFloor(int floorNumber)
     if(gameId >= AITD3)
     {
       char buffer[256];
-      sprintf(buffer,"SAL%02d",floorNumber);
+
+      if(gameId == AITD3)
+      {
+        sprintf(buffer,"SAL%02d",floorNumber);
+      }
+      else
+      {
+        sprintf(buffer,"ETAGE%02d",floorNumber);
+      }
 
       roomData = loadPakSafe(buffer,i);
     }
@@ -170,7 +178,15 @@ void loadFloor(int floorNumber)
   if(gameId >= AITD3)
   {
     char buffer[256];
-    sprintf(buffer,"CAM%02d",floorNumber);
+
+    if(gameId == AITD3)
+    {
+      sprintf(buffer,"CAM%02d",floorNumber);
+    }
+    else
+    {
+      sprintf(buffer,"CAMSAL%02d",floorNumber);
+    }
 
     expectedNumberOfCamera = PAK_getNumFiles(buffer);
   }
@@ -190,7 +206,15 @@ void loadFloor(int floorNumber)
     if(gameId >= AITD3)
     {
       char buffer[256];
-      sprintf(buffer,"CAM%02d",floorNumber);
+
+      if(gameId == AITD3)
+      {
+        sprintf(buffer,"CAM%02d",floorNumber);
+      }
+      else
+      {
+        sprintf(buffer,"CAMSAL%02d",floorNumber);
+      }
 
       offset = 0;
       cameraDataSize = 1;
@@ -295,6 +319,11 @@ void loadFloor(int floorNumber)
           currentCameraData+=0x0C;
         else
           currentCameraData+=0x10;
+
+        if(gameId == TIMEGATE)
+        {
+          currentCameraData+=4;
+        }
       }
     }
     else

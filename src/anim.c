@@ -322,7 +322,7 @@ void processAnimTranslation(char** bodyPtr, int bp, int bx) // local
   (*bodyPtr)+=2;
 }
 
-short int processAnim(int frame, char* animPtr, char* bodyPtr)
+short int setInterAnimObjet(int frame, char* animPtr, char* bodyPtr)
 {
   int numOfBonesInAnim = *(short int*)(animPtr+2);
   unsigned short int keyframeLength;

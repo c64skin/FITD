@@ -124,10 +124,13 @@ s32 q=0;                     /* Dummy */
 
     if(changeFloor == 0)
     {
-      if(defines.field_1A == -1)
+      if(gameId == AITD1)
       {
-//        mainVar2 = 2000;
-//        mainVar3 = 2000;
+        if(CVars[getCVarsIdx(LIGHT_OBJECT)] == -1)
+        {
+  //        mainVar2 = 2000;
+  //        mainVar3 = 2000;
+        }
       }
 
       currentProcessedActorPtr = actorTable;
@@ -186,14 +189,14 @@ s32 q=0;                     /* Dummy */
               {
                 if(currentProcessedActorPtr->lifeMode&3)
                   if(!(currentProcessedActorPtr->lifeMode&4))
-                    processLife2(currentProcessedActorPtr->life);
+                    processLife(currentProcessedActorPtr->life);
                 break;
               }
             case JACK:
               {
                 if(currentProcessedActorPtr->life != -1)
                   if(currentProcessedActorPtr->lifeMode != -1)
-                    processLife2(currentProcessedActorPtr->life);
+                    processLife(currentProcessedActorPtr->life);
                 break;
               }
             case AITD1:
@@ -254,7 +257,7 @@ s32 q=0;                     /* Dummy */
                 if(currentProcessedActorPtr->lifeMode&3)
                   if(!(currentProcessedActorPtr->lifeMode&4))
                   {
-                    processLife2(currentProcessedActorPtr->life);
+                    processLife(currentProcessedActorPtr->life);
                     actorTurnedToObj = 1;
                   }
               }
