@@ -288,8 +288,7 @@ s32 q=0;                     /* Dummy */
     {
       createActorList();
     }
-
-    
+   
     sortActorList();
 
 //    if(objModifFlag2)

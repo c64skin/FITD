@@ -1221,10 +1221,12 @@ void initEngine(void)
 
   if(gameId == AITD1)
   {
-    maxObjects = 300; // fix for save engine..
+    objectTable = (objectStruct*)malloc(300*sizeof(objectStruct));
   }
-
-  objectTable = (objectStruct*)malloc(maxObjects*sizeof(objectStruct));
+  else
+  {
+    objectTable = (objectStruct*)malloc(maxObjects*sizeof(objectStruct));
+  }
 
   for(i=0;i<maxObjects;i++)
   {

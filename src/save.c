@@ -52,6 +52,7 @@ int loadSave(int saveNumber)
   unsigned short int tempVarSize;
   unsigned int offsetToActors;
   int i;
+  int oldNumMaxObj;
   
   sprintf(buffer,"SAVE%d.ITD",saveNumber);
 
@@ -93,6 +94,7 @@ int loadSave(int saveNumber)
 
   if(gameId == AITD1)
   {
+    oldNumMaxObj = maxObjects;
     maxObjects = 300; // fix for save engine..
   }
 
@@ -175,6 +177,11 @@ int loadSave(int saveNumber)
 
     ASSERT(sizeof(objectTable[i].positionInTrack) == 2);
     fread(&objectTable[i].positionInTrack,2,1,fHandle);
+  }
+
+  if(gameId == AITD1)
+  {
+    maxObjects = oldNumMaxObj;
   }
 
   if(gameId == AITD1)
@@ -541,6 +548,7 @@ int makeSaveFile(int entry)
   char* ptr;
   int var_14 = 0;
   int temp;
+  int oldNumMaxObj;
 
   for(i=0;i<NUM_MAX_ACTOR;i++)
   {
@@ -591,6 +599,7 @@ int makeSaveFile(int entry)
 
   if(gameId == AITD1)
   {
+    oldNumMaxObj = maxObjects;
     maxObjects = 300; // fix for save engine..
   }
 
@@ -673,6 +682,11 @@ int makeSaveFile(int entry)
 
     ASSERT(sizeof(objectTable[i].positionInTrack) == 2);
     fwrite(&objectTable[i].positionInTrack,2,1,fHandle);
+  }
+
+  if(gameId == AITD1)
+  {
+    maxObjects = oldNumMaxObj;
   }
 
   if(gameId == AITD1)

@@ -262,6 +262,8 @@ int copyObjectToActor(int flag2, int var1, int foundName, short int flag, int x,
     default:
     {
       printf("Unsupported ZV type in copyObjectToActor\n");
+      printf("var1: %d\n", var1);
+      ASSERT(0);
       exit(1);
       break;
     }
