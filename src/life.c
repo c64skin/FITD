@@ -570,6 +570,13 @@ void processLife(int lifeNum)
 
                 break;
               }
+            case 0x43:
+              {
+                objectTable[var_6].positionInTrack = *(short int*)(currentLifePtr);
+                currentLifePtr+=2;
+
+                break;
+              }
             case 0x4A:
               {
                 objectTable[var_6].alpha = *(short int*)(currentLifePtr);
@@ -1474,6 +1481,20 @@ processOpcode:
       case 0x44: // UP_COOR_Y
         {
           startActorRotation(0,-2000,-1,&currentProcessedActorPtr->field_60);
+          break;
+        }
+      case 0x46: // PUT_AT
+        {
+          int objIdx1;
+          int objIdx2;
+
+          objIdx1 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+
+          objIdx2 = *(short int*)currentLifePtr;
+          currentLifePtr+=2;
+
+          putAt(objIdx1,objIdx2);
           break;
         }
       case 0x47: // DEF_ZV

@@ -1894,6 +1894,8 @@ void removeObjFromInventory(int objIdx)
 
     numObjInInventory--;
   }
+
+  objectTable[objIdx].flags2 &= 0x7FFF;
 }
 
 void deleteObject(int objIdx)
@@ -2703,7 +2705,7 @@ void getHotPoint(int hotPointIdx, char* bodyPtr, point3dStruct* hotPoint)
 
       pointIdx = *(short int*)(bodyPtr+4); // first point
 
-      ASSERT(pointIdx > 0 && pointIdx < 1200);
+      //ASSERT(pointIdx > 0 && pointIdx < 1200);
 
       source = (short int*)(((char*)pointBuffer) + pointIdx);
 
@@ -2812,7 +2814,10 @@ void mainDraw(int mode)
 #ifdef INTERNAL_DEBUGGER
       //  if(debuggerVar_drawModelZv)
         {
-       //   drawZv(actorPtr);
+          if(backgroundMode == backgroundModeEnum_3D)
+          {
+            drawZv(actorPtr);
+          }
         }
 #endif
 /////////////////////////////////////
