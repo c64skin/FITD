@@ -2702,6 +2702,8 @@ int anim(int animNum,int arg_2, int arg_4)
 		currentProcessedActorPtr->field_46 = arg_2;
 		currentProcessedActorPtr->field_48 = arg_4;
 	}
+
+	return(1);
 }
 
 void processLife(int lifeNum)
